@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "540124260305",
+    "project_id": "hldproject-a95af",
+    "storage_bucket": "hldproject-a95af.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:540124260305:android:7421eba03721cfa6eae2f0",
+        "android_client_info": {
+          "package_name": "com.example.hld_project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuuAb_q6qt_4fGwRFTQiG0HmReyFoWSL8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
