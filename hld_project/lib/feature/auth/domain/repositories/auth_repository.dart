@@ -1,7 +1,8 @@
-import 'package:hld_project/feature/auth/domain/entities/user_entity.dart';
+import '../entities/user_entity.dart';
 
 abstract class AuthRepository {
-  Future<UserEntity> login(String email, String password);
-  Future<void> logout();
-  UserEntity? getCurrentUser();
+  Future<UserEntity?> signIn(String email, String password);
+  Future<UserEntity?> signUp(String email, String password);
+  Future<void> signOut();
+  Stream<UserEntity?> get user;
 }

@@ -1,9 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-/// Generic Firestore Data Source
-/// Dùng cho các model có thể chuyển đổi từ / sang Firestore.
-/// T là kiểu dữ liệu (Model), ví dụ: StudentModel, CarModel, ...
+
 class FirebaseRemoteDS<T> {
   final String collectionName;
   final T Function(DocumentSnapshot<Map<String, dynamic>> doc) fromFirestore;
@@ -44,7 +42,7 @@ class FirebaseRemoteDS<T> {
     return docRef.id;
   }
 
-  /// 🟢 Cập nhật document
+
   Future<void> update(String id, T item) async {
     final data = toFirestore(item);
     data['updated_at'] = FieldValue.serverTimestamp();

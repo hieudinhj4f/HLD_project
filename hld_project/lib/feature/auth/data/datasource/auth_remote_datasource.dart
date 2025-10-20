@@ -1,23 +1,34 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../domain/entities/user_entity.dart';
 
-class AuthRemoteDatasource {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+class FirebaseAuthDataSource {
+  final FirebaseAuth _firebaseAuth;
 
-  Future<User?> signInWithEmail(String email, String password) async {
-    try {
-      final credential = await _firebaseAuth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return credential.user;
-    } on FirebaseAuthException catch (e) {
-      throw Exception(e.message);
-    }
+  FirebaseAuthDataSource(this._firebaseAuth);
+
+  Future<UserEntity?> signIn(String email, String password) async {
+    final cred = await _firebaseAuth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return _userFromFirebase(cred.user);
   }
 
-  Future<void> signOut() async {
-    await _firebaseAuth.signOut();
+  Future<UserEntity?> signUp(String email, String password) async {
+    final cred = await _firebaseAuth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return _userFromFirebase(cred.user);
   }
 
-  User? getCurrentUser() => _firebaseAuth.currentUser;
+  Future<void> signOut() async => _firebaseAuth.signOut();
+
+  Stream<UserEntity?> get user =>
+      _firebaseAuth.authStateChanges().map(_userFromFirebase);
+
+  UserEntity? _userFromFirebase(User? user) {
+    if (user == null) return null;
+    return UserEntity(uid: user.uid, email: user.email);
+  }
 }

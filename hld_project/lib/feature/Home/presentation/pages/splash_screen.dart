@@ -16,7 +16,7 @@ class _SplashScreenState extends State<SplashScreen>{
     super.initState();
 
     Future.delayed(const Duration(seconds: 3, milliseconds: 500), () {
-      if (mounted) { // ✅ Kiểm tra widget vẫn còn tồn tại
+      if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const HomePage()),
@@ -26,7 +26,6 @@ class _SplashScreenState extends State<SplashScreen>{
   }
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return  Scaffold(
       backgroundColor: Colors.white,
       body: Center(
