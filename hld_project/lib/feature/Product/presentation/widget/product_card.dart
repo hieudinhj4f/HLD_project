@@ -1,7 +1,7 @@
 // lib/features/products/presentation/widgets/product_card.dart
 
 import 'package:flutter/material.dart';
-import '../../domain/entity/product/product.dart'; // Đảm bảo đường dẫn đúng
+import '../../domain/entity/product/product.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -19,7 +19,7 @@ class ProductCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10.0),
-        side: const BorderSide(color: Colors.blue, width: 1.0), // Viền xanh như hình
+        side: const BorderSide(color: Colors.blue, width: 1.0),
       ),
       elevation: 2,
       child: Padding(

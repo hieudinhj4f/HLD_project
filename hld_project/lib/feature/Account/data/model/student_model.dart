@@ -1,5 +1,5 @@
 import '../../domain/entities/student.dart';
-class StudentModel extends Student {
+class AccountModel extends Account {
   const StudentModel({
     required super.id,
     required super.name,

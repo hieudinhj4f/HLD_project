@@ -62,7 +62,7 @@ class FirebaseRemoteDS<T> {
         .map((snapshot) => snapshot.docs.map(fromFirestore).toList());
   }
 
-  /// 🟢 Lấy UID người dùng hiện tại (nếu dùng Firebase Auth)
+  /// 🟢 Lấy UID người dùng hiện tại (nếu dùng Firebase Auth)cd
   String? get currentUserId {
     return FirebaseAuth.instance.currentUser?.uid;
   }

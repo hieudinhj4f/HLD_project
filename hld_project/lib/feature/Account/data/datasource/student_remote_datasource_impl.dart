@@ -23,7 +23,7 @@ class StudentRemoteDatasourceImpl implements IStudentRemoteDatasource {
   @override
   Future<StudentModel> getStudentById(String id) async {
     final doc = await _firestore.collection(_collection).doc(id).get();
-    if (!doc.exists) throw Exception('Student not found');
+    if (!doc.exists) throw Exception('Account not found');
     final data = doc.data()!;
     return StudentModel.fromJson({'id': doc.id, ...data});
   }

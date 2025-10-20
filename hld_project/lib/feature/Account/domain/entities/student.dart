@@ -25,6 +25,6 @@ class Student{
 });
   @override
   String toString(){
-    return 'Student(id: $id , name: $name , studentCode: $studentCode , birthDate: $birthDate , className: $className , gender: $gender , GPA: $gpa, phone: $phone , createAt: $createAt, updateAt: $updateAt)';
+    return 'Account(id: $id , name: $name , studentCode: $studentCode , birthDate: $birthDate , className: $className , gender: $gender , GPA: $gpa, phone: $phone , createAt: $createAt, updateAt: $updateAt)';
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hld_project/feature/Home/presentation/pages/home_page.dart';
 import '../../feature/Home/presentation/pages/splash_screen.dart';
+import '../../feature/Product/presentation/widget/product_card.dart';
 import '../../feature/Student/presentation/pages/student_list_page.dart';
 import '../../feature/auth/presentation/pages/signup_page.dart';
 import '../presentation/widget/customeButtomNav.dart';
@@ -38,24 +39,53 @@ class AppGoRouter {
       ),
       GoRoute(
         path: AppRoutes.home,
-        builder: (context,state) => const HomeScreen(),
+        builder: (context,state) => const HomePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (context,state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.chat,
+        builder: (context,state) => const ChatScreen(),
+      )
+      GoRoute(
+        path: AppRoutes.cart,
+        builder: (context,state) => const ProductCard(),
       ),
       ShellRoute(
         builder: (context, state, child) {
+          final currentIndex = _getIndexForLocation(state.matchedLocation);
           return Scaffold(
             appBar: AppBar(
-              title: const Text('CARLY Showroom - Student Manager'),
+              title: const Text('CARLY Showroom - Account Manager'),
             ),
             body: child,
-            bottomNavigationBar: CustomBottomNav(onItemTapped: (int p1) {  },, selectedIndex: null,),
+            bottomNavigationBar: CustomBottomNav(
+                selectedIndex: currentIndex,
+                onItemTapped: (index) {
+                  if (index == 0) {
+                    context.go(AppRoutes.home);
+                  }
+                  else if (index == 1) {
+                    context.go(AppRoutes.profile);
+                  }
+                  else if (index == 2) {
+                    context.go(AppRoutes.account);
+                  }
+                  else if (index == 3) {
+                    context.go(AppRoutes.cart);
+                  }
+                }
+            )
           );
         },
-        routes: [
-          GoRoute(
-            path: AppRoutes.home,
-            builder: (context, state) => const StudentListPage(),
-          ),
-        ],
+        // routes: [
+        //   GoRoute(
+        //     path: AppRoutes.home,
+        //     builder: (context, state) => const AccountListPage(),
+        //   ),
+        // ],
       ),
     ],
 
