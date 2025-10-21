@@ -33,12 +33,15 @@ class _ProductListPageState extends State<ProductListPage> {
     late final _updateProduct = UpdateProduct(_repo);
     late final _deleteProduct = DeleteProduct(_repo);
 
-    List<Product> _products = [];
-    List<Product> _filteredProducts = [];
+    // === SỬA LẠI BIẾN STATE ===
+    List<Product> _allProducts = []; // 1. Danh sách "master" chứa TẤT CẢ sản phẩm
+    List<Product> _filteredProducts = []; // 2. Danh sách đã lọc để hiển thị UI
+    List<String> _categories = ['All']; // Danh sách các category (đã sửa tên 'Tất cả' -> 'All')
+    String _selectedCategory = 'All'; // Category đang chọn
 
     bool _isLoading = false;
     String? _error;
-    Timer? _deboucer;
+    Timer? _debouncer; // Sửa lỗi chính tả
 
     final TextEditingController _searchController = TextEditingController();
 
@@ -51,13 +54,13 @@ class _ProductListPageState extends State<ProductListPage> {
 
     @override
     void dispose() {
-        _deboucer?.cancel();
+        _debouncer?.cancel(); // Sửa lỗi chính tả
         _searchController.dispose();
         super.dispose();
     }
 
     Future<void> _checkFirestoreConnection() async {
-        // Logic kiểm tra kết nối Firestore (như cũ)
+        // ... (Giữ nguyên) ...
         debugPrint('Đang kiểm tra kết nối Firestore...');
         final firestore = FirebaseFirestore.instance;
         try {
@@ -75,6 +78,7 @@ class _ProductListPageState extends State<ProductListPage> {
         }
     }
 
+    // === SỬA LẠI HÀM _loadProducts ===
     Future<void> _loadProducts() async {
         setState(() {
             _isLoading = true;
@@ -82,46 +86,58 @@ class _ProductListPageState extends State<ProductListPage> {
         });
         try {
             final products = await _getProducts.call();
+            // Lấy category duy nhất (unique)
+            final uniqueCategoriesName = products.map((p) => p.categories).toSet().toList();
+
             setState(() {
-                _products = products;
-                _performSearch(_searchController.text, runSetState: false);
+                _allProducts = products; // Gán vào danh sách "master"
+                _categories = ['All', ...uniqueCategoriesName]; // Cập nhật danh sách category
                 _error = null;
+
+                // Sửa logic kiểm tra: Nếu category đã chọn không còn tồn tại, reset về 'All'
+                if (!_categories.contains(_selectedCategory)) {
+                    _selectedCategory = 'All';
+                }
             });
         } catch (e) {
-        setState(() => _error = e.toString());
+            setState(() => _error = e.toString());
         } finally {
-        setState(() => _isLoading = false);
+            setState(() => _isLoading = false);
+            // Luôn chạy bộ lọc sau khi tải xong
+            _applyFilters();
         }
     }
 
-    void _performSearch(String query, {bool runSetState = true}) {
-        final lowerQuery = query.toLowerCase();
-        List<Product> results;
+    // === THAY THẾ _performSearch BẰNG HÀM NÀY ===
+    void _applyFilters() {
+        List<Product> tempResults = _allProducts; // Bắt đầu từ danh sách "master"
+        final String query = _searchController.text.toLowerCase();
 
-        if( lowerQuery.isEmpty) {
-            results = _products;
-        } else {
-            results =  _products.where((Product){
-                return Product.name.toLowerCase().contains(lowerQuery);
+        // 1. LỌC THEO CATEGORY
+        if (_selectedCategory != 'All') {
+            tempResults = tempResults.where((product) {
+                return product.categories == _selectedCategory;
             }).toList();
         }
 
-        if (runSetState) {
-            setState(() {
-                _filteredProducts = results;
-            });
+        // 2. LỌC THEO TÌM KIẾM (trên kết quả đã lọc ở bước 1)
+        if (query.isNotEmpty) {
+            tempResults = tempResults.where((product) {
+                return product.name.toLowerCase().contains(query);
+            }).toList();
         }
-        else {
-            // Chỉ cập nhật biến, không gọi setState
-            _filteredProducts = results;
-        }
-    }
-    Future<void> _delete(String id) async {
-        await _deleteProduct(id);
-        await _loadProducts();
+
+        // 3. Cập nhật UI
+        setState(() {
+            _filteredProducts = tempResults;
+        });
     }
 
-    // Hàm mở Form (Add/Edit)
+    Future<void> _delete(String id) async {
+        await _deleteProduct(id);
+        await _loadProducts(); // Tải lại sẽ tự động lọc lại
+    }
+
     Future<void> _openForm([Product? product]) async {
         final result = await Navigator.push(
             context,
@@ -133,41 +149,41 @@ class _ProductListPageState extends State<ProductListPage> {
                 ),
             ),
         );
-        if (result == true) _loadProducts();
+        if (result == true) _loadProducts(); // Tải lại sẽ tự động lọc lại
     }
 
-    // === THAY ĐỔI ===: Hàm Debouncer khi gõ
+    // === SỬA LẠI HÀM Debouncer ===
     void _onSearchChanged(String query) {
-        if (_deboucer?.isActive ?? false) _deboucer!.cancel();
-        _deboucer = Timer(const Duration(milliseconds: 300), () {
-            // Gọi hàm lọc sau khi người dùng ngừng gõ 300ms
-            _performSearch(query);
+        if (_debouncer?.isActive ?? false) _debouncer!.cancel();
+        _debouncer = Timer(const Duration(milliseconds: 300), () {
+            // Gọi hàm lọc TỔNG HỢP
+            _applyFilters();
         });
     }
-    // === UI XÂY DỰNG DANH SÁCH SẢN PHẨM ===
 
+    // === SỬA LẠI _buildProductList ĐỂ DÙNG _allProducts KHI KIỂM TRA ===
     Widget _buildProductList() {
-        if (_isLoading && _products.isEmpty) { // Check danh sách master
+        if (_isLoading && _allProducts.isEmpty) { // Check danh sách "master"
             return const Center(child: CircularProgressIndicator());
         }
         if (_error != null) {
             return Center(child: Text('Lỗi: $_error. Vui lòng thử lại.'));
         }
 
-        // Check danh sách đã lọc
         if (_filteredProducts.isEmpty) {
-            if (_searchController.text.isNotEmpty) {
+            if (_searchController.text.isNotEmpty || _selectedCategory != 'All') { // Kiểm tra nếu đang lọc
                 return const Center(child: Text('Không tìm thấy kết quả phù hợp.'));
             }
             return const Center(child: Text('Không có sản phẩm nào.'));
         }
 
+        // Vẫn dùng _filteredProducts để hiển thị
         return ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: _filteredProducts.length, // Dùng danh sách đã lọc
+            itemCount: _filteredProducts.length,
             itemBuilder: (context, index) {
-                final p = _filteredProducts[index]; // Dùng danh sách đã lọc
+                final p = _filteredProducts[index];
                 return ProductCard(
                     product: p,
                     onDetailsPressed: () => _openForm(p),
@@ -182,15 +198,13 @@ class _ProductListPageState extends State<ProductListPage> {
     Widget build(BuildContext context) {
         return Scaffold(
             appBar: AppBar(
-                title: const Text(
+                title: const Text(  // <--- NÓ NẰM Ở ĐÂY
                     'Healthy Life Diagnosis',
                     style: TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
                     ),
                 ),
-                backgroundColor: Colors.white,
-                elevation: 0,
                 actions: [
                     IconButton(
                         icon: const Icon(Iconsax.notification, color: Colors.black),
@@ -207,50 +221,61 @@ class _ProductListPageState extends State<ProductListPage> {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
-                        // === THAY ĐỔI ===: Thanh tìm kiếm (dùng TextField)
+                        // Thanh tìm kiếm
                         TextField(
                             controller: _searchController,
-                            onChanged: _onSearchChanged, // Gắn hàm debouncer
+                            onChanged: _onSearchChanged,
                             decoration: InputDecoration(
-                                hintText: 'Tìm kiếm thuốc, bệnh lý...',
-                                prefixIcon: const Icon(Iconsax.search_normal, color: Colors.grey),
+                                // ... (Giữ nguyên) ...
                                 suffixIcon: _searchController.text.isNotEmpty
                                     ? IconButton(
                                     icon: const Icon(Iconsax.close_circle, color: Colors.grey),
                                     onPressed: () {
                                         _searchController.clear();
-                                        _onSearchChanged(''); // Xóa và lọc lại
+                                        _onSearchChanged(''); // Xóa và gọi lại bộ lọc
                                     },
                                 )
                                     : null,
-                                filled: true,
-                                fillColor: Colors.grey.shade200,
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                ),
+                                // ... (Giữ nguyên) ...
                             ),
                         ),
                         const SizedBox(height: 24),
 
-                        // Ưu đãi & Khuyến mãi (Giữ nguyên)
+                        // Dropdown
                         Container(
-                            height: 150,
+                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
                             decoration: BoxDecoration(
-                                color: Colors.green.shade100,
-                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(8.0),
                             ),
-                            child: const Center(
-                                child: Text(
-                                    'Ưu đãi & Khuyến mãi',
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1E88E5),
-                                    ),
+                            child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                    isExpanded: true,
+                                    value: _selectedCategory,
+                                    icon: const Icon(Iconsax.arrow_down_1),
+                                    items: _categories.map((String categoryName) {
+                                        return DropdownMenuItem<String>(
+                                            value: categoryName,
+                                            child: Text(categoryName),
+                                        );
+                                    }).toList(),
+                                    // === SỬA LẠI LỖI CÚ PHÁP ===
+                                    onChanged: (String? newValue) {
+                                        if (newValue != null) {
+                                            setState(() {
+                                                _selectedCategory = newValue;
+                                            });
+                                            _applyFilters(); // Gọi lại bộ lọc TỔNG HỢP
+                                        }
+                                    },
                                 ),
                             ),
+                        ),
+                        const SizedBox(height: 24), // Thêm khoảng cách
+
+                        // Ưu đãi & Khuyến mãi (Giữ nguyên)
+                        Container(
+                            // ... (Giữ nguyên) ...
                         ),
                         const SizedBox(height: 24),
 
