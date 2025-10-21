@@ -1,9 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer';
 
-// Import các dependencies cần thiết từ module Product (Giả định)
 import '../../data/datasource/product_repository_datasource.dart';
 import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/entity/product/product.dart';
@@ -15,7 +16,6 @@ import '../../domain/usecase/createProduct.dart';
 import '../../domain/usecase/updateProduct.dart';
 import '../../domain/usecase/deleteProduct.dart';
 
-// Đây là widget Home chính, chứa cả UI và Logic Danh sách Sản phẩm
 class ProductListPage extends StatefulWidget {
     const ProductListPage({Key? key}) : super(key: key);
 
@@ -34,17 +34,26 @@ class _ProductListPageState extends State<ProductListPage> {
     late final _deleteProduct = DeleteProduct(_repo);
 
     List<Product> _products = [];
+    List<Product> _filteredProducts = [];
+
     bool _isLoading = false;
     String? _error;
-    String? SearchQuery;
-    final TextEditingController _searchController = TextEditingController();
+    Timer? _deboucer;
 
+    final TextEditingController _searchController = TextEditingController();
 
     @override
     void initState() {
         super.initState();
         _checkFirestoreConnection();
-        _loadProducts(); // Bắt đầu tải danh sách sản phẩm
+        _loadProducts();
+    }
+
+    @override
+    void dispose() {
+        _deboucer?.cancel();
+        _searchController.dispose();
+        super.dispose();
     }
 
     Future<void> _checkFirestoreConnection() async {
@@ -71,13 +80,17 @@ class _ProductListPageState extends State<ProductListPage> {
             _isLoading = true;
             _error = null;
         });
-        try {
+        ttry {
             final products = await _getProducts.call();
-            setState(() => _products = products);
+            setState(() {
+                _products = products;
+                _performSearch(_searchController.text, runSetState: false);
+                _error = null;
+            });
         } catch (e) {
-            setState(() => _error = e.toString());
+        setState(() => _error = e.toString());
         } finally {
-            setState(() => _isLoading = false);
+        setState(() => _isLoading = false);
         }
     }
 
@@ -130,7 +143,6 @@ class _ProductListPageState extends State<ProductListPage> {
         );
     }
 
-    // === UI XÂY DỰNG TRANG HOME TỔNG THỂ ===
     @override
     Widget build(BuildContext context) {
         return Scaffold(

@@ -1,32 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../provider/student_provider.dart';
-import '../widget/student_card.dart';
+import '../provider/account_provider.dart';
+import '../widget/account_card.dart';
 import '../widget/search_bar.dart';
 
 /// ✅ Trang hiển thị danh sách sinh viên
-class StudentListPage extends StatefulWidget {
-  const StudentListPage({super.key});
+class AccountListPage extends StatefulWidget {
+  const AccountListPage({super.key});
 
   @override
-  State<StudentListPage> createState() => _StudentListPageState();
+  State<AccountListPage> createState() => _AccountListPageState();
 }
 
-class _StudentListPageState extends State<StudentListPage> {
+class _AccountListPageState extends State<AccountListPage> {
   @override
   void initState() {
     super.initState();
     Future.microtask(() =>
-        Provider.of<StudentProvider>(context, listen: false).fetchStudents());
+        Provider.of<AccountProvider>(context, listen: false).fetchAccounts());
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<StudentProvider>(context);
+    final provider = Provider.of<AccountProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Danh sách sinh viên'),
+        title: const Text('Danh sách người dùng'),
       ),
       body: Column(
         children: [
@@ -37,13 +37,13 @@ class _StudentListPageState extends State<StudentListPage> {
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
-              itemCount: provider.filteredStudents.length,
+              itemCount: provider.filteredAccounts.length,
               itemBuilder: (context, index) {
-                final student = provider.filteredStudents[index];
-                return StudentCard(
-                  student: student,
+                final account = provider.filteredAccounts[index];
+                return AccountCard(
+                  account: account,
                   onDelete: () =>
-                      provider.deleteStudent(student.id.toString()), onEdit: () {  },
+                      provider.deleteAccount(account.id.toString()), onEdit: () {  },
                 );
               },
             ),
@@ -52,7 +52,7 @@ class _StudentListPageState extends State<StudentListPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Chuyển sang màn thêm sinh viên
+          // TODO: Chuyển sang màn thêm người dùng
         },
         child: const Icon(Icons.add),
       ),

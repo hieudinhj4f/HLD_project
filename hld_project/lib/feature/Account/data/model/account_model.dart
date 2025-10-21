@@ -1,9 +1,9 @@
-import '../../domain/entities/student.dart';
+import '../../domain/entities/account.dart';
 class AccountModel extends Account {
-  const StudentModel({
+  const AccountModel({
     required super.id,
     required super.name,
-    required super.studentCode,
+    required super.accountCode,
     required super.birthDate,
     required super.className,
     required super.gender,
@@ -13,11 +13,11 @@ class AccountModel extends Account {
     required super.updateAt,
   });
 
-  factory StudentModel.fromJson(Map<String, dynamic> json) {
-    return StudentModel(
+  factory AccountModel.fromJson(Map<String, dynamic> json) {
+    return AccountModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      studentCode: json['studentCode'] as String,
+      accountCode: json['accountCode'] as String,
       birthDate: DateTime.parse(json['birthDate'] as String),
       className: json['className'] as String,
       gender: json['gender'] as String,
@@ -31,7 +31,7 @@ class AccountModel extends Account {
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
-    'studentCode': studentCode,
+    'accountCode': accountCode,
     'birthDate': birthDate.toIso8601String(),
     'className': className,
     'gender': gender,
@@ -40,18 +40,18 @@ class AccountModel extends Account {
     'createAt': createAt.toIso8601String(),
     'updateAt': updateAt.toIso8601String(),
   };
-  factory StudentModel.fromEntity(Student student){
-    return StudentModel(
-      id: student.id,
-      name: student.name,
-      studentCode: student.studentCode,
-      birthDate: student.birthDate,
-      className: student.className,
-      gender: student.gender,
-      gpa:  student.gpa,
-      phone: student.phone,
-      createAt: student.createAt,
-      updateAt: student.updateAt,
+  factory AccountModel.fromEntity(Account account){
+    return AccountModel(
+      id: account.id,
+      name: account.name,
+      accountCode: account.accountCode,
+      birthDate: account.birthDate,
+      className: account.className,
+      gender: account.gender,
+      gpa:  account.gpa,
+      phone: account.phone,
+      createAt: account.createAt,
+      updateAt: account.updateAt,
       );
   }
 }

@@ -1,9 +1,9 @@
 
-class Student{
+class Account{
   final String id;
   final String name;
-  final String studentCode;
-  final DateTime  birthDate;
+  final String accountCode;
+  final DateTime birthDate;
   final String className;
   final String gender;
   final double gpa;
@@ -11,10 +11,10 @@ class Student{
   final DateTime createAt;
   final DateTime updateAt;
 
-  const Student({
+  const Account({
     required this.id,
     required this.name,
-    required this.studentCode,
+    required this.accountCode,
     required this.birthDate,
     required this.className,
     required this.gender,
@@ -25,6 +25,6 @@ class Student{
 });
   @override
   String toString(){
-    return 'Account(id: $id , name: $name , studentCode: $studentCode , birthDate: $birthDate , className: $className , gender: $gender , GPA: $gpa, phone: $phone , createAt: $createAt, updateAt: $updateAt)';
+    return 'Account(id: $id , name: $name , accountCode: $accountCode , birthDate: $birthDate , className: $className , gender: $gender , GPA: $gpa, phone: $phone , createAt: $createAt, updateAt: $updateAt)';
   }
 }

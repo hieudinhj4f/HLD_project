@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/student.dart';
+import '../../domain/entities/account.dart';
 
 /// ✅ Widget hiển thị thông tin một sinh viên
-class StudentCard extends StatelessWidget {
-  final Student student;
+class AccountCard extends StatelessWidget {
+  final Account account;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
 
-  const StudentCard({
+  const AccountCard({
     super.key,
-    required this.student,
+    required this.account,
     required this.onDelete,
     required this.onEdit,
   });
@@ -20,8 +20,8 @@ class StudentCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       elevation: 2,
       child: ListTile(
-        title: Text(student.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text("Ten : ${student.name}\nLớp: ${student.className}"),
+        title: Text(account.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text("Ten : ${account.name}\nLớp: ${account.className}"),
         trailing: Wrap(
           spacing: 8,
           children: [
