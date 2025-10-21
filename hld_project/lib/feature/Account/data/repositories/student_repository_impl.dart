@@ -28,7 +28,6 @@ class StudentRepositoryImpl implements StudentRepo {
   @override
   Future<Student> DeleteStudent(String id) async {
     await remoteDataSource.deleteStudent(id);
-    // tuỳ ý có thể trả về student đã xóa, hoặc null
     return Student(
       id: id,
       name: '',

@@ -7,6 +7,6 @@ class GetProductById{
 
   GetProductById(this.productRepository);
 
-  Future<Product> call(String id) async =>  await productRepository.getProductById(id);
+  Future<Product?> call(String id) async =>  await productRepository.getProductById(id);
 
 }

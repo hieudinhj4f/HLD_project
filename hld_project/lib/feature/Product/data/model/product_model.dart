@@ -1,10 +1,7 @@
-// lib/features/product/data/models/product_model.dart
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entity/product/product.dart'; // Import lớp cha Product
 
 class ProductModel extends Product {
-  // 1. Constructor: BỎ 'const' và gọi constructor của lớp cha
   ProductModel({
     required super.id,
     required super.name,
@@ -15,9 +12,9 @@ class ProductModel extends Product {
     required super.quantity,
     required super.createdAt,
     required super.updateAt,
-
   });
 
+  /// 🔹 Factory: chuyển dữ liệu Firestore → ProductModel
   factory ProductModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 
@@ -34,6 +31,7 @@ class ProductModel extends Product {
     );
   }
 
+  /// 🔹 Model → Entity (Domain)
   Product toEntity() {
     return Product(
       id: id,
@@ -46,5 +44,34 @@ class ProductModel extends Product {
       createdAt: createdAt,
       updateAt: updateAt,
     );
+  }
+
+  /// 🔹 Entity (Domain) → Model (Data)
+  factory ProductModel.fromEntity(Product product) {
+    return ProductModel(
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      categories: product.categories,
+      imageUrl: product.imageUrl,
+      price: product.price,
+      quantity: product.quantity,
+      createdAt: product.createdAt,
+      updateAt: product.updateAt,
+    );
+  }
+
+  /// 🔹 Model → JSON (Map) để ghi lên Firestore
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'description': description,
+      'categories': categories,
+      'imageUrl': imageUrl,
+      'price': price,
+      'quantity': quantity,
+      'createdAt': createdAt,
+      'updateAt': updateAt,
+    };
   }
 }

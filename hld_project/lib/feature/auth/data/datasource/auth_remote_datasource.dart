@@ -1,34 +1,76 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../domain/entities/user_entity.dart';
 
-class FirebaseAuthDataSource {
-  final FirebaseAuth _firebaseAuth;
+/// A generic Firestore DataSource for basic CRUD operations.
+/// T = Model type that represents the Firestore document.
+class FirebaseRemoteDS<T> {
+  final String collectionName;
+  final T Function(DocumentSnapshot doc) fromFirestore;
+  final Map<String, dynamic> Function(T item) toFirestore;
 
-  FirebaseAuthDataSource(this._firebaseAuth);
+  FirebaseRemoteDS({
+    required this.collectionName,
+    required this.fromFirestore,
+    required this.toFirestore,
+  });
 
-  Future<UserEntity?> signIn(String email, String password) async {
-    final cred = await _firebaseAuth.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-    return _userFromFirebase(cred.user);
+  CollectionReference get _collection =>
+      FirebaseFirestore.instance.collection(collectionName);
+
+
+  /// Get all documents in the collection
+  Future<List<T>> getAll() async {
+    final snapshot = await _collection.orderBy('created_at', descending: true).get();
+    return snapshot.docs.map((e) => fromFirestore(e)).toList();
   }
 
-  Future<UserEntity?> signUp(String email, String password) async {
-    final cred = await _firebaseAuth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-    return _userFromFirebase(cred.user);
+  /// Get a single document by ID
+  Future<T?> getById(String id) async {
+    final doc = await _collection.doc(id).get();
+    if (!doc.exists){
+      final docuid = await _collection.where('uid', isEqualTo: id).limit(1).get();
+      return fromFirestore(docuid.docs.first);
+    }
+    return fromFirestore(doc);
   }
 
-  Future<void> signOut() async => _firebaseAuth.signOut();
+  /// Add a new document
+  Future<String> add(T item) async {
 
-  Stream<UserEntity?> get user =>
-      _firebaseAuth.authStateChanges().map(_userFromFirebase);
+    final docRef = await _collection.add(toFirestore(item));
+    return docRef.id;
+  }
 
-  UserEntity? _userFromFirebase(User? user) {
-    if (user == null) return null;
-    return UserEntity(uid: user.uid, email: user.email);
+  /// Update an existing document
+  Future<void> update(String id, T item) async {
+    final doc = await _collection.doc(id).get();
+    if (!doc.exists){
+      final docuid = await _collection.where('uid', isEqualTo: id).limit(1).get();
+      await _collection.doc(docuid.docs.first.id).update(toFirestore(item));
+    }
+    await _collection.doc(id).update(toFirestore(item));
+  }
+
+  /// Delete a document
+  Future<void> delete(String id) async {
+    final doc = await _collection.doc(id).get();
+    if (!doc.exists){
+      final docuid = await _collection.where('uid', isEqualTo: id).limit(1).get();
+      await _collection.doc(docuid.docs.first.id).delete();
+    }
+    await _collection.doc(id).delete();
+  }
+
+  /// Listen to realtime changes in a collection
+  Stream<List<T>> watchAll() {
+    return _collection.orderBy('created_at', descending: true).snapshots().map(
+          (snapshot) => snapshot.docs.map((e) => fromFirestore(e)).toList(),
+    );
+  }
+
+  String? getUserId()  {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return '';
+    return user.uid;
   }
 }

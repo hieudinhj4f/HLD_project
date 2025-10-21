@@ -6,11 +6,12 @@ import '../../domain/entity/product/product.dart';
 class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onDetailsPressed; // Callback khi nhấn nút xem chi tiết
-
+  final VoidCallback onDeletePressed;
   const ProductCard({
     Key? key,
     required this.product,
     required this.onDetailsPressed,
+    required this.onDeletePressed,
   }) : super(key: key);
 
   @override
@@ -99,24 +100,33 @@ class ProductCard extends StatelessWidget {
             ),
 
             // Nút "Open" / "Xem chi tiết"
-            Align(
-              alignment: Alignment.bottomRight,
-              child: ElevatedButton(
-                onPressed: onDetailsPressed, // Sử dụng callback được truyền vào
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade100, // Màu nền xanh nhạt
-                  foregroundColor: Colors.green.shade700, // Màu chữ xanh đậm
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
+            Column( // Thay đổi từ Align thành Column để chứa nhiều nút
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // 1. Nút "Open" / "Xem chi tiết"
+                ElevatedButton(
+                  onPressed: onDetailsPressed,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade100,
+                    foregroundColor: Colors.green.shade700,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    elevation: 0,
+                    minimumSize: const Size(80, 35), // Đặt kích thước tối thiểu
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  elevation: 0, // Bỏ đổ bóng
+                  child: const Text('Open', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                 ),
-                child: const Text(
-                  'Open', // Hoặc 'Xem chi tiết'
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+
+                const SizedBox(height: 8),
+
+                // 2. Nút XÓA
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: onDeletePressed, // <--- SỬ DỤNG CALLBACK XÓA
+                  visualDensity: VisualDensity.compact, // Giảm kích thước vùng chạm
                 ),
-              ),
+              ],
             ),
           ],
         ),

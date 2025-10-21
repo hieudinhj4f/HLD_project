@@ -19,21 +19,19 @@ class _HomePageState extends State<HomePage> {
   }
   Future<void> _checkFirestoreConnection() async {
     debugPrint('Đang kiểm tra kết nối Firestore...');
-    try {
-      final firestore = FirebaseFirestore.instance;
-      final snapshot = await firestore.collection('products')
-          .limit(1)
-          .get();
+    final firestore = FirebaseFirestore.instance;
 
-      if (snapshot.docs.isNotEmpty) {
-        debugPrint('✅ KẾT NỐI FIRESTORE THÀNH CÔNG và collection có dữ liệu.');
-      } else {
-        debugPrint('⚠️ KẾT NỐI FIRESTORE THÀNH CÔNG nhưng collection "products" rỗng.');
-      }
-    } on FirebaseException catch (e) {
-      debugPrint('❌ KẾT NỐI FIRESTORE THẤT BẠI (Lỗi Firebase): ${e.code} - ${e.message}');
-    } catch (e) {
-      debugPrint('❌ KẾT NỐI THẤT BẠI VỚI LỖI CHUNG: $e');
+  // Lấy tài liệu (Document) có ID là 'products' trong collection 'product'
+    final snapshot = await firestore.collection('product')
+        .doc('products')
+        .get();
+
+  // Kiểm tra dữ liệu
+    if (snapshot.exists) {
+      final data = snapshot.data();
+      debugPrint('Dữ liệu lấy được: $data');
+    } else {
+      debugPrint('Không tìm thấy document "products"');
     }
   }
 
