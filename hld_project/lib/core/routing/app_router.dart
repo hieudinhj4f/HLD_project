@@ -10,6 +10,14 @@ import '../routing/app_routers.dart';
 import '../../feature/auth/presentation/pages/login_page.dart';
 import 'go_router_refresh_change.dart';
 
+import '../../feature/Product/domain/usecase/createProduct.dart';
+import '../../feature/Product/domain/usecase/updateProduct.dart';
+import '../../feature/Product/domain/usecase/deleteProduct.dart';
+import '../../feature/Product/domain/usecase/getProductById.dart';
+import '../../feature/Product/domain/usecase/getProduct.dart';
+import '../../feature/Product/data/datasource/product_repository_datasource.dart';
+import '../../feature/Product/data/repositories/product_repository_impl.dart';
+
 class AppGoRouter {
   // 1. HOÀN THIỆN HÀM TÍNH TOÁN INDEX
   static int _getIndexForLocation(String path) {
@@ -21,7 +29,6 @@ class AppGoRouter {
   }
 
   static final GoRouter router = GoRouter(
-    // ... Khởi tạo và Routes độc lập (đã đúng)
     initialLocation: AppRoutes.login,
     debugLogDiagnostics: true,
 
@@ -30,15 +37,6 @@ class AppGoRouter {
       GoRoute(path: AppRoutes.splash, builder: (context, state) => const SplashScreen()),
       GoRoute(path: AppRoutes.signup, builder: (context, state) => const SignupPage()),
 
-      // LƯU Ý: Các tuyến độc lập này (HomePage, StudentListPage) sẽ không có BottomNav
-      // và sẽ bị ShellRoute ghi đè nếu bạn dùng lại path bên trong ShellRoute.
-      // Tốt nhất là BỎ CHÚNG ĐI, hoặc đổi tên và CHỈ SỬ DỤNG ShellRoute.
-      // Tôi sẽ BỎ CHÚNG ở đây để tránh trùng lặp.
-      // GoRoute(path: AppRoutes.home, builder: (context, state) => const HomePage()),
-
-      // =========================================================================
-      // SHELL ROUTE CÓ BOTTOM NAV (Đã hoàn thiện)
-      // =========================================================================
       ShellRoute(
         builder: (context, state, child) {
           final currentIndex = _getIndexForLocation(state.matchedLocation);
@@ -49,7 +47,6 @@ class AppGoRouter {
               bottomNavigationBar: CustomBottomNav(
                   selectedIndex: currentIndex,
                   onItemTapped: (index) {
-                    // 2. HOÀN THIỆN LOGIC ĐIỀU HƯỚNG BOTTOM NAV
                     if (index == 0) {
                       context.go(AppRoutes.home);
                     } else if (index == 1) {
@@ -64,11 +61,24 @@ class AppGoRouter {
           );
         },
         routes: [
-          // 3. HOÀN THIỆN CÁC TUYẾN CON CỦA SHELLROUTE
           GoRoute(
             path: AppRoutes.home,
-            // Giả định HomePage (hoặc HomeScreen) là màn hình chính của tab 0
-            builder: (context, state) => const ProductListPage(),
+            builder: (context, state){
+              late final remote = ProductRemoteDataSourceImpl();
+              late final repo = ProductRepositoryImpl(remote);
+
+              late final getProducts = GetAllProduct(repo);
+              late final createProduct = CreateProduct(repo);
+              late final updateProduct = UpdateProduct(repo);
+              late final deleteProduct = DeleteProduct(repo);
+              return ProductListPage(
+                getProducts: getProducts,
+                createProduct: createProduct,
+                updateProduct: updateProduct,
+                deleteProduct: deleteProduct,
+              );
+            }
+            ,
           ),
           // GoRoute(
           //   path: AppRoutes.profile,
@@ -100,7 +110,6 @@ class AppGoRouter {
           state.matchedLocation == AppRoutes.signup;
 
       if (!loggedIn && !loggingIn) return AppRoutes.login;
-      // Chuyển hướng đến AppRoutes.home (tức là ShellRoute) sau khi đăng nhập
       if (loggedIn && loggingIn) return AppRoutes.home;
       return null;
     },

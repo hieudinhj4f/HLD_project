@@ -34,8 +34,8 @@ class MyApp extends StatelessWidget {
     // 2. Sử dụng MaterialApp.router và cung cấp GoRouter
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'HLD Project', // Thêm tiêu đề
-      routerConfig: AppGoRouter.router, // Sử dụng router đã cấu hình
+      title: 'HLD Project',
+      routerConfig: AppGoRouter.router,
     );
   }
 }

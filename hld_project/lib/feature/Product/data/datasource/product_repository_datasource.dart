@@ -1,8 +1,6 @@
 import '../../../../core/data/firebase_remote_datasource.dart';
 import '../model/product_model.dart';
 
-/// Abstract định nghĩa hành vi của DataSource.
-/// Giúp dễ dàng thay thế Firebase bằng REST API, SQLite, v.v.
 abstract class ProductRemoteDataSource {
   Future<List<ProductModel>> getAll();
   Future<ProductModel?> getProduct(String id);
@@ -11,7 +9,6 @@ abstract class ProductRemoteDataSource {
   Future<void> delete(String id);
 }
 
-/// Triển khai cụ thể sử dụng Firebase Firestore
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   // FirebaseRemoteDS là lớp generic giúp tương tác với Firestore
   final FirebaseRemoteDS<ProductModel> _remoteSource;
