@@ -1,10 +1,9 @@
-import '../entity/product/product.dart';
-import '../repository/product_repository.dart';
+import '../entities/product.dart';
+import '../repositories/product_repository.dart';
 
 class CreateProduct {
-  final ProductRepository productRepository;
+  final ProductRepository repository;
+  CreateProduct(this.repository);
 
-  CreateProduct(this.productRepository);
-
-  Future<void> call (Product product) async => await productRepository.createProduct(product);
+  Future<void> call(Product product) => repository.createProduct(product);
 }

@@ -1,11 +1,9 @@
-import '../entity/product/product.dart';
-import '../repository/product_repository.dart';
+import '../entities/product.dart';
+import '../repositories/product_repository.dart';
 
 class GetAllProduct {
-  final ProductRepository productRepository;
+  final ProductRepository repository;
+  GetAllProduct(this.repository);
 
-  GetAllProduct(this.productRepository);
-
-  Future<List<Product>> call() async => await productRepository.getAllProducts();
-
+  Future<List<Product>> call() => repository.getProducts();
 }

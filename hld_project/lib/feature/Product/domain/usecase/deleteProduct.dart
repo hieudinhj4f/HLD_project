@@ -1,10 +1,8 @@
-import '../entity/product/product.dart';
-import '../repository/product_repository.dart';
+import '../repositories/product_repository.dart';
 
-class DeleteProduct{
-  final ProductRepository productRepository;
+class DeleteProduct {
+  final ProductRepository repository;
+  DeleteProduct(this.repository);
 
-  DeleteProduct(this.productRepository);
-
-  Future<void> call(String id) async => await productRepository.deleteProduct(id);
+  Future<void> call(String id) => repository.deleteProduct(id);
 }

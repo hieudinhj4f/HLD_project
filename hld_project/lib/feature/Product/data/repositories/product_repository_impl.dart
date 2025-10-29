@@ -1,49 +1,81 @@
-import 'package:hld_project/feature/Product/domain/entity/product/product.dart';
-import 'package:hld_project/feature/Product/domain/repository/product_repository.dart';
+import '../datasources/product_remote_datasource.dart';
+import '../models/product_model.dart';
+import '../../domain/entities/product.dart';
+import '../../domain/repositories/product_repository.dart';
 
-// Giả định các imports sau nằm trong tầng Data
-import '../datasource/product_repository_datasource.dart';
-import '../model/product_model.dart';
-
-/// Implementation of ProductRepository (Data Layer)
-/// Chịu trách nhiệm chính là Ánh xạ (Mapping) và Quản lý luồng dữ liệu.
 class ProductRepositoryImpl implements ProductRepository {
-  // Dependency Injection của Data Source
   final ProductRemoteDataSource _remoteDataSource;
 
   ProductRepositoryImpl(this._remoteDataSource);
 
-  // --- Triển khai các phương thức từ ProductRepository (Domain) ---
-
   @override
-  Future<void> createProduct(Product product) async {
-    // 1. Ánh xạ Entity (Domain) sang Model (Data)
-    final model = ProductModel.fromEntity(product);
-    // 2. Gọi Data Source để thực hiện I/O
-    await _remoteDataSource.add(model);
-  }
-
-  @override
-  Future<void> updateProduct(Product product) async {
-    final model = ProductModel.fromEntity(product);
-    await _remoteDataSource.update(model);
-  }
-
-  @override
-  Future<void> deleteProduct(String id) async {
-    await _remoteDataSource.delete(id);
+  Future<List<Product>> getProducts() async {
+    final models = await _remoteDataSource.getProducts();
+    return models.map((m) => Product(
+          id: m.id,
+          name: m.name,
+          description: m.description,
+          categories: m.categories,
+          imageUrl: m.imageUrl,
+          price: m.price,
+          quantity: m.quantity,
+          createdAt: m.createdAt,
+          updateAt: m.updateAt,
+        )).toList();
   }
 
   @override
   Future<Product?> getProductById(String id) async {
-    final model = await _remoteDataSource.getProduct(id);
-
-    return model?.toEntity();
+    final doc = await _remoteDataSource.getProductById(id);
+    if (doc == null) return null;
+    final model = ProductModel.fromFirestore(doc);
+    return Product(
+      id: model.id,
+      name: model.name,
+      description: model.description,
+      categories: model.categories,
+      imageUrl: model.imageUrl,
+      price: model.price,
+      quantity: model.quantity,
+      createdAt: model.createdAt,
+      updateAt: model.updateAt,
+    );
   }
+
   @override
-  Future<List<Product>> getAllProducts() async {
-    final models = await _remoteDataSource.getAll();
-    return models.map((model) => model.toEntity()).toList();
+  Future<void> createProduct(Product product) async {
+    final model = ProductModel(
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      categories: product.categories,
+      imageUrl: product.imageUrl,
+      price: product.price,
+      quantity: product.quantity,
+      createdAt: product.createdAt,
+      updateAt: product.updateAt,
+    );
+    await _remoteDataSource.createProduct(model);
+  }
+
+  @override
+  Future<void> updateProduct(Product product) async {
+    final model = ProductModel(
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      categories: product.categories,
+      imageUrl: product.imageUrl,
+      price: product.price,
+      quantity: product.quantity,
+      createdAt: product.createdAt,
+      updateAt: product.updateAt,
+    );
+    await _remoteDataSource.updateProduct(model);
+  }
+
+  @override
+  Future<void> deleteProduct(String id) async {
+    await _remoteDataSource.deleteProduct(id);
   }
 }
-

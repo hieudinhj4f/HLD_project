@@ -21,7 +21,6 @@ class Product {
     required this.quantity,
     Timestamp? createdAt,
     Timestamp? updateAt,
-  })  : createdAt = createdAt ?? Timestamp.now(),
-        updateAt = updateAt ?? Timestamp.now();
-
+  }) : createdAt = createdAt ?? Timestamp.now(),
+       updateAt = updateAt ?? Timestamp.now();
 }

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../domain/entity/product/product.dart'; // Import lớp cha Product
+import '../../domain/entities/product.dart'; // Import lớp cha Product
 
 class ProductModel extends Product {
   ProductModel({

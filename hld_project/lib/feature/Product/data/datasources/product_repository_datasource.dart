@@ -1,5 +1,5 @@
 import '../../../../core/data/firebase_remote_datasource.dart';
-import '../model/product_model.dart';
+import '../models/product_model.dart';
 
 abstract class ProductRemoteDataSource {
   Future<List<ProductModel>> getAll();
@@ -14,11 +14,11 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   final FirebaseRemoteDS<ProductModel> _remoteSource;
 
   ProductRemoteDataSourceImpl()
-      : _remoteSource = FirebaseRemoteDS<ProductModel>(
-      collectionName: 'product', // Tên collection trên Firestore
-      fromFirestore: (doc) => ProductModel.fromFirestore(doc),
-      toFirestore: (model) => model.toJson(),
-  );
+    : _remoteSource = FirebaseRemoteDS<ProductModel>(
+        collectionName: 'product', // Tên collection trên Firestore
+        fromFirestore: (doc) => ProductModel.fromFirestore(doc),
+        toFirestore: (model) => model.toJson(),
+      );
 
   @override
   Future<List<ProductModel>> getAll() async {
