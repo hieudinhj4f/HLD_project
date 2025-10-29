@@ -13,7 +13,6 @@ class ProductRepositoryImpl implements ProductRepository {
 
   ProductRepositoryImpl(this._remoteDataSource);
 
-  // --- Triển khai các phương thức từ ProductRepository (Domain) ---
 
   @override
   Future<void> createProduct(Product product) async {

@@ -3,13 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:developer';
-
-// === THAY ĐỔI 1: XÓA IMPORT TẦNG DATA ===
-// (UI không được phép biết về 2 file này)
-// import '../../data/datasource/product_repository_datasource.dart';
-// import '../../data/repositories/product_repository_impl.dart';
-
 import '../../domain/entity/product/product.dart';
 import '../widget/product_card.dart';
 import 'product_form_page.dart'; // ProductFormPage
@@ -21,7 +14,6 @@ import '../../domain/usecase/updateProduct.dart';
 import '../../domain/usecase/deleteProduct.dart';
 
 
-// === THAY ĐỔI 2: SỬA LẠI KHAI BÁO WIDGET ===
 class ProductListPage extends StatefulWidget {
 
     // Thêm các trường final để NHẬN use case
@@ -44,20 +36,6 @@ class ProductListPage extends StatefulWidget {
 }
 
 class _ProductListPageState extends State<ProductListPage> {
-
-    // === THAY ĐỔI 3: XÓA BỎ HOÀN TOÀN LOGIC KHỞI TẠO ===
-    /*
-    late final _remote = ProductRemoteDataSourceImpl();
-    late final _repo = ProductRepositoryImpl(_remote);
-
-    late final _getProducts = GetAllProduct(_repo);
-    late final _createProduct = CreateProduct(_repo);
-    late final _updateProduct = UpdateProduct(_repo);
-    late final _deleteProduct = DeleteProduct(_repo);
-    */
-    // ======================================================
-
-    // Các biến state cho UI (giữ nguyên)
     List<Product> _allProducts = [];
     List<Product> _filteredProducts = [];
     List<String> _categories = ['All'];
@@ -84,7 +62,6 @@ class _ProductListPageState extends State<ProductListPage> {
     }
 
     Future<void> _checkFirestoreConnection() async {
-        // ... (Giữ nguyên logic)
         debugPrint('Đang kiểm tra kết nối Firestore...');
         final firestore = FirebaseFirestore.instance;
         try {
@@ -102,7 +79,6 @@ class _ProductListPageState extends State<ProductListPage> {
         }
     }
 
-    // === THAY ĐỔI 4: SỬA HÀM _loadProducts ===
     Future<void> _loadProducts() async {
         setState(() {
             _isLoading = true;
@@ -111,7 +87,6 @@ class _ProductListPageState extends State<ProductListPage> {
         try {
             // Dùng Usecase được "tiêm" vào thông qua "widget"
             final products = await widget.getProducts.call();
-
             final uniqueCategoriesName = products.map((p) => p.categories).toSet().toList();
 
             setState(() {
@@ -130,7 +105,6 @@ class _ProductListPageState extends State<ProductListPage> {
         }
     }
 
-    // === (Hàm _applyFilters giữ nguyên) ===
     void _applyFilters() {
         List<Product> tempResults = _allProducts;
         final String query = _searchController.text.toLowerCase();
@@ -151,22 +125,17 @@ class _ProductListPageState extends State<ProductListPage> {
             _filteredProducts = tempResults;
         });
     }
-
-    // === THAY ĐỔI 5: SỬA HÀM _delete ===
     Future<void> _delete(String id) async {
-        // Dùng Usecase được "tiêm" vào
         await widget.deleteProduct(id);
         await _loadProducts();
     }
 
-    // === THAY ĐỔI 6: SỬA HÀM _openForm ===
     Future<void> _openForm([Product? product]) async {
         final result = await Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (_) => ProductFormPage(
                     product: product,
-                    // Dùng Usecase được "tiêm" vào
                     createUseCase: widget.createProduct,
                     updateUseCase: widget.updateProduct,
                 ),
@@ -175,7 +144,6 @@ class _ProductListPageState extends State<ProductListPage> {
         if (result == true) _loadProducts();
     }
 
-    // === (Hàm _onSearchChanged giữ nguyên) ===
     void _onSearchChanged(String query) {
         if (_debouncer?.isActive ?? false) _debouncer!.cancel();
         _debouncer = Timer(const Duration(milliseconds: 300), () {
@@ -183,7 +151,6 @@ class _ProductListPageState extends State<ProductListPage> {
         });
     }
 
-    // === (Hàm _buildProductList giữ nguyên) ===
     Widget _buildProductList() {
         if (_isLoading && _allProducts.isEmpty) {
             return const Center(child: CircularProgressIndicator());
@@ -213,8 +180,6 @@ class _ProductListPageState extends State<ProductListPage> {
             },
         );
     }
-
-    // === (Hàm build() giữ nguyên) ===
     @override
     Widget build(BuildContext context) {
         return Scaffold(

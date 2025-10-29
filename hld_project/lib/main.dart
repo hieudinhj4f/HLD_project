@@ -1,16 +1,18 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:provider/provider.dart'; // <--- Thêm Provider
+import 'package:provider/provider.dart';
 import 'core/config/firebase_env.dart';
 import 'core/routing/app_router.dart';
 
+
+import 'feature/auth/presentation/providers/auth_provider.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  // Load file env de config cau hinh
   await dotenv.load(fileName: ".env");
 
-  // Khởi tạo Firebase
   await Firebase.initializeApp(
     options: FirebaseOptions(
       apiKey: FirebaseEnv.apiKey,
@@ -23,19 +25,35 @@ Future<void> main() async {
     ),
   );
 
-  runApp(const MyApp());
+
+  final AuthProvider authProvider = AuthProvider();
+  final AppRouter appRouter = AppRouter(authProvider);
+
+  // --- 3. CHẠY ỨNG DỤNG VỚI PROVIDER ---
+  runApp(
+    // Dùng ChangeNotifierProvider.value để cung cấp
+    // instance authProvider đã được tạo
+    ChangeNotifierProvider.value(
+      value: authProvider,
+      child: MyApp(appRouter: appRouter),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final AppRouter appRouter;
+
+  const MyApp({
+    super.key,
+    required this.appRouter,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // 2. Sử dụng MaterialApp.router và cung cấp GoRouter
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'HLD Project',
-      routerConfig: AppGoRouter.router,
+      routerConfig: appRouter.router,
     );
   }
 }

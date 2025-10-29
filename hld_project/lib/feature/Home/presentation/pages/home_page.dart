@@ -3,6 +3,10 @@ import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer';
 
+// --- THÊM IMPORT NÀY ---
+import 'package:firebase_auth/firebase_auth.dart';
+// -------------------------
+
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -11,22 +15,21 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   @override
   void initState() {
     super.initState();
     _checkFirestoreConnection();
   }
+
   Future<void> _checkFirestoreConnection() async {
     debugPrint('Đang kiểm tra kết nối Firestore...');
     final firestore = FirebaseFirestore.instance;
 
-  // Lấy tài liệu (Document) có ID là 'products' trong collection 'product'
-    final snapshot = await firestore.collection('product')
-        .doc('products')
-        .get();
+    // Lấy tài liệu (Document) có ID là 'products' trong collection 'product'
+    final snapshot =
+    await firestore.collection('product').doc('products').get();
 
-  // Kiểm tra dữ liệu
+    // Kiểm tra dữ liệu
     if (snapshot.exists) {
       final data = snapshot.data();
       debugPrint('Dữ liệu lấy được: $data');
@@ -34,6 +37,17 @@ class _HomePageState extends State<HomePage> {
       debugPrint('Không tìm thấy document "products"');
     }
   }
+
+  // --- HÀM XỬ LÝ ĐĂNG XUẤT ---
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    // Nếu bạn không dùng GoRouter's authStateChanges,
+    // bạn có thể cần điều hướng thủ công tại đây:
+    // if (mounted) {
+    //   context.go('/login');
+    // }
+  }
+  // -------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +67,13 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Iconsax.notification, color: Colors.black),
             onPressed: () {},
           ),
+
+          // --- NÚT LOGOUT MÀ TÔI ĐÃ THÊM VÀO ĐÂY ---
+          IconButton(
+            icon: const Icon(Iconsax.logout, color: Colors.black),
+            onPressed: _logout, // Gọi hàm đăng xuất
+          ),
+          // ---------------------------------------
         ],
       ),
       body: SingleChildScrollView(
@@ -70,7 +91,8 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Icon(Iconsax.search_normal, color: Colors.grey),
                   SizedBox(width: 8),
-                  Text('Tìm kiếm thuốc, bệnh lý...', style: TextStyle(color: Colors.grey)),
+                  Text('Tìm kiếm thuốc, bệnh lý...',
+                      style: TextStyle(color: Colors.grey)),
                 ],
               ),
             ),

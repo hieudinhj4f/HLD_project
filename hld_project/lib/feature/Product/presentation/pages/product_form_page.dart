@@ -44,12 +44,11 @@ class _ProductFormPageState extends State<ProductFormPage> {
   @override
   void initState() {
     super.initState();
-    // Xác định xem đây là form 'Chỉnh sửa' (true) hay 'Tạo mới' (false)
-    final isEditing = widget.product != null;
-    final product = widget.product; // Lấy product ra cho gọn
 
-    // === FIX: Khởi tạo TẤT CẢ các controller ===
-    // Nếu là 'Chỉnh sửa', gán giá trị cũ. Nếu 'Tạo mới', gán chuỗi rỗng.
+    final isEditing = widget.product != null;
+    final product = widget.product;
+
+
     _nameController = TextEditingController(text: isEditing ? product!.name : '');
     _priceController = TextEditingController(text: isEditing ? product!.price.toString() : '');
     _quantityController = TextEditingController(text: isEditing ? product!.quantity.toString() : '');
@@ -75,29 +74,18 @@ class _ProductFormPageState extends State<ProductFormPage> {
     super.dispose();
   }
 
-  // 4. LOGIC LƯU FORM
   Future<void> _saveForm() async {
-    // 4.1. Validate form
-    // Nếu form không hợp lệ (ví dụ: thiếu tên), thì dừng lại.
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // 4.2. Bật trạng thái loading
     setState(() {
       _isSaving = true;
     });
 
     try {
-      // 4.3. Lấy thời gian hiện tại
-      // Dùng cho 'createAt' (nếu tạo mới) và 'updateAt' (luôn luôn)
       final now = Timestamp.now();
-
-      // 4.4. Tạo đối tượng Product
-      // === FIX: Giả định Model Product của bạn có TẤT CẢ các trường này ===
       final productToSave = Product(
-        // ID: Nếu là chỉnh sửa, dùng ID cũ.
-        // Nếu là tạo mới, dùng ID rỗng (hoặc null) để useCase/repository tự tạo.
         id: widget.product?.id ?? '',
         name: _nameController.text,
         price: double.parse(_priceController.text),
@@ -106,13 +94,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
         // === FIX: Lấy giá trị từ controller thay vì chuỗi rỗng ===
         description: _descriptionController.text,
         categories: _categoriesController.text,
-
-        // === FIX: Xử lý logic Timestamp ===
-        // createAt: Nếu là chỉnh sửa, giữ nguyên giá trị cũ.
-        //             Nếu là tạo mới (widget.product là null), gán 'now'.
         createdAt: widget.product?.createdAt ?? now,
-
-        // updateAt: Luôn luôn gán là 'now' mỗi khi lưu.
         updateAt: now,
       );
 
