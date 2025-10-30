@@ -1,9 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:hld_project/feature/Account/data/model/account_model.dart';
+
 import '../../domain/entities/account.dart';
 import '../../domain/account_repository/account_repository.dart';
 import '../datasource/account_remote_datasource.dart';
 
 class AccountRepositoryImpl implements AccountRepository {
-  final IAccountRemoteDatasource remoteDataSource;
+  final AccountRemoteDatasource remoteDataSource;
 
   AccountRepositoryImpl({required this.remoteDataSource});
 
@@ -14,20 +17,19 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<Account> CreateAccount(Account account) async {
-    await remoteDataSource.addAccount(account);
-    return account;
+  Future<void> CreateAccount(Account account) async {
+    final model = await AccountModel.fromEntity(account);
+    remoteDataSource.CreateAccount(model);
   }
 
   @override
-  Future<Account> UpdateAccount(Account account) async {
-    await remoteDataSource.updateAccount(account);
-    return account;
+  Future<void> UpdateAccount(Account account) async {
+    final model = await AccountModel.fromEntity(account);
+    remoteDataSource.UpdateAccount(model);
   }
 
   @override
   Future<void> DeleteAccount(String id) async {
-    await remoteDataSource.deleteAccount(id);
-    // tuỳ ý có thể trả về student đã xóa, hoặc null
+    remoteDataSource.DeleteAccount(id);
   }
 }
