@@ -26,20 +26,8 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<Account> DeleteAccount(String id) async {
+  Future<void> DeleteAccount(String id) async {
     await remoteDataSource.deleteAccount(id);
     // tuỳ ý có thể trả về student đã xóa, hoặc null
-    return Account(
-      id: id,
-      name: '',
-      accountCode: '',
-      birthDate: DateTime.now(),
-      className: '',
-      gender: '',
-      gpa: 0,
-      phone: '',
-      createAt: DateTime.now(),
-      updateAt: DateTime.now(),
-    );
   }
 }

@@ -1,57 +1,82 @@
+// file: lib/feature/Account/data/model/account_model.dart
 import '../../domain/entities/account.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class AccountModel extends Account {
   const AccountModel({
     required super.id,
     required super.name,
-    required super.accountCode,
-    required super.birthDate,
-    required super.className,
-    required super.gender,
-    required super.gpa,
+    required super.email,
     required super.phone,
+    required super.gender,
+    required super.dob,
+    required super.age,
+    required super.address,
+    required super.role,
     required super.createAt,
     required super.updateAt,
   });
 
+  // ==========================================================
+  // HÀM 1: Đọc từ Firestore (Đã sửa cho an toàn)
+  // ==========================================================
   factory AccountModel.fromJson(Map<String, dynamic> json) {
+    DateTime _parseDate(dynamic dateValue) {
+      if (dateValue == null) return DateTime(1970);
+      if (dateValue is Timestamp) return dateValue.toDate();
+      if (dateValue is String) return DateTime.parse(dateValue);
+      return DateTime(1970);
+    }
+
     return AccountModel(
       id: json['id'] as String,
-      name: json['name'] as String,
-      accountCode: json['accountCode'] as String,
-      birthDate: DateTime.parse(json['birthDate'] as String),
-      className: json['className'] as String,
-      gender: json['gender'] as String,
-      gpa: (json['gpa'] as num).toDouble(),
-      phone: json['phone'] as String,
-      createAt: DateTime.parse(json['createAt'] as String),
-      updateAt: DateTime.parse(json['updateAt'] as String),
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      phone: json['phone'] ?? '',
+      gender: json['gender'] ?? '',
+      dob: json['dob'] ?? '',
+      age: json['age'] ?? '',
+      address: json['address'] ?? '',
+      role: json['role'] ?? 'user',
+      createAt: _parseDate(json['createdAt']), // Khớp tên field
+      updateAt: _parseDate(json['updatedAt']), // Khớp tên field
     );
   }
 
+  // ==========================================================
+  // HÀM 2: Ghi vào Firestore (Mày thiếu cái này)
+  // ==========================================================
   Map<String, dynamic> toJson() => {
-    'id': id,
+    // Không cần 'id' vì nó là tên document
     'name': name,
-    'accountCode': accountCode,
-    'birthDate': birthDate.toIso8601String(),
-    'className': className,
-    'gender': gender,
-    'gpa': gpa,
+    'email': email,
     'phone': phone,
-    'createAt': createAt.toIso8601String(),
-    'updateAt': updateAt.toIso8601String(),
+    'gender': gender,
+    'dob': dob,
+    'age': age,
+    'address': address,
+    'role': role,
+    'createdAt': Timestamp.fromDate(createAt), // Chuyển về Timestamp
+    'updatedAt': Timestamp.fromDate(updateAt), // Chuyển về Timestamp
   };
-  factory AccountModel.fromEntity(Account account){
+
+  // ==========================================================
+  // HÀM 3: Chuyển Entity -> Model (Mày thiếu cái này)
+  // (Dùng khi update/create)
+  // ==========================================================
+  factory AccountModel.fromEntity(Account account) {
     return AccountModel(
       id: account.id,
       name: account.name,
-      accountCode: account.accountCode,
-      birthDate: account.birthDate,
-      className: account.className,
-      gender: account.gender,
-      gpa:  account.gpa,
+      email: account.email,
       phone: account.phone,
+      gender: account.gender,
+      dob: account.dob,
+      age: account.age,
+      address: account.address,
+      role: account.role,
       createAt: account.createAt,
       updateAt: account.updateAt,
-      );
+    );
   }
 }

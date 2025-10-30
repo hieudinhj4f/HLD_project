@@ -25,10 +25,7 @@ import '../navbar/domain/entity/bottom_nav_item.dart';
 import '../navbar/presentation/widget/app_shell.dart';
 import 'app_routers.dart';
 import '../presentation/widget/customeButtomNav.dart';
-
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:iconsax/iconsax.dart'; // Import icon (hoặc bất cứ gói icon nào bạn dùng)
+import 'package:hld_project/feature/Account/presentation/pages/account_list_page.dart';
 
 
 
@@ -193,8 +190,8 @@ class AppRouter {
             builder: (context, state) => Text("Pharmacy"),
           ),
           GoRoute(
-            path: '/user/account',
-            builder: (context, state) => Text("Account"),
+            path: AppRoutes.account,
+            builder: (context, state) => const AccountListPage(),
           ),
         ],
       ),
