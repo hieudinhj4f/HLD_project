@@ -24,7 +24,7 @@ import 'package:hld_project/feature/Product/domain/usecase/getProduct.dart';
 import '../../feature/auth/presentation/providers/auth_provider.dart';
 import 'app_routers.dart';
 import '../presentation/widget/customeButtomNav.dart';
-
+import 'package:hld_project/feature/Account/presentation/pages/account_list_page.dart';
 
 class AppRouter { // <-- ĐỔI TÊN (VÀ XÓA STATIC)
 
@@ -117,7 +117,7 @@ class AppRouter { // <-- ĐỔI TÊN (VÀ XÓA STATIC)
           // TAB 3: Account
           GoRoute(
             path: AppRoutes.account,
-            builder: (context, state) => const Center(child: Text("Account Page")),
+            builder: (context, state) => const AccountListPage(),
           ),
         ],
       ),

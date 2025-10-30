@@ -21,7 +21,6 @@ class AccountCard extends StatelessWidget {
       elevation: 2,
       child: ListTile(
         title: Text(account.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text("Ten : ${account.name}\nLớp: ${account.className}"),
         trailing: Wrap(
           spacing: 8,
           children: [

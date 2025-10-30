@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widget/account_card.dart';
-import '../widget/search_bar.dart';
+import '../provider/account_provider.dart';
 
 /// ✅ Trang hiển thị danh sách sinh viên
 class AccountListPage extends StatefulWidget {
@@ -29,16 +29,13 @@ class _AccountListPageState extends State<AccountListPage> {
       ),
       body: Column(
         children: [
-          SearchBarWidget(
-            onChanged: provider.setSearchQuery,
-          ),
           Expanded(
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
-              itemCount: provider.filteredAccounts.length,
+              itemCount: provider.accounts.length,
               itemBuilder: (context, index) {
-                final account = provider.filteredAccounts[index];
+                final account = provider.accounts[index];
                 return AccountCard(
                   account: account,
                   onDelete: () =>
