@@ -5,14 +5,8 @@ import 'package:provider/provider.dart';
 import 'core/config/firebase_env.dart';
 import 'core/routing/app_router.dart';
 
+
 import 'feature/auth/presentation/providers/auth_provider.dart';
-import 'package:hld_project/feature/Account/data/datasource/account_remote_datasource.dart';
-import 'package:hld_project/feature/Account/data/datasource/account_remote_datasource_impl.dart';
-import 'package:hld_project/feature/Account/data/repositories/account_repository_impl.dart';
-import 'package:hld_project/feature/Account/domain/account_repository/account_repository.dart';
-import 'package:hld_project/feature/Account/domain/usecases/get_account.dart';
-import 'package:hld_project/feature/Account/domain/usecases/delete_account.dart';
-import 'package:hld_project/feature/Account/presentation/provider/account_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,40 +29,12 @@ Future<void> main() async {
   final AuthProvider authProvider = AuthProvider();
   final AppRouter appRouter = AppRouter(authProvider);
 
+  // --- 3. CHẠY ỨNG DỤNG VỚI PROVIDER ---
   runApp(
-    MultiProvider(
-      providers: [
-        // 1. PROVIDER CHO AUTH (Cái mày đang có)
-        ChangeNotifierProvider.value(value: authProvider),
-        Provider<IAccountRemoteDatasource>(
-          create: (_) => AccountRemoteDatasourceImpl(),
-        ),
-        Provider<AccountRepository>(
-          create: (context) => AccountRepositoryImpl(
-            remoteDataSource: context.read<IAccountRemoteDatasource>(),
-          ),
-        ),
-
-        // --- Tầng Domain (UseCases) ---
-        Provider<GetAccount>(
-          create: (context) => GetAccount(
-            context.read<AccountRepository>(),
-          ),
-        ),
-        Provider<DeleteAccount>(
-          create: (context) => DeleteAccount( // (Sửa tên class cho đúng)
-            context.read<AccountRepository>(),
-          ),
-        ),
-
-        // --- Tầng Presentation (Provider chính) ---
-        ChangeNotifierProvider<AccountProvider>(
-          create: (context) => AccountProvider(
-            getAccount: context.read<GetAccount>(),
-            deleteAccountUseCase: context.read<DeleteAccount>(),
-          )..fetchAccounts(), // Tự động gọi fetchAccounts khi app chạy
-        ),
-      ],
+    // Dùng ChangeNotifierProvider.value để cung cấp
+    // instance authProvider đã được tạo
+    ChangeNotifierProvider.value(
+      value: authProvider,
       child: MyApp(appRouter: appRouter),
     ),
   );

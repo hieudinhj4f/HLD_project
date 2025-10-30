@@ -1,57 +1,95 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../domain/entities/account.dart';
+import '../../domain/usecases/delete_account.dart';
+import '../../domain/usecases/get_account.dart';
 import '../widget/account_card.dart';
 import '../provider/account_provider.dart';
 
-/// ✅ Trang hiển thị danh sách sinh viên
 class AccountListPage extends StatefulWidget {
-  const AccountListPage({super.key});
+  const AccountListPage({Key? key}) : super(key: key);
 
   @override
   State<AccountListPage> createState() => _AccountListPageState();
 }
 
 class _AccountListPageState extends State<AccountListPage> {
+  // Dùng 1 cái Future để FutureBuilder nó bám vào
+  late Future<List<Account>> _accountsFuture;
+
+  // Lấy UseCase ra
+  late final GetAccount _getAccountUseCase;
+  late final DeleteAccount _deleteAccountUseCase;
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() =>
-        Provider.of<AccountProvider>(context, listen: false).fetchAccounts());
+    // Lấy UseCase từ Provider (chỉ 1 lần)
+    _getAccountUseCase = context.read<GetAccount>();
+    _deleteAccountUseCase = context.read<DeleteAccount>();
+
+    // Gọi hàm load data
+    _accountsFuture = _getAccountUseCase.call();
+  }
+
+  // Hàm để load lại data (sau khi xóa)
+  void _refreshData() {
+    setState(() {
+      _accountsFuture = _getAccountUseCase.call();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<AccountProvider>(context);
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Danh sách người dùng'),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: provider.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-              itemCount: provider.accounts.length,
-              itemBuilder: (context, index) {
-                final account = provider.accounts[index];
-                return AccountCard(
-                  account: account,
-                  onDelete: () =>
-                      provider.deleteAccount(account.id.toString()), onEdit: () {  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Chuyển sang màn thêm người dùng
+      // (AppBar...)
+      body: FutureBuilder<List<Account>>(
+        future: _accountsFuture, // Bám vào cái Future
+        builder: (context, snapshot) {
+
+          // Đang tải
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          // Bị lỗi
+          if (snapshot.hasError) {
+            return Center(child: Text('Lỗi: ${snapshot.error}'));
+          }
+
+          // Không có data
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Không tìm thấy tài khoản nào.'));
+          }
+
+          // Có data
+          final accounts = snapshot.data!;
+          return ListView.builder(
+            itemCount: accounts.length,
+            itemBuilder: (context, index) {
+              final account = accounts[index];
+              return ListTile(
+                title: Text(account.name),
+                subtitle: Text(account.email),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () async {
+                    // GỌI THẲNG USECASE KHI XÓA
+                    try {
+                      await _deleteAccountUseCase.call(account.id);
+                      // Tải lại list
+                      _refreshData();
+                    } catch (e) {
+                      // Báo lỗi
+                    }
+                  },
+                ),
+              );
+            },
+          );
         },
-        child: const Icon(Icons.add),
       ),
+      // (FloatingActionButton...)
     );
   }
 }

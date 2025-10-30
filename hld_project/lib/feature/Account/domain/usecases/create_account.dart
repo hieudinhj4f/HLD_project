@@ -5,5 +5,5 @@ class CreateAccount{
   final AccountRepository repo;
   CreateAccount(this.repo);
 
-  Future<Account> call(Account account)  =>   repo.CreateAccount(account);
+  Future<void> call(Account account)  =>   repo.CreateAccount(account);
 }

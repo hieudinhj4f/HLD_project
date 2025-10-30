@@ -5,15 +5,15 @@ import '../../../../core/data/firebase_remote_datasource.dart';
 
 
 /// Interface cơ bản định nghĩa hành vi của datasource
-abstract class IAccountRemoteDatasource {
+abstract class AccountRemoteDatasource {
   Future<List<AccountModel>> getAllAccounts();
-  Future<AccountModel> getAccountById(String id);
-  Future<void> CreateAccount(Account account);
-  Future<void> UpdateAccount(Account account);
+  Future<AccountModel?> getAccountById(String id);
+  Future<void> CreateAccount(AccountModel account);
+  Future<void> UpdateAccount(AccountModel account);
   Future<void> DeleteAccount(String id);
 }
 
-class AccountRemoteDatasourceIpml implements AccountRepositoryImpl {
+class AccountRemoteDatasourceIpml implements AccountRemoteDatasource {
   // FirebaseRemoteDS là lớp generic giúp tương tác với Firestore
   final FirebaseRemoteDS<AccountModel> _remoteSource;
 
@@ -25,58 +25,29 @@ class AccountRemoteDatasourceIpml implements AccountRepositoryImpl {
   );
 
   @override
-  Future<List<AccountModel>> getAllAccounts() async {
-    final accounts = await _remoteSource.getAll();
-    return accounts;
+  Future<void> CreateAccount(AccountModel account) async {
+    await _remoteSource.add(account);
   }
 
   @override
-  Future<AccountModel?> GetAccounts(String id) async {
+  Future<void> DeleteAccount(String id) async {
+    await _remoteSource.delete(id);
+  }
+
+  @override
+  Future<void> UpdateAccount(AccountModel account) async {
+    await _remoteSource.update(account.id.toString(), account);
+  }
+
+  @override
+  Future<AccountModel?> getAccountById(String id) async {
     final account = await _remoteSource.getById(id);
     return account;
   }
 
   @override
-  Future<void> addAccount(AccountModel account) async {
-    await _remoteSource.add(account);
+  Future<List<AccountModel>> getAllAccounts() async{
+    final accounts = await _remoteSource.getAll();
+    return accounts;
   }
-
-  @override
-  Future<void> updateAccount(AccountModel account) async {
-    await _remoteSource.update(account.id.toString(), account);
-  }
-
-  @override
-  Future<void> deleteAccount(String id) async {
-    await _remoteSource.delete(id);
-  }
-
-  @override
-  Future<Account> CreateAccount(Account account) {
-    // TODO: implement CreateAccount
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> DeleteAccount(String id) {
-    // TODO: implement DeleteAccount
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<Account>> GetAccount() {
-    // TODO: implement GetAccount
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<Account> UpdateAccount(Account account) {
-    // TODO: implement UpdateAccount
-    throw UnimplementedError();
-  }
-
-  @override
-  // TODO: implement remoteDataSource
-  IAccountRemoteDatasource get remoteDataSource => throw UnimplementedError();
-
 }
