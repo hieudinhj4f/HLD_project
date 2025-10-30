@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,71 +21,113 @@ import 'package:hld_project/feature/Product/domain/usecase/deleteProduct.dart';
 import 'package:hld_project/feature/Product/domain/usecase/getProduct.dart';
 
 import '../../feature/auth/presentation/providers/auth_provider.dart';
+import '../navbar/domain/entity/bottom_nav_item.dart';
+import '../navbar/presentation/widget/app_shell.dart';
 import 'app_routers.dart';
 import '../presentation/widget/customeButtomNav.dart';
 
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:iconsax/iconsax.dart'; // Import icon (hoặc bất cứ gói icon nào bạn dùng)
 
-class AppRouter { // <-- ĐỔI TÊN (VÀ XÓA STATIC)
 
-  // 2. BIẾN ĐỂ GIỮ AUTH PROVIDER
+
+
+class AppRouter {
   final AuthProvider authProvider;
-
-  // 3. CONSTRUCTOR ĐỂ NHẬN AUTH PROVIDER
   AppRouter(this.authProvider);
 
-  // 4. ROUTER INSTANCE (KHÔNG CÒN STATIC)
-  late final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.login, // Nên bắt đầu từ Splash
-    debugLogDiagnostics: true,
+  // --- 4. ĐỊNH NGHĨA DANH SÁCH TABS CHO MỖI VAI TRÒ ---
+  // (Dựa trên ảnh figma của bạn)
+  static const List<BottomNavItem> _adminTabs = [
+    BottomNavItem(path: '/admin/home', label: 'Home', icon: Iconsax.home_1),
+    BottomNavItem(path: '/admin/product', label: 'Product', icon: Iconsax.box),
+    BottomNavItem(path: '/admin/pharmacy', label: 'Pharmacy', icon: Iconsax.danger),
+    BottomNavItem(path: '/admin/account', label: 'Account', icon: Iconsax.user),
+    BottomNavItem(path: '/admin/setting', label: 'Setting', icon: Iconsax.setting),
+  ];
 
-    // 5. SỬA LẠI REFRESHLISTENABLE
-    // Lắng nghe AuthProvider, KHÔNG phải FirebaseAuth
+  // (Dựa trên yêu cầu 4 tab của bạn)
+  static const List<BottomNavItem> _userTabs = [
+    BottomNavItem(path: '/user/home', label: 'Home', icon: Iconsax.home_1),
+    BottomNavItem(path: '/user/product', label: 'Product', icon: Iconsax.box),
+    BottomNavItem(path: '/user/pharmacy', label: 'Pharmacy', icon: Iconsax.danger),
+    BottomNavItem(path: '/user/account', label: 'Account', icon: Iconsax.user),
+  ];
+
+
+  // --- 5. GO ROUTER INSTANCE (KHÔNG CÒN STATIC) ---
+  late final GoRouter router = GoRouter(
+    initialLocation: AppRoutes.login, // Luôn bắt đầu từ Splash
+    debugLogDiagnostics: true,
     refreshListenable: authProvider,
 
+    // --- 6. LOGIC REDIRECT "CẢNH SÁT" HOÀN CHỈNH ---
+    redirect: (context, state) {
+      final bool isLoggedIn = authProvider.isLoggedIn;
+      final bool isAdmin = authProvider.isAdmin;
+      final location = state.matchedLocation;
+
+      // Xác định các luồng "đặc biệt"
+      final bool isAuthFlow = (location == AppRoutes.login ||
+          location == AppRoutes.signup ||
+          location == AppRoutes.home);
+      final bool isGoingToAdmin = location.startsWith('/admin');
+      final bool isGoingToUser = location.startsWith('/user');
+
+      // 1. Chưa đăng nhập
+      if (!isLoggedIn && !isAuthFlow) {
+        return AppRoutes.login;
+      }
+
+      // 2. Đã đăng nhập
+      if (isLoggedIn) {
+        // Nếu đã đăng nhập mà cố vào trang auth (Login, Signup, Splash)
+        if (isAuthFlow) {
+          // Đẩy về trang chủ tương ứng
+          return isAdmin ? '/admin/home' : '/user/home';
+        }
+
+        // 3. Logic PHÂN QUYỀN (NGĂN CHẶN CHÉO)
+        // Nếu là Admin nhưng đang lạc vào luồng /user
+        if (isAdmin && !isGoingToAdmin) {
+          return '/admin/home'; // Kéo về trang chủ Admin
+        }
+
+        // Nếu là User nhưng đang lạc vào luồng /admin
+        if (!isAdmin && !isGoingToUser) {
+          return '/user/home'; // Kéo về trang chủ User
+        }
+      }
+
+      // 4. Cho phép đi
+      return null;
+    },
+
+    // --- 7. ROUTES VỚI HAI SHELLROUTE (DÙNG APP SHELL TÁI SỬ DỤNG) ---
     routes: [
+      // Các route không có Shell
       GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginPage()),
       GoRoute(path: AppRoutes.splash, builder: (context, state) => const SplashScreen()),
       GoRoute(path: AppRoutes.signup, builder: (context, state) => const SignupPage()),
 
-      // Giả sử bạn có 1 route Admin nằm ngoài ShellRoute
-      GoRoute(
-        path: '/admin', // ĐÂY LÀ ROUTE CẦN BẢO VỆ
-        builder: (context, state) => const Text('Admin Page'), // Thay bằng AdminPage()
-      ),
-
+      // --- SHELLROUTE CỦA ADMIN ---
       ShellRoute(
         builder: (context, state, child) {
-          final currentIndex = _getIndexForLocation(state.matchedLocation);
-          return Scaffold(
-              appBar: AppBar(
-                title: Text(_getTitleForIndex(currentIndex)),
-                // Thêm nút logout (tùy chọn)
-                actions: [
-                  if (currentIndex == 3) // Ví dụ: chỉ hiện ở tab Account
-                    IconButton(
-                      icon: Icon(Icons.logout),
-                      onPressed: () {
-                        FirebaseAuth.instance.signOut();
-                      },
-                    )
-                ],
-              ),
-              body: child,
-              bottomNavigationBar: CustomBottomNav(
-                  selectedIndex: currentIndex,
-                  onItemTapped: (index) {
-                    if (index == 0) context.go(AppRoutes.home);
-                    else if (index == 1) context.go(AppRoutes.recipe);
-                    else if (index == 2) context.go(AppRoutes.chat);
-                    else if (index == 3) context.go(AppRoutes.account);
-                  }));
+          return AppShell(
+            tabs: _adminTabs,
+            child: child,
+          );
         },
         routes: [
-          // TAB 0: Product List
           GoRoute(
-            path: AppRoutes.home,
+            path: '/admin/home',
+            builder: (context, state) => Text("AdminHomePage"),
+          ),
+          GoRoute(
+            path: '/admin/product',
+            // --- 5. TIÊM DI TRỞ LẠI (CHO ADMIN) ---
             builder: (context, state) {
-              // GÓP Ý: Phần DI này nên đưa ra ngoài
               late final remote = ProductRemoteDataSourceImpl();
               late final repo = ProductRepositoryImpl(remote);
               late final getProducts = GetAllProduct(repo);
@@ -101,75 +142,66 @@ class AppRouter { // <-- ĐỔI TÊN (VÀ XÓA STATIC)
               );
             },
           ),
-
-          // TAB 1: Recipe
           GoRoute(
-            path: AppRoutes.recipe,
-            builder: (context, state) => const Center(child: Text("Recipe Page")),
+            path: '/admin/pharmacy',
+            builder: (context, state) => Text("Pharmacy"),
           ),
-
-          // TAB 2: Chat
           GoRoute(
-            path: AppRoutes.chat,
-            builder: (context, state) => const Center(child: Text("Chat Page")),
+            path: '/admin/account',
+            builder: (context, state) => Text("Account"),
           ),
-
-          // TAB 3: Account
           GoRoute(
-            path: AppRoutes.account,
-            builder: (context, state) => const Center(child: Text("Account Page")),
+            path: '/admin/setting',
+            builder: (context, state) => Text("Setting"),
+          ),
+        ],
+      ),
+
+      // --- SHELLROUTE CỦA USER ---
+      ShellRoute(
+        builder: (context, state, child) {
+          return AppShell(
+            tabs: _userTabs,
+            child: child,
+          );
+        },
+        routes: [
+          GoRoute(
+            path: '/user/home',
+            builder: (context, state) => HomePage(),
+          ),
+          GoRoute(
+            path: '/user/product',
+            // --- 6. TIÊM DI TRỞ LẠI (CHO USER) ---
+            builder: (context, state) {
+              late final remote = ProductRemoteDataSourceImpl();
+              late final repo = ProductRepositoryImpl(remote);
+              late final getProducts = GetAllProduct(repo);
+              late final createProduct = CreateProduct(repo);
+              late final updateProduct = UpdateProduct(repo);
+              late final deleteProduct = DeleteProduct(repo);
+              return ProductListPage(
+                getProducts: getProducts,
+                createProduct: createProduct,
+                updateProduct: updateProduct,
+                deleteProduct: deleteProduct,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/user/pharmacy',
+            builder: (context, state) => Text("Pharmacy"),
+          ),
+          GoRoute(
+            path: '/user/account',
+            builder: (context, state) => Text("Account"),
           ),
         ],
       ),
     ],
-
-    // 6. SỬA LẠI REDIRECT ĐỂ CHECK ROLE (QUAN TRỌNG NHẤT)
-    redirect: (context, state) {
-      // Đọc trạng thái TỪ AUTHPROVIDER (không phải FirebaseAuth)
-      final bool isLoggedIn = authProvider.isLoggedIn;
-      final bool isAdmin = authProvider.isAdmin;
-
-      final location = state.matchedLocation;
-      final bool isAuthPage = (location == AppRoutes.login || location == AppRoutes.signup);
-
-      // 1. Logic cho người chưa đăng nhập
-      if (!isLoggedIn && !isAuthPage && location != AppRoutes.splash) {
-        return AppRoutes.login; // Đá về login
-      }
-
-      // 2. Logic cho người đã đăng nhập
-      if (isLoggedIn && (isAuthPage || location == AppRoutes.splash)) {
-        return AppRoutes.home; // Đá về home
-      }
-
-      // 3. LOGIC PHÂN QUYỀN (BLOCK ADMIN PAGE)
-      final bool isGoingToAdmin = location.startsWith('/admin');
-      if (isLoggedIn && isGoingToAdmin && !isAdmin) {
-        // Nếu là 'user' mà cố vào '/admin'
-        return AppRoutes.home; // Đá về home
-      }
-
-      // 4. Cho phép đi
-      return null;
-    },
   );
 
-  // --- Các hàm helper (giữ nguyên) ---
-  static int _getIndexForLocation(String path) {
-    if (path.startsWith(AppRoutes.home)) return 0;
-    if (path.startsWith(AppRoutes.recipe)) return 1;
-    if (path.startsWith(AppRoutes.chat)) return 2;
-    if (path.startsWith(AppRoutes.account)) return 3;
-    return 0;
-  }
-  static String _getTitleForIndex(int index) {
-    // ... (giữ nguyên)
-    switch (index) {
-      case 0: return 'Sản phẩm (Product)';
-      case 1: return 'Công thức (Recipe)';
-      case 2: return 'Chat';
-      case 3: return 'Tài khoản';
-      default: return 'Trang chủ';
-    }
-  }
+// --- CÁC HÀM STATIC HELPER ĐÃ BỊ XÓA ---
+// (Đã xóa _getIndexForLocation và _getTitleForIndex)
+// Logic này đã được chuyển vào bên trong 'AppShell'
 }
