@@ -79,4 +79,18 @@ class AccountModel extends Account {
       updateAt: account.updateAt,
     );
   }
+
+  factory AccountModel.fromFirestore(DocumentSnapshot doc) {
+    // 1. Lấy data (là Map) từ DocumentSnapshot
+    final data = doc.data() as Map<String, dynamic>;
+
+    // 2. Gộp ID của doc vào chung Map
+    final jsonData = {
+      'id': doc.id,
+      ...data,
+    };
+
+    // 3. Gọi hàm fromJson (để tái sử dụng logic parse an toàn)
+    return AccountModel.fromJson(jsonData);
+  }
 }

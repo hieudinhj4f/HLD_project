@@ -1,53 +1,69 @@
+// file: lib/feature/Account/presentation/pages/account_list_page.dart
+// BẢN "BẨN" - KHÔNG CẦN SỬA main.dart
+
 import 'dart:async';
-
-import '../../domain/entities/account.dart';
-import '../../domain/usecases/create_account.dart';
-import '../../domain/usecases/delete_account.dart';
-import '../../domain/usecases/update_account.dart';
-
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../widget/account_card.dart'; // <-- THAY ĐỔI
+import 'package:cloud_firestore/cloud_firestore.dart'; // (Code "bẩn" có thể cần)
 
-// Import các Usecase mà Page này cần
+// === IMPORT "BẨN": UI IMPORT THẲNG TẦNG DATA ===
+import 'package:hld_project/feature/Account/data/datasource/account_remote_datasource.dart';
+import 'package:hld_project/feature/Account/data/repositories/account_repository_impl.dart';
+// ===============================================
+
+// === IMPORT ENTITY, USECASE, VÀ FORM PAGE ===
+import 'package:hld_project/feature/Account/domain/entities/account.dart';
+import 'package:hld_project/feature/Account/domain/usecases/get_account.dart';
+import 'package:hld_project/feature/Account/domain/usecases/create_account.dart';
+import 'package:hld_project/feature/Account/domain/usecases/delete_account.dart';
+import 'package:hld_project/feature/Account/domain/usecases/update_account.dart';
+import 'package:hld_project/feature/Account/presentation/pages/account_form_page.dart'; // (Đây là Form "bẩn")
+import 'package:hld_project/feature/Account/presentation/widget/account_card.dart'; // (Import cái Card của mày)
+
 
 class AccountListPage extends StatefulWidget {
-  final GetAllAccounts getAccounts;
-  final CreateAccount createAccount;
-  final UpdateAccount updateAccount;
-  final DeleteAccount deleteAccount;
-
-  const AccountListPage({
-    Key? key,
-    required this.getAccounts,
-    required this.createAccount,
-    required this.updateAccount,
-    required this.deleteAccount,
-  }) : super(key: key);
+  // === BỎ HẾT REQUIRED USECASE Ở CONSTRUCTOR ===
+  const AccountListPage({Key? key}) : super(key: key);
 
   @override
   State<AccountListPage> createState() => _AccountListPageState();
 }
 
 class _AccountListPageState extends State<AccountListPage> {
+  // === KHAI BÁO BIẾN GIỮ USECASE "BẨN" ===
+  late GetAccount _getAccountUseCase;
+  late CreateAccount _createAccountUseCase;
+  late UpdateAccount _updateAccountUseCase;
+  late DeleteAccount _deleteAccountUseCase;
+
+  // (State variables)
   List<Account> _allAccounts = [];
   List<Account> _filteredAccounts = [];
   List<String> _roles = ['All', 'user', 'admin'];
   String _selectedRole = 'All';
-
   bool _isLoading = false;
   String? _error;
   Timer? _debouncer;
-
   final TextEditingController _searchController = TextEditingController();
-
-  // === THAY ĐỔI 1: Thêm state để theo dõi người dùng được chọn ===
   Account? _selectedAccount;
 
   @override
   void initState() {
     super.initState();
+
+    // =================================================
+    // === PHẦN CODE "BẨN" (KHỞI TẠO TẠI CHỖ) ===
+    // 1. Tự tạo DataSource
+    final dataSource = AccountRemoteDatasourceIpml();
+    // 2. Tự tạo Repository
+    final repository = AccountRepositoryImpl(remoteDataSource: dataSource);
+    // 3. Tự tạo UseCase (Lưu vào biến state)
+    _getAccountUseCase = GetAccount(repository);
+    _createAccountUseCase = CreateAccount(repository);
+    _updateAccountUseCase = UpdateAccount(repository);
+    _deleteAccountUseCase = DeleteAccount(repository);
+    // =================================================
+
     _checkFirestoreConnection();
     _loadAccounts();
   }
@@ -59,8 +75,8 @@ class _AccountListPageState extends State<AccountListPage> {
     super.dispose();
   }
 
+  // (Hàm kiểm tra kết nối)
   Future<void> _checkFirestoreConnection() async {
-    // (Không thay đổi, giữ nguyên)
     debugPrint('Đang kiểm tra kết nối Firestore...');
     final firestore = FirebaseFirestore.instance;
     try {
@@ -77,20 +93,16 @@ class _AccountListPageState extends State<AccountListPage> {
     }
   }
 
+  // (Hàm tải data)
   Future<void> _loadAccounts() async {
-    // (Không thay đổi, giữ nguyên)
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+    setState(() { _isLoading = true; _error = null; });
     try {
-      final accounts = await widget.getAccounts.call();
+      // Gọi UseCase "bẩn" (biến state)
+      final accounts = await _getAccountUseCase.call();
       setState(() {
         _allAccounts = accounts;
         _error = null;
-        if (!_roles.contains(_selectedRole)) {
-          _selectedRole = 'All';
-        }
+        if (!_roles.contains(_selectedRole)) _selectedRole = 'All';
       });
     } catch (e) {
       setState(() => _error = e.toString());
@@ -100,9 +112,12 @@ class _AccountListPageState extends State<AccountListPage> {
     }
   }
 
+  // (Hàm lọc data)
   void _applyFilters() {
-    // (Không thay đổi, giữ nguyên)
+    // === SỬA LỖI 1: Khai báo tempResults ===
     List<Account> tempResults = _allAccounts;
+    // ======================================
+
     final String query = _searchController.text.toLowerCase();
 
     if (_selectedRole != 'All') {
@@ -123,42 +138,40 @@ class _AccountListPageState extends State<AccountListPage> {
     });
   }
 
-  // === THAY ĐỔI 2: Cập nhật hàm delete để xóa lựa chọn nếu cần ===
+  // (Hàm xóa)
   Future<void> _delete(String id) async {
-    // Nếu người dùng bị xóa là người đang được chọn, hãy bỏ chọn
     if (_selectedAccount?.id == id) {
-      setState(() {
-        _selectedAccount = null;
-      });
+      setState(() { _selectedAccount = null; });
     }
-    await widget.deleteAccount(id);
+    // Gọi UseCase "bẩn" (biến state)
+    await _deleteAccountUseCase.call(id);
     await _loadAccounts();
   }
 
-  // (Hàm _openForm không đổi, vẫn dùng để Mở Form Thêm Mới hoặc Sửa)
+  // (Hàm mở Form "bẩn")
   Future<void> _openForm([Account? account]) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
+        // KHÔNG CẦN TRUYỀN USECASE NỮA
         builder: (_) => AccountFormPage(
           account: account,
-          createUseCase: widget.createAccount,
-          updateUseCase: widget.updateAccount,
         ),
       ),
     );
+    // Nếu form trả về 'true' (lưu thành công) -> tải lại list
     if (result == true) _loadAccounts();
   }
 
+  // (Hàm search)
   void _onSearchChanged(String query) {
-    // (Không thay đổi, giữ nguyên)
     if (_debouncer?.isActive ?? false) _debouncer!.cancel();
     _debouncer = Timer(const Duration(milliseconds: 300), () {
       _applyFilters();
     });
   }
 
-  // === THAY ĐỔI 3: Sửa _buildAccountList để xử lý việc chọn ===
+  // (Hàm build danh sách)
   Widget _buildAccountList() {
     if (_isLoading && _allAccounts.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -173,33 +186,32 @@ class _AccountListPageState extends State<AccountListPage> {
       return const Center(child: Text('Không có người dùng nào.'));
     }
 
+    // === SỬA LỖI 2: Đảm bảo CÓ RETURN ===
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _filteredAccounts.length,
       itemBuilder: (context, index) {
         final account = _filteredAccounts[index];
-        final isSelected = _selectedAccount?.id == account.id; // Kiểm tra xem có đang được chọn không
+        final isSelected = _selectedAccount?.id == account.id;
 
         return AccountCard(
           account: account,
-          isSelected: isSelected, // <-- Truyền trạng thái này vào Card
-          onTap: () { // <-- Thêm hàm onTap
+          isSelected: isSelected,
+          onTap: () {
             setState(() {
               _selectedAccount = account;
             });
           },
-          // (Bỏ onEdit và onDelete ở đây để giao diện gọn hơn,
-          //  chuyển các nút này sang panel chi tiết)
-          // onEdit: () => _openForm(account),
-          // onDelete:  () => _delete(account.id),
         );
       },
     );
+    // ===================================
   }
 
-  // === THAY ĐỔI 4: Tạo _buildListPanel (Panel bên trái) ===
+  // (Hàm build panel trái)
   Widget _buildListPanel() {
+    // === SỬA LỖI 2: Đảm bảo CÓ RETURN ===
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -233,7 +245,6 @@ class _AccountListPageState extends State<AccountListPage> {
 
           // Dropdown lọc theo Role
           Container(
-            // ... (giữ nguyên code Dropdown)
             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
             decoration: BoxDecoration(
               color: Colors.grey.shade200,
@@ -272,9 +283,10 @@ class _AccountListPageState extends State<AccountListPage> {
         ],
       ),
     );
+    // ===================================
   }
 
-  // === THAY ĐỔI 5: Tạo _buildDetailPanel (Panel bên phải) ===
+  // (Hàm build panel phải - chi tiết)
   Widget _buildDetailPanel() {
     // Nếu đang tải và chưa chọn ai, hiển thị loading
     if (_isLoading && _allAccounts.isEmpty) {
@@ -293,6 +305,8 @@ class _AccountListPageState extends State<AccountListPage> {
 
     // Nếu đã chọn, hiển thị chi tiết
     final account = _selectedAccount!;
+
+    // === SỬA LỖI 2: Đảm bảo CÓ RETURN ===
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -313,9 +327,10 @@ class _AccountListPageState extends State<AccountListPage> {
           const Divider(),
           const SizedBox(height: 24),
 
+          // (Sửa lại: Account Entity của mày đéo có 'address')
+          // (Dùng các trường mày có: email, phone, dob, gender)
           _buildDetailRow(Iconsax.direct, account.email ?? 'Chưa có email'),
           _buildDetailRow(Iconsax.call, account.phone ?? 'Chưa có SĐT'),
-          _buildDetailRow(Iconsax.location, account.address ?? 'Chưa có địa chỉ'),
           _buildDetailRow(Iconsax.calendar, account.dob ?? 'Chưa có ngày sinh'),
           _buildDetailRow(Iconsax.user, account.gender ?? 'Chưa có giới tính'),
 
@@ -348,9 +363,12 @@ class _AccountListPageState extends State<AccountListPage> {
         ],
       ),
     );
+    // ===================================
   }
+
   // (Widget phụ trợ cho panel chi tiết)
   Widget _buildDetailRow(IconData icon, String text) {
+    // === SỬA LỖI 2: Đảm bảo CÓ RETURN ===
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -361,12 +379,14 @@ class _AccountListPageState extends State<AccountListPage> {
         ],
       ),
     );
+    // ===================================
   }
 
 
-  // === THAY ĐỔI 6: Cập nhật hàm Build() chính ===
+  // (Hàm Build() chính)
   @override
   Widget build(BuildContext context) {
+    // === SỬA LỖI 2: Đảm bảo CÓ RETURN ===
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -411,5 +431,6 @@ class _AccountListPageState extends State<AccountListPage> {
         child: const Icon(Iconsax.add, color: Colors.white),
       ),
     );
+    // ===================================
   }
 }
