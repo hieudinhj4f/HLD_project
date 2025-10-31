@@ -1,42 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../navbar/domain/entity/bottom_nav_item.dart';
 
 class CustomBottomNav extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onItemTapped;
 
+  // 2. THÊM THUỘC TÍNH NÀY
+  // Nó sẽ nhận 4 tabs (từ UserShell) hoặc 5 tabs (từ AdminShell)
+  final List<BottomNavItem> items;
+
   const CustomBottomNav({
     super.key,
     required this.onItemTapped,
-    required this.selectedIndex, // Đã đổi tên
+    required this.selectedIndex,
+    required this.items, // 3. YÊU CẦU TRUYỀN VÀO
   });
+
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
-      currentIndex: selectedIndex, // Sử dụng tên đã sửa
-      onTap: onItemTapped,         // Sử dụng tên đã sửa
-      selectedItemColor: Colors.blue,
-      unselectedItemColor: Colors.grey,
-      showUnselectedLabels: true, // Thường dùng để hiển thị nhãn cho tất cả các mục
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Iconsax.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Iconsax.shopping_cart),
-          label: 'Cart',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Iconsax.user),
-          label: 'Profile',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Iconsax.message),
-          label: 'Chat',
-        ),
-      ],
+      currentIndex: selectedIndex,
+      onTap: onItemTapped,
+      selectedItemColor: Color(0xFF2DCC70),      // Giữ nguyên style của bạn
+      unselectedItemColor: Colors.grey,     // Giữ nguyên style của bạn
+      showUnselectedLabels: true,           // Giữ nguyên style của bạn
+
+      // 4. SỬA PHẦN QUAN TRỌNG NHẤT
+      // Xóa danh sách hard-code và .map() (biến đổi)
+      // danh sách 'items' mà AppShell truyền vào
+      items: items.map((item) {
+        return BottomNavigationBarItem(
+          icon: Icon(item.icon), // Lấy icon từ model
+          label: item.label,   // Lấy label từ model
+        );
+      }).toList(), // Chuyển kết quả map thành một List
     );
   }
 }

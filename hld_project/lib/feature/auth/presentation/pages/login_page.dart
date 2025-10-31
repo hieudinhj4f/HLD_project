@@ -210,7 +210,7 @@ class _LoginPageState extends State<LoginPage> {
           // TODO: Xử lý sự kiện quên mật khẩu
         },
         child: const Text(
-          "Forgot Password?",
+          "Quên mật khẩu ?",
           style: TextStyle(
             color: subtleTextColor,
             fontSize: 14,
@@ -247,7 +247,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         )
             : const Text(
-          "Sign in",
+          "Đăng nhập",
           style: TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -264,11 +264,11 @@ class _LoginPageState extends State<LoginPage> {
       onPressed: _isLoading ? null : () => context.go(AppRoutes.signup),
       child: const Text.rich(
         TextSpan(
-          text: "No account? ",
+          text: "Chưa có tài khoản? ",
           style: TextStyle(color: subtleTextColor, fontSize: 14),
           children: [
             TextSpan(
-              text: "Register",
+              text: "Đăng ký",
               style: TextStyle(
                 color: primaryColor,
                 fontWeight: FontWeight.bold,

@@ -5,5 +5,5 @@ class UpdateAccount{
   final AccountRepository repo;
   UpdateAccount(this.repo);
 
-  Future<Account> call(Account account) => repo.UpdateAccount(account);
+  Future<void> call(Account account) => repo.UpdateAccount(account);
 }
