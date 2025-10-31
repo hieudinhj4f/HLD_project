@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../domain/entities/product.dart';
-import '../../domain/usecase/createProduct.dart';
-import '../../domain/usecase/updateProduct.dart';
+import '../../../domain/entities/product.dart';
+import '../../../domain/usecase/createProduct.dart';
+import '../../../domain/usecase/updateProduct.dart';
 
 class ProductFormPage extends StatefulWidget {
   final Product? product;

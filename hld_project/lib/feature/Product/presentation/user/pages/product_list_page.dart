@@ -2,13 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // ĐÃ THÊM
-import '../../domain/entities/product.dart';
+import '../../../domain/entities/product.dart';
 import '../widget/product_card.dart';
 import 'product_detail_page.dart';
-import '../../domain/usecase/getProduct.dart';
-import '../../domain/usecase/createProduct.dart';
-import '../../domain/usecase/updateProduct.dart';
-import '../../domain/usecase/deleteProduct.dart';
+import '../../../domain/usecase/getProduct.dart';
+import '../../../domain/usecase/createProduct.dart';
+import '../../../domain/usecase/updateProduct.dart';
+import '../../../domain/usecase/deleteProduct.dart';
 
 class ProductListPage extends StatefulWidget {
   final GetAllProduct getProducts;
@@ -136,7 +136,7 @@ class _ProductListPageState extends State<ProductListPage> {
               controller: _searchController,
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
-                hintText: 'Thuốc',
+                hintText: 'Tìm kiếm',
                 prefixIcon: const Icon(Iconsax.search_normal),
                 filled: true,
                 fillColor: Colors.grey.shade200,

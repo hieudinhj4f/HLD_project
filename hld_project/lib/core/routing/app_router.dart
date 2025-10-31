@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hld_project/feature/Home/presentation/pages/home_page.dart';
-import 'package:hld_project/feature/Product/presentation/pages/product_list_page.dart';
+import 'package:hld_project/feature/Product/presentation/user/pages/product_list_page.dart';
 import '../../feature/Home/presentation/pages/splash_screen.dart';
 import '../../feature/auth/presentation/pages/signup_page.dart';
 import '../presentation/widget/customeButtomNav.dart';
@@ -23,7 +23,7 @@ import '../../feature/chat/data/repositories/chat_repository_impl.dart';
 import '../../feature/chat/domain/usecases/get_doctors.dart';
 import '../../feature/chat/presentation/pages/chat_home_page.dart';
 
-import '../../feature/Product/presentation/pages/cart_page.dart';
+import '../../feature/Product/presentation/user/pages/cart_page.dart';
 import '../../feature/account/presentation/pages/account_page.dart';
 
 class AppGoRouter {
