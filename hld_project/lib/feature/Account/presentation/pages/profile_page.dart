@@ -29,7 +29,7 @@ class ProfilePage extends StatelessWidget {
 
       if (doc.exists) {
         // 3. Tự parse (dùng hàm fromFirestore của Model)
-        return AccountModel.fromFirestore(doc);
+        return AccountModel.fromEntity(doc);
       } else {
         throw Exception('Không tìm thấy thông tin profile.');
       }

@@ -23,7 +23,7 @@ class CustomBottomNav extends StatelessWidget {
       type: BottomNavigationBarType.fixed,
       currentIndex: selectedIndex,
       onTap: onItemTapped,
-      selectedItemColor: Colors.blue,      // Giữ nguyên style của bạn
+      selectedItemColor: Color(0xFF2DCC70),      // Giữ nguyên style của bạn
       unselectedItemColor: Colors.grey,     // Giữ nguyên style của bạn
       showUnselectedLabels: true,           // Giữ nguyên style của bạn
 
@@ -31,7 +31,6 @@ class CustomBottomNav extends StatelessWidget {
       // Xóa danh sách hard-code và .map() (biến đổi)
       // danh sách 'items' mà AppShell truyền vào
       items: items.map((item) {
-        // 'item' ở đây là một BottomNavItem
         return BottomNavigationBarItem(
           icon: Icon(item.icon), // Lấy icon từ model
           label: item.label,   // Lấy label từ model

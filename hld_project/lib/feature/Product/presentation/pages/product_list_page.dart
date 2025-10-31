@@ -85,7 +85,7 @@ class _ProductListPageState extends State<ProductListPage> {
             _error = null;
         });
         try {
-            // Dùng Usecase được "tiêm" vào thông qua "widget"
+            // Dùng Usecase được "tiêm" vào thông qua "widgets"
             final products = await widget.getProducts.call();
             final uniqueCategoriesName = products.map((p) => p.categories).toSet().toList();
 

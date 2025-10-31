@@ -249,7 +249,7 @@ class _SignUpPageState extends State<SignupPage> {
     );
   }
 
-  // Helper widget cho Style của Input
+  // Helper widgets cho Style của Input
   InputDecoration _buildInputDecoration(String labelText, {bool isHint = false}) {
     return InputDecoration(
       hintText: isHint ? labelText : null,
@@ -275,7 +275,7 @@ class _SignUpPageState extends State<SignupPage> {
     );
   }
 
-  // Helper widget cho TextField (dùng _buildInputDecoration)
+  // Helper widgets cho TextField (dùng _buildInputDecoration)
   Widget _buildTextField(String hintText, TextEditingController controller,
       {bool isPassword = false}) {
     return TextField(
@@ -286,7 +286,7 @@ class _SignUpPageState extends State<SignupPage> {
     );
   }
 
-  // Helper widget cho nút "Done"
+  // Helper widgets cho nút "Done"
   Widget _buildDoneButton() {
     return SizedBox(
       width: double.infinity,
