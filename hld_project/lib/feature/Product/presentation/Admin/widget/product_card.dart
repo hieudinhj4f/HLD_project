@@ -1,7 +1,7 @@
 // lib/features/products/presentation/widgets/product_card.dart
 
 import 'package:flutter/material.dart';
-import '../../domain/entity/product/product.dart';
+import '../../../domain/entity/product/product.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;

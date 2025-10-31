@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 // Chỉ cần import 'cloud_firestore.dart' là đủ cho cả mobile và web
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../domain/entity/product/product.dart';
-import '../../domain/usecase/createProduct.dart';
-import '../../domain/usecase/updateProduct.dart';
+import '../../../domain/entity/product/product.dart';
+import '../../../domain/usecase/createProduct.dart';
+import '../../../domain/usecase/updateProduct.dart';
 
 class ProductFormPage extends StatefulWidget {
   final Product? product; // Product (có thể null) được truyền vào để chỉnh sửa
