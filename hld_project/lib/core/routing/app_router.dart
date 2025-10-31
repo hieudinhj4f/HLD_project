@@ -29,7 +29,7 @@ import '../navbar/domain/entity/bottom_nav_item.dart';
 import '../navbar/presentation/widget/app_shell.dart';
 import 'app_routers.dart';
 import '../presentation/widget/customeButtomNav.dart';
-import 'package:hld_project/feature/Account/presentation/pages/account_list_page.dart';
+
 
 
 
@@ -43,7 +43,7 @@ class AppRouter {
   static const List<BottomNavItem> _adminTabs = [
     BottomNavItem(path: '/admin/home', label: 'Home', icon: Iconsax.home_1),
     BottomNavItem(path: '/admin/product', label: 'Product', icon: Iconsax.box),
-    BottomNavItem(path: '/admin/pharmacy', label: 'Pharmacy', icon: Iconsax.danger),
+    BottomNavItem(path: '/admin/Pharmacy', label: 'Pharmacy', icon: Iconsax.danger),
     BottomNavItem(path: '/admin/account', label: 'Account', icon: Iconsax.user),
     BottomNavItem(path: '/admin/setting', label: 'Setting', icon: Iconsax.setting),
   ];
@@ -52,7 +52,7 @@ class AppRouter {
   static const List<BottomNavItem> _userTabs = [
     BottomNavItem(path: '/user/home', label: 'Home', icon: Iconsax.home_1),
     BottomNavItem(path: '/user/product', label: 'Product', icon: Iconsax.box),
-    BottomNavItem(path: '/user/pharmacy', label: 'Pharmacy', icon: Iconsax.danger),
+    BottomNavItem(path: '/user/Pharmacy', label: 'Pharmacy', icon: Iconsax.danger),
     BottomNavItem(path: '/user/account', label: 'Account', icon: Iconsax.user),
   ];
 
@@ -123,7 +123,7 @@ class AppRouter {
         routes: [
           GoRoute(
             path: '/admin/home',
-            builder: (context, state) => Text("AdminHomePage"),
+            builder: (context, state) => const AdminHomePage(),
           ),
           GoRoute(
             path: '/admin/product',
@@ -144,7 +144,7 @@ class AppRouter {
             },
           ),
           GoRoute(
-            path: '/admin/pharmacy',
+            path: '/admin/Pharmacy',
             builder: (context, state) => Text("Pharmacy"),
           ),
           GoRoute(
@@ -203,7 +203,7 @@ class AppRouter {
             },
           ),
           GoRoute(
-            path: '/user/pharmacy',
+            path: '/user/Pharmacy',
             builder: (context, state) => Text("Pharmacy"),
           ),
           GoRoute(

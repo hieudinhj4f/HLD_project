@@ -43,6 +43,8 @@ class _ProfilePageState extends State<ProfilePage> {
           .get();
       if (doc.exists) {
         return AccountModel.fromFirestore(doc);
+        // 3. Tự parse (dùng hàm fromFirestore của Model)
+        return AccountModel.fromEntity(doc);
       } else {
         throw Exception('Không tìm thấy thông tin profile.');
       }
