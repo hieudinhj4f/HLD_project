@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hld_project/feature/Account/presentation/pages/profile_page.dart';
 
 // 1. IMPORT AUTH PROVIDER
 
@@ -19,7 +20,10 @@ import 'package:hld_project/feature/Product/domain/usecase/createProduct.dart';
 import 'package:hld_project/feature/Product/domain/usecase/updateProduct.dart';
 import 'package:hld_project/feature/Product/domain/usecase/deleteProduct.dart';
 import 'package:hld_project/feature/Product/domain/usecase/getProduct.dart';
+import 'package:iconsax/iconsax.dart';
 
+import '../../feature/Account/domain/entities/account.dart';
+import '../../feature/Account/presentation/pages/profile_edit_page.dart';
 import '../../feature/auth/presentation/providers/auth_provider.dart';
 import '../navbar/domain/entity/bottom_nav_item.dart';
 import '../navbar/presentation/widget/app_shell.dart';
@@ -145,7 +149,20 @@ class AppRouter {
           ),
           GoRoute(
             path: '/admin/account',
-            builder: (context, state) => Text("Account"),
+            builder: (context, state) => const ProfilePage(),
+            routes: [
+              // === THÊM ROUTE CHO PROFILE EDIT PAGE VÀO ĐÂY ===
+              GoRoute(
+                path: 'edit', // Đường dẫn sẽ là /user/account/edit
+                builder: (context, state) {
+                  // === SỬA DÒNG NÀY: ÉP KIỂU THẲNG SANG ACCOUNT ===
+                  final Map<String, dynamic> initialData = state.extra as Map<String, dynamic>;
+                  return ProfileEditPage(
+                    initialData: initialData, // <-- TRUYỀN ĐÚNG TÊN THAM SỐ
+                  );
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/admin/setting',
@@ -190,8 +207,21 @@ class AppRouter {
             builder: (context, state) => Text("Pharmacy"),
           ),
           GoRoute(
-            path: AppRoutes.account,
-            builder: (context, state) => const AccountListPage(),
+            path: '/user/account',
+            builder: (context, state) => const ProfilePage(),
+            routes: [
+              // === THÊM ROUTE CHO PROFILE EDIT PAGE VÀO ĐÂY ===
+              GoRoute(
+                path: 'edit', // Đường dẫn sẽ là /user/account/edit
+                builder: (context, state) {
+                  // === SỬA DÒNG NÀY: ÉP KIỂU THẲNG SANG ACCOUNT ===
+                  final Map<String, dynamic> initialData = state.extra as Map<String, dynamic>;
+                  return ProfileEditPage(
+                    initialData: initialData, // <-- TRUYỀN ĐÚNG TÊN THAM SỐ
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),
