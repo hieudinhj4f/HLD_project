@@ -1,4 +1,4 @@
-// file: lib/feature/Account/widget/account_card.dart
+// file: lib/feature/Account/widgets/account_card.dart
 import 'package:flutter/material.dart';
 import 'package:hld_project/feature/Account/domain/entities/account.dart';
 import 'package:iconsax/iconsax.dart'; // (Icon cho nó đẹp)

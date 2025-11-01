@@ -9,18 +9,23 @@ import 'package:hld_project/feature/Account/presentation/pages/profile_page.dart
 // --- Imports cho các Pages
 import 'package:hld_project/feature/Home/presentation/pages/home_page.dart';
 import 'package:hld_project/feature/Product/presentation/Admin/pages/product_list_page.dart';
+import 'package:hld_project/feature/Product/presentation/User/pages/cart_page.dart';
 import 'package:hld_project/feature/auth/presentation/pages/login_page.dart';
 import 'package:hld_project/feature/auth/presentation/pages/signup_page.dart';
 import 'package:hld_project/feature/Home/presentation/pages/splash_screen.dart';
 // import 'package:hld_project/feature/admin/presentation/pages/admin_page.dart'; // <-- BẠN SẼ CẦN TRANG NÀY
 
-// --- Imports cho DI (Tạm thời giữ nguyên)
+
 import 'package:hld_project/feature/Product/data/datasource/product_repository_datasource.dart';
 import 'package:hld_project/feature/Product/data/repositories/product_repository_impl.dart';
 import 'package:hld_project/feature/Product/domain/usecase/createProduct.dart';
 import 'package:hld_project/feature/Product/domain/usecase/updateProduct.dart';
 import 'package:hld_project/feature/Product/domain/usecase/deleteProduct.dart';
 import 'package:hld_project/feature/Product/domain/usecase/getProduct.dart';
+// --- Imports cho DI ( Cho product - admin )
+import 'package:hld_project/feature/Product/presentation/Admin/pages/product_list_page.dart' as admin_role;
+// --- Imports cho DI ( Cho product - user )
+import 'package:hld_project/feature/Product/presentation/User/pages/product_list_page.dart' as user_role;
 import 'package:iconsax/iconsax.dart';
 
 // --- Imports cho DI (Tạm thời giữ nguyên)
@@ -54,7 +59,7 @@ class AppRouter {
   // --- 4. ĐỊNH NGHĨA DANH SÁCH TABS CHO MỖI VAI TRÒ ---
   static const List<BottomNavItem> _adminTabs = [
     BottomNavItem(path: '/admin/home', label: 'Home', icon: Iconsax.home_1),
-    BottomNavItem(path: '/admin/product', label: 'Product', icon: Iconsax.box),
+    BottomNavItem(path: '/admin/product', label: 'Product', icon: Iconsax.shopping_cart),
     // Tên path '/admin/Pharmacy' phải khớp với GoRoute
     BottomNavItem(path: '/admin/Pharmacy', label: 'Pharmacy', icon: Iconsax.danger),
     BottomNavItem(path: '/admin/account', label: 'Account', icon: Iconsax.user),
@@ -62,8 +67,8 @@ class AppRouter {
   ];
 
   static const List<BottomNavItem> _userTabs = [
-    BottomNavItem(path: '/user/home', label: 'Home', icon: Iconsax.home_1),
-    BottomNavItem(path: '/user/product', label: 'Product', icon: Iconsax.box),
+    BottomNavItem(path: '/user/product', label: 'product', icon: Iconsax.home_1),
+    BottomNavItem(path: '/user/cart', label: 'cart', icon: Iconsax.shopping_cart),
     // Tên path '/user/Pharmacy' phải khớp với GoRoute
     BottomNavItem(path: '/user/Pharmacy', label: 'Pharmacy', icon: Iconsax.danger),
     BottomNavItem(path: '/user/account', label: 'Account', icon: Iconsax.user),
@@ -71,7 +76,7 @@ class AppRouter {
 
   // --- 5. GO ROUTER INSTANCE (KHÔNG CÒN STATIC) ---
   late final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.login, // Luôn bắt đầu từ Splash
+    initialLocation: AppRoutes.login,
     debugLogDiagnostics: true,
     refreshListenable: authProvider,
 
@@ -94,13 +99,13 @@ class AppRouter {
 
       if (isLoggedIn) {
         if (isAuthFlow) {
-          return isAdmin ? '/admin/home' : '/user/home';
+          return isAdmin ? '/admin/home' : '/user/product';
         }
         if (isAdmin && !isGoingToAdmin) {
           return '/admin/home';
         }
         if (!isAdmin && !isGoingToUser) {
-          return '/user/home';
+          return '/user/product';
         }
       }
       return null;
@@ -136,7 +141,7 @@ class AppRouter {
               late final createProduct = CreateProduct(repo);
               late final updateProduct = UpdateProduct(repo);
               late final deleteProduct = DeleteProduct(repo);
-              return ProductListPage(
+              return admin_role.ProductListPage(
                 getProducts: getProducts,
                 createProduct: createProduct,
                 updateProduct: updateProduct,
@@ -145,10 +150,24 @@ class AppRouter {
             },
           ),
           GoRoute(
-            path: '/admin/Pharmacy',
-            builder: (context, state) => Text("Pharmacy"),
+            path: '/admin/Pharmacy', // Phải khớp với 'path' trong _adminTabs
+            builder: (context, state) {
+              late final remote = PharmacyRemoteDataSourceImpl();
+              late final repo = PharmacyRepositoryImpl(remote);
+              late final getAllPharmacyy = GetAllPharmacy(repo);
+              late final createPharmacy = CreatePharmacy(repo);
+              late final updatePharmacy = UpdatePharmacy(repo);
+              late final deletePharmacy = DeletePharmacy(repo);
+
+              // Giả sử PharmacyListPage cũng cần 4 usecases này
+              return PharmacyListPage(
+                getAllPharmacies : getAllPharmacyy,
+                createPharmacy: createPharmacy,
+                updatePharmacy: updatePharmacy,
+                deletePharmacy: deletePharmacy,
+              );
+            },
           ),
-          // --- (HẾT MỚI) ---
           GoRoute(
             path: '/admin/account',
             builder: (context, state) => const AccountListPage(),
@@ -181,10 +200,6 @@ class AppRouter {
         },
         routes: [
           GoRoute(
-            path: '/user/home',
-            builder: (context, state) => HomePage(),
-          ),
-          GoRoute(
             path: '/user/product',
             // --- 6. TIÊM DI TRỞ LẠI (CHO USER) ---
             builder: (context, state) {
@@ -194,7 +209,7 @@ class AppRouter {
               late final createProduct = CreateProduct(repo);
               late final updateProduct = UpdateProduct(repo);
               late final deleteProduct = DeleteProduct(repo);
-              return ProductListPage(
+              return user_role.ProductListPage(
                 getProducts: getProducts,
                 createProduct: createProduct,
                 updateProduct: updateProduct,
@@ -202,10 +217,30 @@ class AppRouter {
               );
             },
           ),
+          GoRoute(
+            path: '/user/cart',
+            builder: (context, state) => CartPage(),
+          ),
           // --- (MỚI) ROUTE PHARMACY CỦA USER VỚI DI ---
           GoRoute(
-            path: '/user/Pharmacy',
-            builder: (context, state) => Text("Pharmacy"),
+            path: '/user/Pharmacy', // Phải khớp với 'path' trong _userTabs
+            builder: (context, state) {
+              // (Bạn lặp lại DI giống như admin,
+              // theo đúng pattern bạn làm với Product)
+              late final remote = PharmacyRemoteDataSourceImpl();
+              late final repo = PharmacyRepositoryImpl(remote);
+              late final getAllPharmacy = GetAllPharmacy(repo);
+              late final createPharmacy = CreatePharmacy(repo);
+              late final updatePharmacy = UpdatePharmacy(repo);
+              late final deletePharmacy = DeletePharmacy(repo);
+
+              return PharmacyListPage(
+                getAllPharmacies: getAllPharmacy,
+                createPharmacy: createPharmacy,
+                updatePharmacy: updatePharmacy,
+                deletePharmacy: deletePharmacy,
+              );
+            },
           ),
           // GoRoute(
           //   path: '/user/Pharmacy', // Phải khớp với 'path' trong _userTabs
