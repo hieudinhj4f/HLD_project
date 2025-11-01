@@ -12,6 +12,7 @@ class Account{
   final String role; // Mày có 'role'
   final DateTime createAt; // (tên field là createdAt)
   final DateTime updateAt; // (tên field là updatedAt)
+  final String avatarUrl;
 
   const Account({
     required this.id,
@@ -25,5 +26,6 @@ class Account{
     required this.role,
     required this.createAt,
     required this.updateAt,
+    required this.avatarUrl,
   });
 }

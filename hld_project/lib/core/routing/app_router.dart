@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hld_project/feature/Account/presentation/pages/account_list_page.dart';
 import 'package:hld_project/feature/Account/presentation/pages/profile_page.dart';
 
 // 1. IMPORT AUTH PROVIDER
@@ -148,7 +149,6 @@ class AppRouter {
               );
             },
           ),
-          // --- (MỚI) ROUTE PHARMACY CỦA ADMIN VỚI DI ---
           GoRoute(
             path: '/admin/Pharmacy', // Phải khớp với 'path' trong _adminTabs
             builder: (context, state) {
@@ -170,7 +170,7 @@ class AppRouter {
           ),
           GoRoute(
             path: '/admin/account',
-            builder: (context, state) => const ProfilePage(),
+            builder: (context, state) => const AccountListPage(),
             routes: [
               GoRoute(
                 path: 'edit',
@@ -201,6 +201,7 @@ class AppRouter {
         routes: [
           GoRoute(
             path: '/user/product',
+            // --- 6. TIÊM DI TRỞ LẠI (CHO USER) ---
             builder: (context, state) {
               late final remote = ProductRemoteDataSourceImpl();
               late final repo = ProductRepositoryImpl(remote);
@@ -241,6 +242,26 @@ class AppRouter {
               );
             },
           ),
+          // GoRoute(
+          //   path: '/user/Pharmacy', // Phải khớp với 'path' trong _userTabs
+          //   builder: (context, state) {
+          //     // (Bạn lặp lại DI giống như admin,
+          //     // theo đúng pattern bạn làm với Product)
+          //     late final remote = PharmacyRemoteDataSourceImpl();
+          //     late final repo = PharmacyRepositoryImpl(remoteDatasource: remote);
+          //     late final getAllPharmacy = GetAllPharmacy(repo);
+          //     late final createPharmacy = CreatePharmacy(repo);
+          //     late final updatePharmacy = UpdatePharmacy(repo);
+          //     late final deletePharmacy = DeletePharmacy(repo);
+          //
+          //     return PharmacyListPage(
+          //       getAllPharmacies: getAllPharmacy,
+          //       createPharmacy: createPharmacy,
+          //       updatePharmacy: updatePharmacy,
+          //       deletePharmacy: deletePharmacy,
+          //     );
+          //   },
+          // ),
           // --- (HẾT MỚI) ---
           GoRoute(
             path: '/user/account',

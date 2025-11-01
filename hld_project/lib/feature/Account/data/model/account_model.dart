@@ -15,6 +15,7 @@ class AccountModel extends Account {
     required super.role,
     required super.createAt,
     required super.updateAt,
+    required super.avatarUrl,
   });
 
   // ==========================================================
@@ -40,6 +41,7 @@ class AccountModel extends Account {
       role: json['role'] ?? 'user',
       createAt: _parseDate(json['createdAt']), // Khớp tên field
       updateAt: _parseDate(json['updatedAt']), // Khớp tên field
+      avatarUrl: json['avatarUrl'] ?? '',
     );
   }
 
@@ -58,6 +60,7 @@ class AccountModel extends Account {
     'role': role,
     'createdAt': Timestamp.fromDate(createAt), // Chuyển về Timestamp
     'updatedAt': Timestamp.fromDate(updateAt), // Chuyển về Timestamp
+    'avatarUrl': avatarUrl,
   };
 
   // ==========================================================
@@ -77,6 +80,7 @@ class AccountModel extends Account {
       role: account.role,
       createAt: account.createAt,
       updateAt: account.updateAt,
+      avatarUrl: account.avatarUrl,
     );
   }
 
