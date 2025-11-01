@@ -17,7 +17,6 @@ class _LoginPageState extends State<LoginPage> {
   String? error;
   bool _isLoading = false;
 
-
   @override
   void dispose() {
     emailCtrl.dispose();
@@ -75,6 +74,98 @@ class _LoginPageState extends State<LoginPage> {
   static const Color scaffoldBgColor = Color(0xFFF7F7F7);
   static const Color textColor = Color(0xFF424242);
   static const Color subtleTextColor = Color(0xFF757575);
+
+  // -----------------------------------------------------------------
+  // --- THÊM MỚI: LOGIC GỬI EMAIL RESET MẬT KHẨU ---
+  // -----------------------------------------------------------------
+  Future<void> _sendResetEmail(String email) async {
+    // Tạm thời vô hiệu hoá nút login để tránh user bấm lung tung
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      if (!mounted) return;
+      // Thông báo thành công
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Đã gửi link reset. Vui lòng kiểm tra email!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      // Thông báo lỗi
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_mapFirebaseError(e.code)),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Đã xảy ra lỗi. Vui lòng thử lại."),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      // Mở lại nút login
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  // --- THÊM MỚI: HIỂN THỊ DIALOG ĐỂ NHẬP EMAIL ---
+  void _showForgotPasswordDialog() {
+    // Controller này chỉ dùng cho cái dialog thôi
+    final emailResetCtrl = TextEditingController();
+
+    // Nếu user đã nhập email ở form login thì mình lấy luôn cho tiện
+    if (emailCtrl.text.isNotEmpty) {
+      emailResetCtrl.text = emailCtrl.text.trim();
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Quên Mật Khẩu"),
+        content: TextField(
+          controller: emailResetCtrl,
+          decoration: const InputDecoration(
+            labelText: "Email",
+            hintText: "Nhập email của bạn...",
+          ),
+          keyboardType: TextInputType.emailAddress,
+          autofocus: true,
+        ),
+        actions: [
+          // Nút Huỷ
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Huỷ"),
+          ),
+          // Nút Gửi
+          ElevatedButton(
+            onPressed: () {
+              final email = emailResetCtrl.text.trim();
+              if (email.isNotEmpty) {
+                Navigator.pop(ctx); // Đóng dialog
+                _sendResetEmail(email); // Gọi hàm gửi link
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+            child: const Text("Gửi link", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+  // -----------------------------------------------------------------
+  // --- KẾT THÚC PHẦN THÊM MỚI ---
+  // -----------------------------------------------------------------
+
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +234,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 12.0),
 
                     // Link Quên mật khẩu
-                    _buildForgotPassword(),
+                    _buildForgotPassword(), // <-- CHỖ NÀY SẼ GỌI HÀM MỚI
                     const SizedBox(height: 24.0),
 
                     // --- TÍCH HỢP LOGIC: HIỂN THỊ LỖI ---
@@ -206,9 +297,8 @@ class _LoginPageState extends State<LoginPage> {
     return Container(
       alignment: Alignment.centerRight,
       child: TextButton(
-        onPressed: _isLoading ? null : () { // <-- VÔ HIỆU HOÁ KHI LOADING
-          // TODO: Xử lý sự kiện quên mật khẩu
-        },
+        // <-- SỬA Ở ĐÂY: Gọi hàm _showForgotPasswordDialog
+        onPressed: _isLoading ? null : _showForgotPasswordDialog,
         child: const Text(
           "Quên mật khẩu ?",
           style: TextStyle(
@@ -261,7 +351,7 @@ class _LoginPageState extends State<LoginPage> {
   // Thêm nút này để khớp với logic của bạn (context.go(AppRoutes.signup))
   Widget _buildSignUpButton(BuildContext context) {
     return TextButton(
-      onPressed: _isLoading ? null : () => context.go(AppRoutes.signup),
+      onPressed: _isLoading ? null : () => context.push(AppRoutes.signup),
       child: const Text.rich(
         TextSpan(
           text: "Chưa có tài khoản? ",
