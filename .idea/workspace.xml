@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="4b8c20d9-8865-46cd-b0a3-622fd6bf5144" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/hld_project/lib/core/routing/app_router.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/core/routing/app_router.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/lib/feature/Pharmacy/data/repository/pharmacy_repository_impl.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/feature/Pharmacy/data/repository/pharmacy_repository_impl.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/pages/product_form_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/Admin/pages/product_form_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/pages/product_list_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/Admin/pages/product_list_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/widget/product_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/Admin/widget/product_card.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/linux/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/linux/flutter/generated_plugin_registrant.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/linux/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/linux/flutter/generated_plugins.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/windows/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/windows/flutter/generated_plugin_registrant.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/windows/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/windows/flutter/generated_plugins.cmake" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="3415476dsu8vTGzLF5wVicJ7bPR" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "com.google.services.firebase.aqiPopupShown": "true",
+    "last_opened_file_path": "D:/HLD_project",
+    "settings.editor.selected.configurable": "editor.preferences.fonts.default",
+    "show.migrate.to.gradle.popup": "false"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\HLD_project\hld_project\lib\feature\Product\presentation\Admin" />
+      <recent name="D:\HLD_project\hld_project\lib\feature\Product\data\datasource" />
+      <recent name="D:\HLD_project\hld_project\lib\feature\Product\data\repositories" />
+      <recent name="D:\HLD_project\hld_project\lib\feature\Product\presentation\widget" />
+      <recent name="D:\HLD_project\hld_project\lib\feature\Product\presentation\pages" />
+    </key>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4b8c20d9-8865-46cd-b0a3-622fd6bf5144" name="Changes" comment="" />
+      <created>1760368043183</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1760368043183</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="RECENT_FILTERS">
+      <map>
+        <entry key="Branch">
+          <value>
+            <list>
+              <RecentGroup>
+                <option name="FILTER_VALUES">
+                  <option value="main" />
+                </option>
+              </RecentGroup>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/main" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/hld_project/lib/feature/Account/presentation/pages/account_list_page.dart</url>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/hld_project/lib/feature/recipe/presentation/pages/recipe_list_page.dart</url>
+          <line>47</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/go_router-16.2.4/lib/go_router.dart</url>
+          <line>8</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/hld_project/lib/feature/Account/data/datasource/account_remote_datasource.dart</url>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/hld_project/lib/feature/Pharmacy/domain/usecase/getAllPharmacy.dart</url>
+          <line>9</line>
+          <option name="timeStamp" value="8" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/Admin/widget/product_card.dart</url>
+          <line>2</line>
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
