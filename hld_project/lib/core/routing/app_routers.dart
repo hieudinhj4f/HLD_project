@@ -11,4 +11,8 @@ class AppRoutes {
   static const String product = '/product';
   static const String recipe = '/recipe';
   static const String cart = '/cart';
+  static const String qrPayment = '/qr-payment';
+  static const String invoice = '/invoice';
+
 }
+
