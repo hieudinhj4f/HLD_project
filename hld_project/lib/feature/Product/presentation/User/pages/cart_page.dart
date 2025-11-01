@@ -1,50 +1,108 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:iconsax/iconsax.dart';
+import 'package:go_router/go_router.dart';
 
-class CartPage extends StatelessWidget {
+class CartPage extends StatefulWidget {
   const CartPage({Key? key}) : super(key: key);
+
+  @override
+  State<CartPage> createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  double _total = 0.0;
+  String _orderNumber = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _generateOrderNumber();
+  }
+
+  void _generateOrderNumber() {
+    _orderNumber = '225117234425114'; // Tạm thời
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('HLD', style: TextStyle(color: Colors.green)),
+        title: const Text(
+          'Giỏ hàng',
+          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 1,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('cart').snapshots(),
+        stream: _firestore.collection('cart').snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData)
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          final items = snapshot.data!.docs;
-          double total = 0;
-          for (var item in items) {
-            final data = item.data() as Map;
-            total += (data['price'] as num) * (data['quantity'] as num);
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('Giỏ hàng trống'));
+          }
+
+          final cartItems = snapshot.data!.docs;
+          _total = 0.0;
+          for (var item in cartItems) {
+            final data = item.data() as Map<String, dynamic>;
+            final price = (data['price'] as num?)?.toDouble() ?? 0.0;
+            final quantity = (data['quantity'] as num?)?.toInt() ?? 0;
+            _total += price * quantity;
           }
 
           return Column(
             children: [
               Expanded(
                 child: ListView.builder(
-                  itemCount: items.length,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: cartItems.length,
                   itemBuilder: (context, index) {
-                    final data = items[index].data() as Map;
-                    return ListTile(
-                      leading: Image.network(
-                        data['imageUrl'],
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.cover,
-                      ),
-                      title: Text(data['name']),
-                      subtitle: Text(
-                        '${data['quantity']} x ${data['price'].toInt()}đ',
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => items[index].reference.delete(),
+                    final doc = cartItems[index];
+                    final data = doc.data() as Map<String, dynamic>;
+                    final name = data['name'] ?? 'Sản phẩm';
+                    final price = (data['price'] as num?)?.toDouble() ?? 0.0;
+                    final quantity = (data['quantity'] as num?)?.toInt() ?? 1;
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.shopping_cart, size: 60),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    '$quantity x ${price.toStringAsFixed(0)}đ',
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _firestore
+                                  .collection('cart')
+                                  .doc(doc.id)
+                                  .delete(),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -52,46 +110,81 @@ class CartPage extends StatelessWidget {
               ),
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(color: Colors.grey.shade200, blurRadius: 10),
-                  ],
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)],
                 ),
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Subtotal'),
-                        Text('${total.toInt()}đ'),
+                        const Text('Tổng tiền', style: TextStyle(fontSize: 16)),
+                        Text(
+                          '${_total.toStringAsFixed(0)}đ',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
+                    const SizedBox(height: 8),
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [Text('Shipping'), Text('0đ')],
+                      children: [
+                        Text('Phí vận chuyển', style: TextStyle(fontSize: 16)),
+                        Text('0đ', style: TextStyle(fontSize: 16)),
+                      ],
                     ),
-                    const Divider(),
+                    const Divider(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Total'),
+                        const Text(
+                          'Tổng cộng',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         Text(
-                          '${total.toInt()}đ',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          '${_total.toStringAsFixed(0)}đ',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: _total > 0
+                          ? () {
+                              context.go(
+                                '/user/cart/qr-payment', // ĐÚNG SUB-ROUTE
+                                extra: {
+                                  'totalAmount': _total,
+                                  'orderNumber': _orderNumber,
+                                },
+                              );
+                            }
+                          : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        minimumSize: const Size(double.infinity, 50),
+                        backgroundColor: Colors.green,
+                        minimumSize: const Size(double.infinity, 56),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text(
                         'Finish Order',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ],
