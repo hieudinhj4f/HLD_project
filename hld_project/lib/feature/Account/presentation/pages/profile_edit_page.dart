@@ -5,16 +5,17 @@ import 'package:intl/intl.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 
 // === IMPORT TẦNG DATA "BẨN" (Cần cho UseCase) ===
 import 'package:hld_project/feature/Account/domain/entities/account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/update_account.dart';
 import 'package:hld_project/feature/Account/data/repositories/account_repository_impl.dart';
-import 'package:hld_project/feature/auth/presentation/providers/auth_provider.dart';
+import 'package:firebase_storage/firebase_storage.dart' as fb_storage;
 
 import '../../data/datasource/account_remote_datasource.dart';
+import 'package:flutter/foundation.dart'; // <-- THÊM CÁI NÀY (để check kIsWeb)
+import 'dart:typed_data'; // <-- THÊM CÁI NÀY (để dùng Uint8List)
 
 
 class ProfileEditPage extends StatefulWidget {
@@ -42,7 +43,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   String? _selectedGender;
   String? _selectedRole;
 
-  File? _newAvatarImage;
+  Uint8List? _newAvatarBytes;
   bool _isSaving = false;
   late UpdateAccount _updateUseCase;
   late Account _originalAccount; // Biến giữ Entity gốc
@@ -56,17 +57,21 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
     // Tự tạo object Account gốc từ Map (Cần parse các trường DateTime)
     _originalAccount = Account(
-      id: data['id'] as String,
-      name: data['name'] as String,
-      email: data['email'] as String,
-      phone: data['phone'] as String,
-      gender: data['gender'] as String,
-      dob: data['dob'] as String,
-      age: data['age'] as String,
-      address: data['address'] as String,
-      role: data['role'] as String,
-      // === FIX LỖI TYPE: PHẢI PARSE STRING THÀNH DATETIME ===
-      createAt: DateTime.parse(data['createAt'] as String),
+      id: data['id'] as String, // ID không bao giờ được null
+
+      // === SỬA CÁC DÒNG NÀY: DÙNG ?? '' (NẾU NULL THÌ DÙNG RỖNG) ===
+      name: data['name'] ?? '',
+      email: data['email'] ?? '',
+      phone: data['phone'] ?? '',
+      gender: data['gender'] ?? '',
+      dob: data['dob'] ?? '',
+      age: data['age'] ?? '',
+      address: data['address'] ?? '',
+      role: data['role'] ?? 'user', // (Cho 'user' làm mặc định)
+      avatarUrl: data['avatarUrl'] ?? '',
+
+      // === PHẢI PARSE STRING THÀNH DATETIME ===
+      createAt: DateTime.parse(data['createAt'] as String), // (Giả sử 2 trường này luôn có)
       updateAt: DateTime.parse(data['updateAt'] as String),
     );
 
@@ -99,8 +104,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _newAvatarImage = File(pickedFile.path);
+        _newAvatarBytes = bytes;
       });
     }
   }
@@ -142,7 +148,19 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
     try {
       final now = DateTime.now();
+      String newAvatarUrl = _originalAccount.avatarUrl;
+      if (_newAvatarBytes != null) {
+        // Tạo đường dẫn trên Storage
+        final ref = fb_storage.FirebaseStorage.instance
+            .ref('avatars')
+            .child('${_originalAccount.id}.jpg');
 
+        // Tải file lên
+        await ref.putData(_newAvatarBytes!);
+
+        // Lấy URL mới
+        newAvatarUrl = await ref.getDownloadURL();
+      }
       // Tạo object Account mới để lưu (Dùng _originalAccount để lấy các trường cố định)
       final updatedAccount = Account(
         // Lấy các trường KHÔNG THỂ SỬA từ object gốc
@@ -158,8 +176,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         dob: _dobController.text,
         address: _addressController.text,
         role: _selectedRole!,
-
         updateAt: now,
+        avatarUrl: newAvatarUrl,
       );
 
       // 1. Gọi UseCase "bẩn" để lưu Profile mới
@@ -180,7 +198,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cập nhật thông tin thành công!')),
         );
-        context.pop(); // Quay lại ProfilePage (View)
+        context.pop(true); // Quay lại ProfilePage (View)
       }
     } catch (e) {
       if (mounted) {
@@ -218,10 +236,12 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                   CircleAvatar(
                     radius: 60,
                     backgroundColor: Colors.grey.shade200,
-                    backgroundImage: _newAvatarImage != null
-                        ? FileImage(_newAvatarImage!) as ImageProvider
-                        : null,
-                    child: _newAvatarImage == null
+                    backgroundImage: _newAvatarBytes != null
+                        ? MemoryImage(_newAvatarBytes!) // <-- DÙNG MemoryImage
+                        : (_originalAccount.avatarUrl.isNotEmpty
+                        ? NetworkImage(_originalAccount.avatarUrl) // <-- Ảnh cũ
+                        : null) as ImageProvider?,
+                    child: _newAvatarBytes == null
                         ? const Icon(Iconsax.user, size: 60, color: Colors.grey)
                         : null,
                   ),

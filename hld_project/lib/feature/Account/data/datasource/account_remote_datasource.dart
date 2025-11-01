@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hld_project/feature/Account/data/model/account_model.dart';
 import 'package:hld_project/feature/Account/domain/entities/account.dart';
 import '../repositories/account_repository_impl.dart';
@@ -47,7 +48,7 @@ class AccountRemoteDatasourceIpml implements AccountRemoteDatasource {
 
   @override
   Future<List<AccountModel>> getAllAccounts() async{
-    final accounts = await _remoteSource.getAll();
-    return accounts;
+    final snapshot = await FirebaseFirestore.instance.collection('users').get();
+    return snapshot.docs.map((doc) => AccountModel.fromFirestore(doc)).toList();
   }
 }

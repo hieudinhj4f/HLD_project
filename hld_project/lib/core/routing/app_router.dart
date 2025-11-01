@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hld_project/feature/Account/presentation/pages/account_list_page.dart';
 import 'package:hld_project/feature/Account/presentation/pages/profile_page.dart';
 
 // 1. IMPORT AUTH PROVIDER
@@ -143,30 +144,14 @@ class AppRouter {
               );
             },
           ),
-          // --- (MỚI) ROUTE PHARMACY CỦA ADMIN VỚI DI ---
           GoRoute(
-            path: '/admin/Pharmacy', // Phải khớp với 'path' trong _adminTabs
-            builder: (context, state) {
-              late final remote = PharmacyRemoteDataSourceImpl();
-              late final repo = PharmacyRepositoryImpl(remote);
-              late final getAllPharmacy = getAllPharmacy(repo);
-              late final createPharmacy = createPharmacy(repo);
-              late final updatePharmacy = UpdatePharmacy(repo);
-              late final deletePharmacy = deletePharmacy(repo);
-
-              // Giả sử PharmacyListPage cũng cần 4 usecases này
-              return PharmacyListPage(
-                getAllPharmacy: getAllPharmacy,
-                createPharmacy: createPharmacy,
-                updatePharmacy: updatePharmacy,
-                deletePharmacy: deletePharmacy,
-              );
-            },
+            path: '/admin/Pharmacy',
+            builder: (context, state) => Text("Pharmacy"),
           ),
           // --- (HẾT MỚI) ---
           GoRoute(
             path: '/admin/account',
-            builder: (context, state) => const ProfilePage(),
+            builder: (context, state) => const AccountListPage(),
             routes: [
               GoRoute(
                 path: 'edit',
@@ -201,10 +186,10 @@ class AppRouter {
           ),
           GoRoute(
             path: '/user/product',
+            // --- 6. TIÊM DI TRỞ LẠI (CHO USER) ---
             builder: (context, state) {
               late final remote = ProductRemoteDataSourceImpl();
-              // [SỬA] Thêm tên tham số 'remoteDatasource'
-              late final repo = ProductRepositoryImpl(remoteDatasource: remote);
+              late final repo = ProductRepositoryImpl(remote);
               late final getProducts = GetAllProduct(repo);
               late final createProduct = CreateProduct(repo);
               late final updateProduct = UpdateProduct(repo);
@@ -219,25 +204,29 @@ class AppRouter {
           ),
           // --- (MỚI) ROUTE PHARMACY CỦA USER VỚI DI ---
           GoRoute(
-            path: '/user/Pharmacy', // Phải khớp với 'path' trong _userTabs
-            builder: (context, state) {
-              // (Bạn lặp lại DI giống như admin,
-              // theo đúng pattern bạn làm với Product)
-              late final remote = PharmacyRemoteDataSourceImpl();
-              late final repo = PharmacyRepositoryImpl(remoteDatasource: remote);
-              late final getAllPharmacy = GetAllPharmacy(repo);
-              late final createPharmacy = CreatePharmacy(repo);
-              late final updatePharmacy = UpdatePharmacy(repo);
-              late final deletePharmacy = DeletePharmacy(repo);
-
-              return PharmacyListPage(
-                getAllPharmacies: getAllPharmacy,
-                createPharmacy: createPharmacy,
-                updatePharmacy: updatePharmacy,
-                deletePharmacy: deletePharmacy,
-              );
-            },
+            path: '/user/Pharmacy',
+            builder: (context, state) => Text("Pharmacy"),
           ),
+          // GoRoute(
+          //   path: '/user/Pharmacy', // Phải khớp với 'path' trong _userTabs
+          //   builder: (context, state) {
+          //     // (Bạn lặp lại DI giống như admin,
+          //     // theo đúng pattern bạn làm với Product)
+          //     late final remote = PharmacyRemoteDataSourceImpl();
+          //     late final repo = PharmacyRepositoryImpl(remoteDatasource: remote);
+          //     late final getAllPharmacy = GetAllPharmacy(repo);
+          //     late final createPharmacy = CreatePharmacy(repo);
+          //     late final updatePharmacy = UpdatePharmacy(repo);
+          //     late final deletePharmacy = DeletePharmacy(repo);
+          //
+          //     return PharmacyListPage(
+          //       getAllPharmacies: getAllPharmacy,
+          //       createPharmacy: createPharmacy,
+          //       updatePharmacy: updatePharmacy,
+          //       deletePharmacy: deletePharmacy,
+          //     );
+          //   },
+          // ),
           // --- (HẾT MỚI) ---
           GoRoute(
             path: '/user/account',

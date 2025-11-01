@@ -1,28 +1,29 @@
 // file: lib/feature/Account/presentation/pages/account_list_page.dart
-// BẢN "BẨN" - KHÔNG CẦN SỬA main.dart
+// BẢN "BẨN" - GIAO DIỆN 2 NÚT (ĐÃ FIX LỖI TỰ HỦY)
 
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // (Code "bẩn" có thể cần)
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // <-- CẦN CÓ ĐỂ LỌC
 
 // === IMPORT "BẨN": UI IMPORT THẲNG TẦNG DATA ===
 import 'package:hld_project/feature/Account/data/datasource/account_remote_datasource.dart';
 import 'package:hld_project/feature/Account/data/repositories/account_repository_impl.dart';
 // ===============================================
 
-// === IMPORT ENTITY, USECASE, VÀ FORM PAGE ===
+// === IMPORT ENTITY, USECASE, VÀ CÁC PAGE LIÊN QUAN ===
 import 'package:hld_project/feature/Account/domain/entities/account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/get_account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/create_account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/delete_account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/update_account.dart';
-import 'package:hld_project/feature/Account/presentation/pages/account_form_page.dart'; // (Đây là Form "bẩn")
-import 'package:hld_project/feature/Account/presentation/widget/account_card.dart'; // (Import cái Card của mày)
+import 'package:hld_project/feature/Account/presentation/pages/account_form_page.dart'; // Form Sửa
+import 'package:hld_project/feature/Account/presentation/pages/profile_page.dart'; // Trang Xem
+import 'package:hld_project/feature/Account/data/model/account_model.dart'; // BẮT BUỘC CÓ ĐỂ PARSE
 
 
 class AccountListPage extends StatefulWidget {
-  // === BỎ HẾT REQUIRED USECASE Ở CONSTRUCTOR ===
   const AccountListPage({Key? key}) : super(key: key);
 
   @override
@@ -39,33 +40,25 @@ class _AccountListPageState extends State<AccountListPage> {
   // (State variables)
   List<Account> _allAccounts = [];
   List<Account> _filteredAccounts = [];
-  List<String> _roles = ['All', 'user', 'admin'];
-  String _selectedRole = 'All';
   bool _isLoading = false;
   String? _error;
   Timer? _debouncer;
   final TextEditingController _searchController = TextEditingController();
-  Account? _selectedAccount;
 
   @override
   void initState() {
     super.initState();
 
-    // =================================================
     // === PHẦN CODE "BẨN" (KHỞI TẠO TẠI CHỖ) ===
-    // 1. Tự tạo DataSource
-    final dataSource = AccountRemoteDatasourceIpml();
-    // 2. Tự tạo Repository
+    final dataSource = AccountRemoteDatasourceIpml(); // (Mày tự sửa tên Ipml nếu cần)
     final repository = AccountRepositoryImpl(remoteDataSource: dataSource);
-    // 3. Tự tạo UseCase (Lưu vào biến state)
     _getAccountUseCase = GetAccount(repository);
     _createAccountUseCase = CreateAccount(repository);
     _updateAccountUseCase = UpdateAccount(repository);
     _deleteAccountUseCase = DeleteAccount(repository);
     // =================================================
 
-    _checkFirestoreConnection();
-    _loadAccounts();
+    _loadAccounts(); // Tải data
   }
 
   @override
@@ -75,95 +68,106 @@ class _AccountListPageState extends State<AccountListPage> {
     super.dispose();
   }
 
-  // (Hàm kiểm tra kết nối)
-  Future<void> _checkFirestoreConnection() async {
-    debugPrint('Đang kiểm tra kết nối Firestore...');
-    final firestore = FirebaseFirestore.instance;
-    try {
-      final snapshot = await firestore.collection('users').limit(1).get();
-      if (snapshot.docs.isNotEmpty) {
-        debugPrint('✅ KẾT NỐI FIRESTORE (users) THÀNH CÔNG');
-      } else {
-        debugPrint('✅ KẾT NỐI FIRESTORE THÀNH CÔNG, nhưng collection "users" trống.');
-      }
-    } on FirebaseException catch (e) {
-      debugPrint('❌ LỖI FIRESTORE: ${e.code}');
-    } catch (e) {
-      debugPrint('❌ LỖI KHÁC: $e');
-    }
-  }
-
-  // (Hàm tải data)
+  // (Hàm tải data - ĐÃ SỬA LỖI TỰ HỦY)
   Future<void> _loadAccounts() async {
     setState(() { _isLoading = true; _error = null; });
     try {
-      // Gọi UseCase "bẩn" (biến state)
-      final accounts = await _getAccountUseCase.call();
+      // 1. Gọi UseCase "bẩn" (biến state)
+      final dynamic rawAccounts = await _getAccountUseCase.call();
+
+      // 2. === PARSE DATA (SỬA LỖI TYPEERROR) ===
+      final List<Account> accounts = (rawAccounts as List).map((doc) {
+        if (doc is QueryDocumentSnapshot) {
+          return AccountModel.fromFirestore(doc);
+        }
+        if (doc is Account) {
+          return doc;
+        }
+        throw Exception('Kiểu dữ liệu trả về từ UseCase không xác định');
+      }).toList();
+      // =============================================
+
+      // 3. === LỌC ADMIN (FIX LỖI TỰ HỦY) ===
+      final String? currentAdminId = fb_auth.FirebaseAuth.instance.currentUser?.uid;
+      if (currentAdminId != null) {
+        accounts.removeWhere((account) => account.id == currentAdminId);
+      }
+      // =======================================
+
       setState(() {
-        _allAccounts = accounts;
+        _allAccounts = accounts; // 4. Gán data đã parse và lọc
         _error = null;
-        if (!_roles.contains(_selectedRole)) _selectedRole = 'All';
       });
     } catch (e) {
+      // Hiển thị lỗi ra UI
       setState(() => _error = e.toString());
     } finally {
       setState(() => _isLoading = false);
-      _applyFilters();
+      _applyFilters(); // Áp dụng filter (search)
     }
   }
 
-  // (Hàm lọc data)
+  // (Hàm lọc data - Giữ nguyên)
   void _applyFilters() {
-    // === SỬA LỖI 1: Khai báo tempResults ===
     List<Account> tempResults = _allAccounts;
-    // ======================================
-
     final String query = _searchController.text.toLowerCase();
-
-    if (_selectedRole != 'All') {
-      tempResults = tempResults.where((account) {
-        return account.role == _selectedRole;
-      }).toList();
-    }
-
     if (query.isNotEmpty) {
       tempResults = tempResults.where((account) {
         return account.name.toLowerCase().contains(query) ||
             (account.email?.toLowerCase().contains(query) ?? false);
       }).toList();
     }
-
     setState(() {
       _filteredAccounts = tempResults;
     });
   }
 
-  // (Hàm xóa)
+  // (Hàm xóa - Giữ nguyên)
   Future<void> _delete(String id) async {
-    if (_selectedAccount?.id == id) {
-      setState(() { _selectedAccount = null; });
+    final confirmed = await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xác nhận xóa'),
+        content: const Text('Bạn có chắc chắn muốn xóa tài khoản này không?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Xóa', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      try {
+        await _deleteAccountUseCase.call(id);
+        await _loadAccounts();
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi khi xóa: $e')));
+      }
     }
-    // Gọi UseCase "bẩn" (biến state)
-    await _deleteAccountUseCase.call(id);
-    await _loadAccounts();
   }
 
-  // (Hàm mở Form "bẩn")
-  Future<void> _openForm([Account? account]) async {
+  // (Hàm mở Form Edit - Giữ nguyên)
+  Future<void> _openEditForm(Account? account) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        // KHÔNG CẦN TRUYỀN USECASE NỮA
-        builder: (_) => AccountFormPage(
-          account: account,
-        ),
+        builder: (_) => AccountFormPage(account: account),
       ),
     );
-    // Nếu form trả về 'true' (lưu thành công) -> tải lại list
     if (result == true) _loadAccounts();
   }
 
-  // (Hàm search)
+  // (Hàm mở Profile View - Giữ nguyên)
+  Future<void> _openViewProfile(Account user) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfilePage(account: user),
+      ),
+    );
+    if (result == true) _loadAccounts();
+  }
+
+  // (Hàm search - Giữ nguyên)
   void _onSearchChanged(String query) {
     if (_debouncer?.isActive ?? false) _debouncer!.cancel();
     _debouncer = Timer(const Duration(milliseconds: 300), () {
@@ -171,266 +175,148 @@ class _AccountListPageState extends State<AccountListPage> {
     });
   }
 
-  // (Hàm build danh sách)
-  Widget _buildAccountList() {
-    if (_isLoading && _allAccounts.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_error != null) {
-      return Center(child: Text('Lỗi: $_error. Vui lòng thử lại.'));
-    }
-    if (_filteredAccounts.isEmpty) {
-      if (_searchController.text.isNotEmpty || _selectedRole != 'All') {
-        return const Center(child: Text('Không tìm thấy người dùng phù hợp.'));
-      }
-      return const Center(child: Text('Không có người dùng nào.'));
-    }
-
-    // === SỬA LỖI 2: Đảm bảo CÓ RETURN ===
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _filteredAccounts.length,
-      itemBuilder: (context, index) {
-        final account = _filteredAccounts[index];
-        final isSelected = _selectedAccount?.id == account.id;
-
-        return AccountCard(
-          account: account,
-          isSelected: isSelected,
-          onTap: () {
-            setState(() {
-              _selectedAccount = account;
-            });
-          },
-        );
-      },
-    );
-    // ===================================
-  }
-
-  // (Hàm build panel trái)
-  Widget _buildListPanel() {
-    // === SỬA LỖI 2: Đảm bảo CÓ RETURN ===
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Thanh tìm kiếm
-          TextField(
-            controller: _searchController,
-            onChanged: _onSearchChanged,
-            decoration: InputDecoration(
-              hintText: 'Tìm kiếm người dùng (tên, email)...',
-              prefixIcon: const Icon(Iconsax.search_normal, color: Colors.grey),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                icon: const Icon(Iconsax.close_circle, color: Colors.grey),
-                onPressed: () {
-                  _searchController.clear();
-                  _onSearchChanged('');
-                },
-              )
-                  : null,
-              filled: true,
-              fillColor: Colors.grey.shade200,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Dropdown lọc theo Role
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                isExpanded: true,
-                value: _selectedRole,
-                icon: const Icon(Iconsax.arrow_down_1),
-                items: _roles.map((String roleName) {
-                  return DropdownMenuItem<String>(
-                    value: roleName,
-                    child: Text(roleName),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    setState(() { _selectedRole = newValue; });
-                    _applyFilters();
-                  }
-                },
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          const Text(
-            'Tất cả người dùng',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-
-          // Danh sách
-          _buildAccountList(),
-        ],
-      ),
-    );
-    // ===================================
-  }
-
-  // (Hàm build panel phải - chi tiết)
-  Widget _buildDetailPanel() {
-    // Nếu đang tải và chưa chọn ai, hiển thị loading
-    if (_isLoading && _allAccounts.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    // Nếu không có ai được chọn, hiển thị hướng dẫn
-    if (_selectedAccount == null) {
-      return const Center(
-        child: Text(
-          'Chọn một người dùng từ danh sách để xem chi tiết',
-          style: TextStyle(color: Colors.grey),
-        ),
-      );
-    }
-
-    // Nếu đã chọn, hiển thị chi tiết
-    final account = _selectedAccount!;
-
-    // === SỬA LỖI 2: Đảm bảo CÓ RETURN ===
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            account.name,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Chip(
-            label: Text(account.role),
-            backgroundColor: account.role == 'admin' ? Colors.blue.shade100 : Colors.grey.shade200,
-          ),
-          const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 24),
-
-          // (Sửa lại: Account Entity của mày đéo có 'address')
-          // (Dùng các trường mày có: email, phone, dob, gender)
-          _buildDetailRow(Iconsax.direct, account.email ?? 'Chưa có email'),
-          _buildDetailRow(Iconsax.call, account.phone ?? 'Chưa có SĐT'),
-          _buildDetailRow(Iconsax.calendar, account.dob ?? 'Chưa có ngày sinh'),
-          _buildDetailRow(Iconsax.user, account.gender ?? 'Chưa có giới tính'),
-
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              ElevatedButton.icon(
-                icon: const Icon(Iconsax.edit),
-                label: const Text('Chỉnh sửa'),
-                onPressed: () => _openForm(account), // Nút sửa
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                ),
-              ),
-              const SizedBox(width: 16),
-              OutlinedButton.icon(
-                icon: const Icon(Iconsax.trash, color: Colors.red),
-                label: const Text('Xóa'),
-                onPressed: () => _delete(account.id), // Nút xóa
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: const BorderSide(color: Colors.red),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                ),
-              ),
-            ],
-          )
-        ],
-      ),
-    );
-    // ===================================
-  }
-
-  // (Widget phụ trợ cho panel chi tiết)
-  Widget _buildDetailRow(IconData icon, String text) {
-    // === SỬA LỖI 2: Đảm bảo CÓ RETURN ===
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey.shade600, size: 20),
-          const SizedBox(width: 16),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 16))),
-        ],
-      ),
-    );
-    // ===================================
-  }
-
-
-  // (Hàm Build() chính)
+  // ==========================================================
+  // === HÀM BUILD (GIAO DIỆN DANH SÁCH 2 NÚT) ===
+  // ==========================================================
   @override
   Widget build(BuildContext context) {
-    // === SỬA LỖI 2: Đảm bảo CÓ RETURN ===
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Quản lý Người dùng',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 16),
+
+            // Thanh tìm kiếm (Giống ảnh)
+            TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Tìm kiếm người dùng (tên, email)...', // <-- ĐÃ SỬA
+                prefixIcon: const Icon(Iconsax.search_normal),
+                filled: true,
+                fillColor: Colors.grey.shade100,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Tiêu đề
+            const Text(
+              'Danh sách người dùng', // <-- ĐÃ SỬA
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+
+            // Danh sách
+            Expanded(
+              child: _buildAccountListWidget(), // Gọi hàm build list
+            ),
+          ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Iconsax.notification, color: Colors.black),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Iconsax.refresh, color: Colors.black),
-            onPressed: _isLoading ? null : _loadAccounts,
-          ),
-        ],
       ),
-      // Thay đổi toàn bộ body thành Row
-      body: Row(
-        children: [
-          // Panel trái (Danh sách)
-          Expanded(
-            flex: 1, // Panel này chiếm 1/3
-            child: _buildListPanel(),
-          ),
-          // Đường kẻ phân chia
-          const VerticalDivider(thickness: 1, width: 1),
-          // Panel phải (Chi tiết)
-          Expanded(
-            flex: 2, // Panel này chiếm 2/3 (rộng hơn)
-            child: _buildDetailPanel(),
-          ),
-        ],
-      ),
-      // Nút Thêm mới vẫn giữ nguyên
+      // Nút Thêm mới
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _openForm(),
+        onPressed: () => _openEditForm(null), // Mở Form (Create mode)
         backgroundColor: Colors.blue,
         child: const Icon(Iconsax.add, color: Colors.white),
       ),
     );
-    // ===================================
+  }
+
+  // === HÀM BUILD LIST (VẼ CÁC CARD 2 NÚT) ===
+  Widget _buildAccountListWidget() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    // HIỂN THỊ LỖI (NẾU CÓ)
+    if (_error != null) {
+      return Center(child: Text('Lỗi: $_error. Vui lòng thử lại.'));
+    }
+    if (_filteredAccounts.isEmpty) {
+      return const Center(child: Text('Không tìm thấy người dùng nào.'));
+    }
+
+    // Dùng ListView
+    return ListView.builder(
+      itemCount: _filteredAccounts.length,
+      itemBuilder: (context, index) {
+        final account = _filteredAccounts[index];
+
+        // Đây là Card UI (Giống ảnh Hania Piece)
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          elevation: 1,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Avatar (Giống ảnh)
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.grey.shade200,
+                  // (Mày tự thêm logic load ảnh avatar thật ở đây)
+                  child: const Icon(Iconsax.user, color: Colors.grey),
+                ),
+                const SizedBox(width: 16),
+
+                // Cột thông tin (Tên, Ngày sinh, SĐT)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        account.name,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      Text('${account.dob} - ${account.gender}', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                      Text(account.phone, style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+
+                // === CỘT 2 NÚT (EDIT VÀ OPEN) ===
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Nút EDIT
+                    ElevatedButton(
+                      onPressed: () => _openEditForm(account), // GỌI HÀM SỬA
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        minimumSize: const Size(80, 35),
+                        padding: EdgeInsets.zero,
+                      ),
+                      child: const Text('Edit', style: TextStyle(fontSize: 14)),
+                    ),
+                    const SizedBox(height: 8),
+                    // Nút OPEN
+                    OutlinedButton(
+                      onPressed: () => _openViewProfile(account), // GỌI HÀM VIEW
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.green,
+                        side: BorderSide(color: Colors.green),
+                        minimumSize: const Size(80, 35),
+                        padding: EdgeInsets.zero,
+                      ),
+                      child: const Text('Open', style: TextStyle(fontSize: 14)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
