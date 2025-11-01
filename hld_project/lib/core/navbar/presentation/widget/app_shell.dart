@@ -30,18 +30,6 @@ class AppShell extends StatelessWidget {
     final String currentTitle = tabs[currentIndex].label;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(currentTitle),
-        actions: [
-          if (tabs[currentIndex].path.endsWith('/account'))
-            IconButton(
-              icon: Icon(Icons.logout),
-              onPressed: () {
-                // FirebaseAuth.instance.signOut();
-              },
-            ),
-        ],
-      ),
       body: child,
       bottomNavigationBar: CustomBottomNav(
         selectedIndex: currentIndex,

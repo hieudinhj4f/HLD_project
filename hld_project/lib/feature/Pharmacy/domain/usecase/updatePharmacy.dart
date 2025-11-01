@@ -2,9 +2,9 @@ import 'package:hld_project/feature/Pharmacy/domain/repository/pharmacy_reposito
 
 import '../entity/pharmacy.dart';
 
-class updatePharmacy {
+class UpdatePharmacy {
   final PharmacyRepository p;
-  updatePharmacy(this.p);
+  UpdatePharmacy(this.p);
 
   Future<void> call(Pharmacy pharma) async => await p.updatePharmacy(pharma);
 }
