@@ -259,6 +259,7 @@ class AppRouter {
               final repo = ChatRepositoryImpl(remote);
               return ChatHomePage(getDoctors: GetDoctors(repo));
             },
+
           ),
           GoRoute(
             path: '/user/account',

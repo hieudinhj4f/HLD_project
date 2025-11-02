@@ -3,14 +3,15 @@ import 'package:hld_project/feature/chat/presentation/pages/doctor_form_page.dar
 import '../../domain/entities/doctor.dart';
 import '../../domain/usecases/create_doctor.dart';
 import '../../domain/usecases/delete_doctor.dart';
+// Bạn import 2 Usecase lấy Bác sĩ, 'get_all_doctor.dart' và 'get_doctors.dart'
+// Tôi sẽ dùng 'GetAllDoctor' theo khai báo biến của bạn
 import '../../domain/usecases/get_all_doctor.dart';
-import '../../domain/usecases/get_doctors.dart';
 import '../../domain/usecases/update_doctor.dart';
+// Bạn cần import DoctorCard cho admin (tôi đoán tên)
 import 'package:hld_project/feature/chat/presentation/widgets/doctor_card_admin.dart';
 
-class DoctorListPage extends StatelessWidget {
-  // 1. NHẬN CÁC USECASE (từ AppRouter)
-  // (Lưu ý: Tên Usecase phải khớp với file Usecase của bạn)
+// --- BƯỚC 1: CHUYỂN THÀNH STATEFULWIDGET ---
+class DoctorListPage extends StatefulWidget {
   final GetAllDoctor getAllDoctors;
   final CreateDoctor createDoctor;
   final UpdateDoctor updateDoctor;
@@ -25,20 +26,41 @@ class DoctorListPage extends StatelessWidget {
   });
 
   @override
+  State<DoctorListPage> createState() => _DoctorListPageState();
+}
+
+// --- BƯỚC 2: TẠO CLASS STATE ---
+class _DoctorListPageState extends State<DoctorListPage> {
+  // --- BƯỚC 3: KHAI BÁO BIẾN FUTURE TRONG STATE ---
+  late Future<List<Doctor>> _doctorsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // --- BƯỚC 4: GỌI FUTURE MỘT LẦN KHI TRANG MỞ ---
+    _loadDoctors();
+  }
+
+  // Hàm helper để tải/tải lại
+  void _loadDoctors() {
+    setState(() {
+      _doctorsFuture = widget.getAllDoctors(); // Gọi Usecase từ widget
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Manage Doctors'),
-        // Tắt nút back nếu đây là trang tab chính
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 1,
       ),
-
-      // 2. DÙNG FUTUREBUILDER ĐỂ LẤY DỮ LIỆU
+      // --- BƯỚC 5: DÙNG BIẾN STATE _doctorsFuture ---
       body: FutureBuilder<List<Doctor>>(
-        future: getAllDoctors(), // Gọi Usecase
+        future: _doctorsFuture, // <-- DÙNG BIẾN NÀY
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -50,7 +72,6 @@ class DoctorListPage extends StatelessWidget {
             return const Center(child: Text('No doctors found.'));
           }
 
-          // 3. HIỂN THỊ DANH SÁCH
           final doctors = snapshot.data!;
 
           return ListView.builder(
@@ -58,45 +79,26 @@ class DoctorListPage extends StatelessWidget {
             itemCount: doctors.length,
             itemBuilder: (context, index) {
               final doctor = doctors[index];
+              // Đổi tên DoctorCard cho đúng (bạn import là DoctorCard)
               return DoctorCard(
                 doctor: doctor,
                 onEdit: () {
-                  // 4. ĐIỀU HƯỚNG SANG TRANG FORM (CHẾ ĐỘ EDIT)
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => DoctorFormPage(
-                        createDoctor:  createDoctor,
-                        updateDoctor: updateDoctor,
-                        doctor: doctor,
-                        // Bạn cũng nên truyền 'updateDoctor' vào đây
-                      ),
-                    ),
-                  );
+                  // --- BƯỚC 6: SỬA 'onEdit' (gọi hàm helper) ---
+                  _navigateToForm(doctor: doctor);
                 },
                 onDelete: () {
-                  // 5. GỌI DIALOG XÁC NHẬN XÓA
-                  _showDeleteConfirmDialog(context, doctor, deleteDoctor);
+                  // Gọi hàm dialog (truyền usecase từ widget)
+                  _showDeleteConfirmDialog(context, doctor, widget.deleteDoctor);
                 },
               );
             },
           );
         },
       ),
-
-      // 6. NÚT THÊM MỚI
+      // --- BƯỚC 7: SỬA 'floatingActionButton' (gọi hàm helper) ---
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // ĐIỀU HƯỚNG SANG TRANG FORM (CHẾ ĐỘ ADD)
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => DoctorFormPage(
-                createDoctor: createDoctor,
-                updateDoctor: updateDoctor,
-                doctor: null, // Truyền 'null' để báo là form Add
-                // Bạn cũng nên truyền 'createDoctor' vào đây
-              ),
-            ),
-          );
+          _navigateToForm(doctor: null); // Chế độ Add
         },
         backgroundColor: const Color(0xFF4CAF50),
         child: const Icon(Icons.add, color: Colors.white),
@@ -104,11 +106,29 @@ class DoctorListPage extends StatelessWidget {
     );
   }
 
-  // 7. HÀM XÁC NHẬN XÓA
+  // Hàm helper để điều hướng (tránh lặp code)
+  void _navigateToForm({Doctor? doctor}) async {
+    // Chuyển sang async
+    // Đợi trang Form đóng lại
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DoctorFormPage(
+          doctor: doctor, // (null cho Add, có data cho Edit)
+          createDoctor: widget.createDoctor,
+          updateDoctor: widget.updateDoctor,
+        ),
+      ),
+    );
+
+    // SAU KHI QUAY LẠI, GỌI LẠI FUTURE ĐỂ CẬP NHẬT UI
+    _loadDoctors();
+  }
+
+  // --- BƯỚC 8: SỬA HÀM XÓA (async/await) ---
   void _showDeleteConfirmDialog(
       BuildContext context,
       Doctor doctor,
-      DeleteDoctor deleteDoctor, // Nhận Usecase
+      DeleteDoctor deleteDoctor,
       ) {
     showDialog(
       context: context,
@@ -123,14 +143,25 @@ class DoctorListPage extends StatelessWidget {
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),
-            onPressed: () {
-              // GỌI USECASE ĐỂ XÓA
+            onPressed: () async { // <-- Sửa thành async
               print('Deleting ${doctor.id}...');
-              deleteDoctor(doctor.id);
 
-              // (Lý tưởng nhất là bạn nên refresh lại list,
-              // tạm thời chỉ đóng dialog)
-              Navigator.of(ctx).pop();
+              try {
+                await deleteDoctor(doctor.id); // <-- Sửa (await)
+
+                // Đóng dialog (kiểm tra mounted vì là async)
+                if (ctx.mounted) {
+                  Navigator.of(ctx).pop();
+                }
+
+                // SAU KHI XÓA, GỌI LẠI FUTURE ĐỂ CẬP NHẬT UI
+                _loadDoctors();
+
+              } catch (e) {
+                // Xử lý lỗi nếu xóa thất bại
+                print('Delete failed: $e');
+                // (Bạn có thể hiển thị SnackBar ở đây)
+              }
             },
           ),
         ],
