@@ -1,16 +1,20 @@
 // file: lib/feature/Account/presentation/pages/account_list_page.dart
-// BẢN "BẨN" - GIAO DIỆN 2 NÚT (ĐÃ FIX LỖI TỰ HỦY)
+// BẢN "BẨN" - GIAO DIỆN 2 NÚT (ĐÃ SỬA LỖI HIỂN THỊ ẢNH BASE64)
 
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // <-- CẦN CÓ ĐỂ LỌC
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+
+// === THÊM 2 IMPORT ĐỂ GIẢI MÃ ẢNH ===
+import 'dart:convert';
+import 'dart:typed_data';
+// ==================================
 
 // === IMPORT "BẨN": UI IMPORT THẲNG TẦNG DATA ===
 import 'package:hld_project/feature/Account/data/datasource/account_remote_datasource.dart';
 import 'package:hld_project/feature/Account/data/repositories/account_repository_impl.dart';
-// ===============================================
 
 // === IMPORT ENTITY, USECASE, VÀ CÁC PAGE LIÊN QUAN ===
 import 'package:hld_project/feature/Account/domain/entities/account.dart';
@@ -56,7 +60,6 @@ class _AccountListPageState extends State<AccountListPage> {
     _createAccountUseCase = CreateAccount(repository);
     _updateAccountUseCase = UpdateAccount(repository);
     _deleteAccountUseCase = DeleteAccount(repository);
-    // =================================================
 
     _loadAccounts(); // Tải data
   }
@@ -68,14 +71,12 @@ class _AccountListPageState extends State<AccountListPage> {
     super.dispose();
   }
 
-  // (Hàm tải data - ĐÃ SỬA LỖI TỰ HỦY)
+  // (Hàm tải data - ĐÃ FIX LỖI TỰ HỦY)
   Future<void> _loadAccounts() async {
     setState(() { _isLoading = true; _error = null; });
     try {
-      // 1. Gọi UseCase "bẩn" (biến state)
       final dynamic rawAccounts = await _getAccountUseCase.call();
 
-      // 2. === PARSE DATA (SỬA LỖI TYPEERROR) ===
       final List<Account> accounts = (rawAccounts as List).map((doc) {
         if (doc is QueryDocumentSnapshot) {
           return AccountModel.fromFirestore(doc);
@@ -85,9 +86,8 @@ class _AccountListPageState extends State<AccountListPage> {
         }
         throw Exception('Kiểu dữ liệu trả về từ UseCase không xác định');
       }).toList();
-      // =============================================
 
-      // 3. === LỌC ADMIN (FIX LỖI TỰ HỦY) ===
+      // === LỌC ADMIN (FIX LỖI TỰ HỦY) ===
       final String? currentAdminId = fb_auth.FirebaseAuth.instance.currentUser?.uid;
       if (currentAdminId != null) {
         accounts.removeWhere((account) => account.id == currentAdminId);
@@ -95,15 +95,14 @@ class _AccountListPageState extends State<AccountListPage> {
       // =======================================
 
       setState(() {
-        _allAccounts = accounts; // 4. Gán data đã parse và lọc
+        _allAccounts = accounts;
         _error = null;
       });
     } catch (e) {
-      // Hiển thị lỗi ra UI
       setState(() => _error = e.toString());
     } finally {
       setState(() => _isLoading = false);
-      _applyFilters(); // Áp dụng filter (search)
+      _applyFilters();
     }
   }
 
@@ -188,12 +187,12 @@ class _AccountListPageState extends State<AccountListPage> {
           children: [
             const SizedBox(height: 16),
 
-            // Thanh tìm kiếm (Giống ảnh)
+            // Thanh tìm kiếm
             TextField(
               controller: _searchController,
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm người dùng (tên, email)...', // <-- ĐÃ SỬA
+                hintText: 'Tìm kiếm người dùng (tên, email)...',
                 prefixIcon: const Icon(Iconsax.search_normal),
                 filled: true,
                 fillColor: Colors.grey.shade100,
@@ -207,33 +206,32 @@ class _AccountListPageState extends State<AccountListPage> {
 
             // Tiêu đề
             const Text(
-              'Danh sách người dùng', // <-- ĐÃ SỬA
+              'Danh sách người dùng',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
 
             // Danh sách
             Expanded(
-              child: _buildAccountListWidget(), // Gọi hàm build list
+              child: _buildAccountListWidget(),
             ),
           ],
         ),
       ),
       // Nút Thêm mới
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _openEditForm(null), // Mở Form (Create mode)
-        backgroundColor: Colors.blue,
-        child: const Icon(Iconsax.add, color: Colors.white),
+        onPressed: () => _openEditForm(null),
+        backgroundColor: const Color(0xFF4CAF50),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  // === HÀM BUILD LIST (VẼ CÁC CARD 2 NÚT) ===
+  // === HÀM BUILD LIST (ĐÃ SỬA LỖI HIỂN THỊ ẢNH) ===
   Widget _buildAccountListWidget() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    // HIỂN THỊ LỖI (NẾU CÓ)
     if (_error != null) {
       return Center(child: Text('Lỗi: $_error. Vui lòng thử lại.'));
     }
@@ -247,7 +245,19 @@ class _AccountListPageState extends State<AccountListPage> {
       itemBuilder: (context, index) {
         final account = _filteredAccounts[index];
 
-        // Đây là Card UI (Giống ảnh Hania Piece)
+        // === LOGIC DECODE ẢNH (GIỐNG PROFILE_PAGE) ===
+        ImageProvider? avatarImage;
+        if (account.avatarUrl.startsWith('data:image')) {
+          try {
+            final String base64String = account.avatarUrl.split(',')[1];
+            final Uint8List imageBytes = base64Decode(base64String);
+            avatarImage = MemoryImage(imageBytes);
+          } catch (e) { avatarImage = null; }
+        } else if (account.avatarUrl.startsWith('http')) {
+          avatarImage = NetworkImage(account.avatarUrl);
+        }
+        // ============================================
+
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 8.0),
           elevation: 1,
@@ -257,16 +267,18 @@ class _AccountListPageState extends State<AccountListPage> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Avatar (Giống ảnh)
+                // Avatar (ĐÃ SỬA)
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: Colors.grey.shade200,
-                  // (Mày tự thêm logic load ảnh avatar thật ở đây)
-                  child: const Icon(Iconsax.user, color: Colors.grey),
+                  backgroundImage: avatarImage, // <-- DÙNG BIẾN MỚI
+                  child: (avatarImage == null)
+                      ? const Icon(Iconsax.user, color: Colors.grey)
+                      : null,
                 ),
                 const SizedBox(width: 16),
 
-                // Cột thông tin (Tên, Ngày sinh, SĐT)
+                // Cột thông tin
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -282,13 +294,12 @@ class _AccountListPageState extends State<AccountListPage> {
                 ),
                 const SizedBox(width: 16),
 
-                // === CỘT 2 NÚT (EDIT VÀ OPEN) ===
+                // Cột 2 nút (Edit/Open)
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Nút EDIT
                     ElevatedButton(
-                      onPressed: () => _openEditForm(account), // GỌI HÀM SỬA
+                      onPressed: () => _openEditForm(account),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
@@ -299,9 +310,8 @@ class _AccountListPageState extends State<AccountListPage> {
                       child: const Text('Edit', style: TextStyle(fontSize: 14)),
                     ),
                     const SizedBox(height: 8),
-                    // Nút OPEN
                     OutlinedButton(
-                      onPressed: () => _openViewProfile(account), // GỌI HÀM VIEW
+                      onPressed: () => _openViewProfile(account),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.green,
                         side: BorderSide(color: Colors.green),

@@ -1,23 +1,28 @@
 // file: lib/feature/Account/presentation/pages/account_form_page.dart
-// BẢN "BẨN" - FORM CỦA ADMIN (ĐÃ SỬA LỖI _selectedRole)
+// BẢN "BẨN" - ĐÃ SỬA LỖI REDIRECT KHI CREATE
 
+import 'package:firebase_core/firebase_core.dart' as fb_auth;
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart'; // <-- THÊM IMPORT NÀY (SAU KHI PUB GET)
+import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
+import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // <-- CẦN CÓ
+import 'package:cloud_firestore/cloud_firestore.dart'; // <-- CẦN CÓ
 
 // === IMPORT "BẨN": UI IMPORT THẲNG TẦNG DATA ===
 import 'package:hld_project/feature/Account/data/datasource/account_remote_datasource.dart';
 import 'package:hld_project/feature/Account/data/repositories/account_repository_impl.dart';
 
-// === IMPORT ENTITY VÀ USECASE (VẪN CẦN) ===
+// === IMPORT ENTITY, USECASE, VÀ CÁC PAGE LIÊN QUAN ===
 import 'package:hld_project/feature/Account/domain/entities/account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/create_account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/update_account.dart';
-// (Mày cũng phải tạo 2 file UseCase này)
+import 'package:hld_project/feature/Account/data/model/account_model.dart'; // <-- CẦN CÓ
 
 class AccountFormPage extends StatefulWidget {
-  // Nhận Account (nếu là Sửa) hoặc null (nếu là Tạo mới)
   final Account? account;
 
   const AccountFormPage({
@@ -33,19 +38,19 @@ class _AccountFormPageState extends State<AccountFormPage> {
   // 1. STATE VARIABLES
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers (Bỏ _roleController vì dùng Radio)
+  // Controllers
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _dobController;
   late TextEditingController _addressController;
   late TextEditingController _emailController;
+  late TextEditingController _passwordController;
 
   String? _selectedGender;
-  String? _selectedRole; // <-- SỬA: THÊM DÒNG NÀY
+  String? _selectedRole;
   bool _isSaving = false;
+  Uint8List? _newAvatarBytes;
 
-  // === KHAI BÁO BIẾN GIỮ USECASE "BẨN" ===
-  late CreateAccount _createUseCase;
   late UpdateAccount _updateUseCase;
   late Account _originalAccount; // Biến giữ Entity gốc
 
@@ -54,16 +59,10 @@ class _AccountFormPageState extends State<AccountFormPage> {
   void initState() {
     super.initState();
 
-    // =================================================
     // === PHẦN CODE "BẨN" (KHỞI TẠO TẠI CHỖ) ===
-
-    // 1. Tự tạo DataSource (DÙNG ĐÚNG TÊN 'Ipml' CỦA MÀY)
-    final dataSource = AccountRemoteDatasourceIpml(); // (Sửa Impl nếu mày đổi ý)
-
-    // 2. Tự tạo Repository
+    final dataSource = AccountRemoteDatasourceIpml(); // (Mày tự sửa tên Ipml nếu cần)
     final repository = AccountRepositoryImpl(remoteDataSource: dataSource);
-    // 3. Tự tạo UseCase
-    _createUseCase = CreateAccount(repository);
+    // (Bỏ CreateUseCase vì logic sai, ta sẽ tự gọi Firestore)
     _updateUseCase = UpdateAccount(repository);
     // =================================================
 
@@ -86,13 +85,13 @@ class _AccountFormPageState extends State<AccountFormPage> {
     _phoneController = TextEditingController(text: _originalAccount.phone);
     _dobController = TextEditingController(text: _originalAccount.dob);
     _addressController = TextEditingController(text: _originalAccount.address);
+    _passwordController = TextEditingController();
 
-    // === SỬA: KHỞI TẠO BIẾN STATE (KHÔNG DÙNG CONTROLLER) ===
     _selectedGender = _originalAccount.gender;
     _selectedRole = _originalAccount.role;
   }
 
-  // 3. DISPOSE (Bỏ _roleController)
+  // 3. DISPOSE
   @override
   void dispose() {
     _nameController.dispose();
@@ -100,49 +99,21 @@ class _AccountFormPageState extends State<AccountFormPage> {
     _phoneController.dispose();
     _dobController.dispose();
     _addressController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  // 4. HÀM LƯU (SỬA: DÙNG _selectedRole)
-  Future<void> _saveForm() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() { _isSaving = true; });
-
-    try {
-      final now = DateTime.now();
-      final accountToSave = Account(
-        id: _originalAccount.id, // Giữ ID cũ (nếu edit)
-        createAt: _originalAccount.createAt, // Giữ ngày tạo (nếu edit)
-
-        name: _nameController.text,
-        email: _emailController.text,
-        phone: _phoneController.text,
-        gender: _selectedGender!, // Lấy từ Radio
-        dob: _dobController.text,
-        address: _addressController.text,
-        role: _selectedRole!, // <-- SỬA: LẤY TỪ RADIO
-        age: '', // (Tạm thời bỏ qua)
-        updateAt: now,
-        avatarUrl: _originalAccount.avatarUrl,
-      );
-
-      // Gọi UseCase "bẩn"
-      if (widget.account == null) {
-        await _createUseCase.call(accountToSave);
-      } else {
-        await _updateUseCase.call(accountToSave);
-      }
-
-      if (mounted) context.pop(true); // Trả về 'true' để báo list TẢI LẠI
-
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
-    } finally {
-      if (mounted) { setState(() { _isSaving = false; }); }
+  // (Hàm _pickImage và _selectDate giữ nguyên)
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _newAvatarBytes = bytes;
+      });
     }
   }
-
-  // (Hàm _selectDate - Giữ nguyên)
   Future<void> _selectDate(BuildContext context) async {
     DateTime initialDate = DateTime.now();
     try {
@@ -159,9 +130,119 @@ class _AccountFormPageState extends State<AccountFormPage> {
     }
   }
 
-  // 5. BUILD (SỬA: BỎ TextFormField CỦA ROLE)
+  // 4. HÀM LƯU (SỬA LẠI LOGIC CREATE ĐỂ TRÁNH REDIRECT)
+  Future<void> _saveForm() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() { _isSaving = true; });
+
+    try {
+      final now = DateTime.now();
+      String newAvatarData = _originalAccount.avatarUrl;
+
+      // === BƯỚC 1: ENCODE ẢNH (NẾU CÓ) ===
+      if (_newAvatarBytes != null) {
+        String base64Image = base64Encode(_newAvatarBytes!);
+        newAvatarData = 'data:image/jpeg;base64,$base64Image';
+        if (newAvatarData.length > 1000000) {
+          throw Exception('Ảnh quá lớn (trên 1MB), Firestore đéo cho lưu.');
+        }
+      }
+
+      // === BƯỚC 2: CHỌN LOGIC (CREATE / EDIT) ===
+      if (widget.account == null) {
+        // --- LOGIC CREATE (TẠO MỚI) ---
+
+        // === SỬA: DÙNG MỘT APP TẠM ĐỂ TẠO AUTH ===
+        // 1. Lấy config của app hiện tại (app Admin đang chạy)
+        final currentApp = fb_auth.FirebaseAuth.instance.app;
+
+        // 2. Tạo một app tạm (với tên ngẫu nhiên)
+        final String tempAppName = 'tempCreateUserApp_${DateTime.now().millisecondsSinceEpoch}';
+        final fb_auth.FirebaseApp tempApp = await fb_auth.Firebase.initializeApp(
+          name: tempAppName,
+          options: currentApp.options,
+        );
+
+        // 3. Tạo Auth instance từ app tạm
+        final fb_auth.FirebaseAuth tempAuth = fb_auth.FirebaseAuth.instanceFor(app: tempApp);
+        // ========================================
+
+        // 4. TẠO USER BẰNG AUTH TẠM (ĐỂ KHÔNG ĐÁ ADMIN RA)
+        final userCredential = await tempAuth.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+        final newUid = userCredential.user!.uid;
+
+        // 5. ĐĂNG XUẤT VÀ XÓA APP TẠM
+        await tempAuth.signOut();
+        await tempApp.delete();
+        // ========================================
+
+        // B. Tạo Entity để lưu vào Firestore
+        final accountToSave = Account(
+          id: newUid, // Dùng ID từ Auth
+          createAt: now,
+          name: _nameController.text,
+          email: _emailController.text.trim(),
+          phone: _phoneController.text,
+          gender: _selectedGender!,
+          dob: _dobController.text,
+          address: _addressController.text,
+          role: _selectedRole!,
+          age: '',
+          updateAt: now,
+          avatarUrl: newAvatarData,
+        );
+
+        // C. Lưu vào Firestore
+        final model = AccountModel.fromEntity(accountToSave);
+        await FirebaseFirestore.instance.collection('users').doc(newUid).set(model.toJson());
+
+      } else {
+        // --- LOGIC EDIT (CHỈNH SỬA) ---
+        final updatedAccount = Account(
+          id: _originalAccount.id,
+          createAt: _originalAccount.createAt,
+          age: _originalAccount.age,
+          email: _emailController.text,
+          name: _nameController.text,
+          phone: _phoneController.text,
+          gender: _selectedGender!,
+          dob: _dobController.text,
+          address: _addressController.text,
+          role: _selectedRole!,
+          updateAt: now,
+          avatarUrl: newAvatarData,
+        );
+        await _updateUseCase.call(updatedAccount);
+      }
+
+      if (mounted) context.pop(true); // Trả về 'true' để báo list TẢI LẠI
+
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+    } finally {
+      if (mounted) { setState(() { _isSaving = false; }); }
+    }
+  }
+
+  // 5. BUILD (UI)
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.account != null;
+
+    // === LOGIC HIỂN THỊ ẢNH CŨ (BASE64 HOẶC URL) ===
+    ImageProvider? currentAvatarImage;
+    if (_originalAccount.avatarUrl.startsWith('data:image')) {
+      try {
+        currentAvatarImage = MemoryImage(base64Decode(_originalAccount.avatarUrl.split(',')[1]));
+      } catch (e) { currentAvatarImage = null; }
+    } else if (_originalAccount.avatarUrl.startsWith('http')) {
+      currentAvatarImage = NetworkImage(_originalAccount.avatarUrl);
+    }
+    // ============================================
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -169,7 +250,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-            widget.account != null ? 'Chỉnh Sửa (Admin)' : 'Tạo Mới (Admin)',
+            isEditing ? 'Chỉnh Sửa (Admin)' : 'Tạo Mới (Admin)',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)
         ),
         centerTitle: true,
@@ -180,45 +261,80 @@ class _AccountFormPageState extends State<AccountFormPage> {
           key: _formKey,
           child: Column(
             children: [
-              const SizedBox(height: 32),
-              // Tên
-              _buildTextField(
-                controller: _nameController, label: 'Name', hintText: 'Nhập họ và tên',
-                validator: (value) => value!.isEmpty ? 'Tên không được để trống' : null,
+              // === UI UPLOAD ẢNH ===
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 60,
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage: _newAvatarBytes != null
+                        ? MemoryImage(_newAvatarBytes!)
+                        : currentAvatarImage,
+                    child: (_newAvatarBytes == null && currentAvatarImage == null)
+                        ? const Icon(Iconsax.user, size: 60, color: Colors.grey)
+                        : null,
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
-              // Email
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: _pickImage,
+                child: const Text(
+                  'Change avatar',
+                  style: TextStyle(
+                    color: Color(0xFF388E3C),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              // =========================
+
+              const SizedBox(height: 32),
+
+              // === EMAIL ===
               _buildTextField(
                 controller: _emailController, label: 'Email', hintText: 'Nhập email',
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) => value!.isEmpty || !value.contains('@') ? 'Email không hợp lệ' : null,
               ),
               const SizedBox(height: 24),
-              // Phone
+
+              // === PASSWORD (CHỈ HIỆN KHI TẠO MỚI) ===
+              if (!isEditing) ...[
+                _buildTextField(
+                  controller: _passwordController, label: 'Password', hintText: 'Nhập mật khẩu',
+                  obscureText: true,
+                  validator: (value) => value!.length < 6 ? 'Mật khẩu phải > 6 ký tự' : null,
+                ),
+                const SizedBox(height: 24),
+              ],
+
+              // === CÁC TRƯỜNG CÒN LẠI ===
+              _buildTextField(
+                controller: _nameController, label: 'Name', hintText: 'Nhập họ và tên',
+                validator: (value) => value!.isEmpty ? 'Tên không được để trống' : null,
+              ),
+              const SizedBox(height: 24),
               _buildTextField(
                 controller: _phoneController, label: 'Phone', hintText: 'Nhập số điện thoại',
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 24),
-              // Address
               _buildTextField(
                 controller: _addressController, label: 'Address', hintText: 'Nhập địa chỉ',
               ),
               const SizedBox(height: 24),
-              // Giới tính
               _buildRadioButtons(context, 'Gender', ['Nam', 'Nữ']),
               const SizedBox(height: 24),
-
-              // === SỬA: DÙNG RADIO THAY VÌ TEXTFIELD ===
               _buildRadioButtons(context, 'Role', ['Customer', 'Mangament', 'Staff', 'Admin'], isRole: true),
-              // ======================================
-
               const SizedBox(height: 24),
-              // Ngày sinh
               _buildDatePickerField(
                 context: context, controller: _dobController, label: 'Birthday', hintText: 'Chọn ngày sinh',
               ),
               const SizedBox(height: 48),
+
               // Nút SAVE
               SizedBox(
                 width: double.infinity,
@@ -244,10 +360,11 @@ class _AccountFormPageState extends State<AccountFormPage> {
     );
   }
 
-  // (Các Widget phụ trợ y hệt ProfileEditPage)
+  // (Các Widget phụ trợ _buildTextField, _buildDatePickerField, _buildRadioButtons giữ nguyên)
   Widget _buildTextField({
     required TextEditingController controller, required String label, required String hintText,
     TextInputType keyboardType = TextInputType.text, String? Function(String?)? validator,
+    bool obscureText = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,6 +374,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          obscureText: obscureText,
           decoration: InputDecoration(
             hintText: hintText,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -293,7 +411,6 @@ class _AccountFormPageState extends State<AccountFormPage> {
     );
   }
 
-  // (Widget Radio buttons - GIỮ NGUYÊN)
   Widget _buildRadioButtons(BuildContext context, String label, List<String> options, {bool isRole = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,7 +420,6 @@ class _AccountFormPageState extends State<AccountFormPage> {
         Wrap(
           spacing: 16.0,
           children: options.map((value) {
-            // === SỬA LỖI: DÙNG _selectedRole ===
             final currentValue = isRole ? _selectedRole : _selectedGender;
             return Row(
               mainAxisSize: MainAxisSize.min,
