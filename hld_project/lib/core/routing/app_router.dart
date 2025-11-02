@@ -94,7 +94,7 @@ class AppRouter {
   static const List<BottomNavItem> _userTabs = [
     BottomNavItem(path: '/user/product', label: 'Product', icon: Icons.home),
     BottomNavItem(path: '/user/cart', label: 'Cart', icon: Icons.shopping_cart),
-    BottomNavItem(path: '/user/doctor', label: 'Doctors',icon: Icons.message),
+    BottomNavItem(path: '/user/chat', label: 'Chat',icon: Icons.message),
     BottomNavItem(path: '/user/account', label: 'Account', icon: Icons.person),
   ];
 
