@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hld_project/feature/chat/presentation/pages/doctor_form_page.dart';
 import '../../domain/entities/doctor.dart';
 import '../../domain/usecases/create_doctor.dart';
@@ -29,11 +30,16 @@ class DoctorListPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Manage Doctors'),
-        // Tắt nút back nếu đây là trang tab chính
-        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
-        elevation: 1,
+        title: Text(
+          'HLD',
+          style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
+            fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
+            color: Colors.green,
+            fontSize: 30,
+          ),
+        ),
+        centerTitle: true,
       ),
 
       // 2. DÙNG FUTUREBUILDER ĐỂ LẤY DỮ LIỆU

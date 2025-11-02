@@ -24,6 +24,7 @@ dependencies:
   fl_chart: ^1.1.1
   firebase_storage: 13.0.3
   http: ^1.1.0
+  google_fonts: ^6.3.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -36,3 +37,15 @@ flutter:
   assets:
     - .env
   uses-material-design: true
+
+
+fonts:
+  - family: Montserrat  # <--- TÊN GIA ĐÌNH FONT (1)
+    fonts:
+      - asset: assets/fonts/Montserrat-Black.ttf # <--- KIỂM TRA ĐƯỜNG DẪN ĐÚNG CHƯA?
+        weight: 900 # <--- KHAI BÁO ĐÂY LÀ FONT 900
+      # Mày có thể thêm các file khác nếu muốn
+      # - asset: assets/fonts/Montserrat-Bold.ttf
+      #   weight: 700
+      # - asset: assets/fonts/Montserrat-Regular.ttf
+      #   weight: 400

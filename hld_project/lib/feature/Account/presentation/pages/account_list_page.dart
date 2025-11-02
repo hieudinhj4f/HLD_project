@@ -3,6 +3,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
@@ -180,6 +181,18 @@ class _AccountListPageState extends State<AccountListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text(
+          'HLD',
+          style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
+            fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
+            color: Colors.green,
+            fontSize: 30,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
@@ -307,18 +320,18 @@ class _AccountListPageState extends State<AccountListPage> {
                         minimumSize: const Size(80, 35),
                         padding: EdgeInsets.zero,
                       ),
-                      child: const Text('Edit', style: TextStyle(fontSize: 14)),
+                      child: const Text('Chỉnh sửa', style: TextStyle(fontSize: 14)),
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton(
                       onPressed: () => _openViewProfile(account),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.green,
-                        side: BorderSide(color: Colors.green),
+                        backgroundColor: Colors.grey.shade100,
                         minimumSize: const Size(80, 35),
                         padding: EdgeInsets.zero,
                       ),
-                      child: const Text('Open', style: TextStyle(fontSize: 14)),
+                      child: const Text('Mở', style: TextStyle(fontSize: 14)),
                     ),
                   ],
                 ),
