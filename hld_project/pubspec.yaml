@@ -23,6 +23,7 @@ dependencies:
   qr_flutter: ^4.1.0
   fl_chart: ^1.1.1
   firebase_storage: 13.0.3
+  http: ^1.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

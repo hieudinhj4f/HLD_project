@@ -1,5 +1,5 @@
 // file: lib/feature/Account/presentation/pages/profile_page.dart
-// BẢN "THÔNG MINH" - TỰ XEM HOẶC XEM CỦA NGƯỜI KHÁC (ĐÃ SỬA LỖI RETURN)
+// BẢN "THÔNG MINH" - ĐÃ SỬA ĐỂ DECODE ẢNH BASE64
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
@@ -7,6 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:provider/provider.dart';
+
+import 'dart:convert'; // <-- BẮT BUỘC CÓ
+import 'dart:typed_data'; // <-- BẮT BUỘC CÓ
 
 // === IMPORT AUTHPROVIDER ĐỂ CHECK ROLE ===
 import 'package:hld_project/feature/auth/presentation/providers/auth_provider.dart';
@@ -32,13 +35,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  // Biến giữ Future (chỉ dùng nếu xem profile của chính mình)
   late Future<Account> _profileFuture;
-
-  // Biến giữ Account (hoặc là của mình, hoặc là của người khác)
   Account? _userToDisplay;
-
-  // Biến xác định xem đây là trang của mình hay của người khác
   bool _isViewingOtherUser = false;
 
   @override
@@ -46,13 +44,9 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
 
     if (widget.account != null) {
-      // TRƯỜNG HỢP 1: ADMIN BẤM "OPEN"
-      // Dùng data được truyền vào
       _userToDisplay = widget.account;
       _isViewingOtherUser = true;
     } else {
-      // TRƯỜNG HỢP 2: TỰ XEM PROFILE (USER/ADMIN TỪ BOTTOMNAV)
-      // Dùng Future để tự fetch
       _profileFuture = _fetchMyProfile();
       _isViewingOtherUser = false;
     }
@@ -76,12 +70,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // === HÀM XÓA (CHO TRƯỜNG HỢP 1 - ADMIN VIEW) ===
   Future<void> _deleteAccount(String accountId) async {
-    // 1. Tự tạo UseCase "bẩn"
     final dataSource = AccountRemoteDatasourceIpml();
     final repository = AccountRepositoryImpl(remoteDataSource: dataSource);
     final deleteUseCase = DeleteAccount(repository);
 
-    // 2. Hỏi xác nhận
     final confirmed = await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -94,7 +86,6 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
 
-    // 3. Gọi UseCase và Pop(true)
     if (confirmed == true) {
       try {
         await deleteUseCase.call(accountId);
@@ -115,7 +106,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // === HÀM CHUYỂN ACCOUNT OBJECT THÀNH MAP<STRING, STRING> THỦ CÔNG ===
   Map<String, String> _createProfileMap(Account user) {
-    // === SỬA LỖI: THÊM RETURN VÀO ĐÂY ===
     return {
       'id': user.id,
       'name': user.name,
@@ -126,7 +116,7 @@ class _ProfilePageState extends State<ProfilePage> {
       'age': user.age,
       'address': user.address,
       'role': user.role,
-      // Chuyển DateTime sang String ISO để xử lý
+      'avatarUrl': user.avatarUrl, // Thêm avatar
       'createAt': user.createAt.toIso8601String(),
       'updateAt': user.updateAt.toIso8601String(),
     };
@@ -134,7 +124,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // === WIDGET DÒNG TEXT PHẲNG ===
   Widget _buildTextField(String label, String value) {
-    // === SỬA LỖI: THÊM RETURN VÀO ĐÂY ===
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       child: Row(
@@ -148,30 +137,27 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext cxt) { // Đổi tên context để tránh nhầm lẫn
     // === LOGIC BUILD CHÍNH ===
-    // Nếu không phải xem người khác (Trường hợp 2) -> dùng FutureBuilder
     if (!_isViewingOtherUser) {
       return Scaffold(
-        appBar: _buildProfileAppBar(context, isAdmin: context.read<AuthProvider>().isAdmin),
+        appBar: _buildProfileAppBar(cxt, isAdmin: cxt.read<AuthProvider>().isAdmin),
         body: FutureBuilder<Account>(
           future: _profileFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
             if (snapshot.hasError) return Center(child: Text('Lỗi: ${snapshot.error}'));
             if (!snapshot.hasData) return const Center(child: Text('Không tìm thấy dữ liệu.'));
-
             final Account user = snapshot.data!;
-            return _buildProfileBody(context, user, isAdmin: context.read<AuthProvider>().isAdmin);
+            return _buildProfileBody(context, user, isAdmin: cxt.read<AuthProvider>().isAdmin);
           },
         ),
       );
     }
 
-    // Nếu là xem người khác (Trường hợp 1) -> Dùng data đã có
     return Scaffold(
-      appBar: _buildProfileAppBar(context, isAdmin: true), // Admin xem thì luôn là Admin
-      body: _buildProfileBody(context, _userToDisplay!, isAdmin: true),
+      appBar: _buildProfileAppBar(cxt, isAdmin: true),
+      body: _buildProfileBody(cxt, _userToDisplay!, isAdmin: true),
     );
   }
 
@@ -179,20 +165,17 @@ class _ProfilePageState extends State<ProfilePage> {
   // === TÁCH APPBAR RA CHO SẠCH ===
   AppBar _buildProfileAppBar(BuildContext context, {required bool isAdmin}) {
     return AppBar(
-      // Nút back (chỉ hiện khi Admin xem)
       leading: _isViewingOtherUser
           ? IconButton(icon: const Icon(Iconsax.arrow_left, color: Colors.black), onPressed: () => context.pop())
-          : null, // User tự xem thì không có nút back
+          : null,
       title: const Text('HLD Project', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
       centerTitle: true,
       actions: [
-        // Nút thông báo (chỉ hiện khi tự xem)
         if (!_isViewingOtherUser)
           IconButton(
             icon: const Icon(Iconsax.notification, color: Colors.black),
             onPressed: () {},
           ),
-        // Nút Logout (chỉ hiện khi tự xem)
         if (!_isViewingOtherUser)
           IconButton(
             icon: const Icon(Iconsax.logout, color: Colors.black),
@@ -204,8 +187,26 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // === TÁCH BODY UI RA CHO SẠCH ===
+  // === TÁCH BODY UI (ĐÃ SỬA DECODE ẢNH) ===
   Widget _buildProfileBody(BuildContext context, Account user, {required bool isAdmin}) {
+
+    // === LOGIC GIẢI MÃ (DECODE) ẢNH ===
+    ImageProvider? avatarImage;
+    if (user.avatarUrl.startsWith('data:image')) {
+      // TRƯỜNG HỢP 1: ẢNH LÀ BASE64
+      try {
+        final String base64String = user.avatarUrl.split(',')[1];
+        final Uint8List imageBytes = base64Decode(base64String);
+        avatarImage = MemoryImage(imageBytes);
+      } catch (e) {
+        avatarImage = null; // Lỗi decode
+      }
+    } else if (user.avatarUrl.startsWith('http')) {
+      // TRƯỜNG HỢP 2: ẢNH LÀ LINK (URL)
+      avatarImage = NetworkImage(user.avatarUrl);
+    }
+    // =================================
+
     return SingleChildScrollView(
       child: Container(
         color: Colors.grey.shade50,
@@ -213,11 +214,14 @@ class _ProfilePageState extends State<ProfilePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 24),
-            // Avatar
+            // Avatar (ĐÃ SỬA)
             CircleAvatar(
               radius: 50,
               backgroundColor: Colors.grey.shade200,
-              child: const Icon(Iconsax.user, size: 50, color: Colors.grey),
+              backgroundImage: avatarImage, // <-- DÙNG BIẾN MỚI
+              child: (avatarImage == null)
+                  ? const Icon(Iconsax.user, size: 50, color: Colors.grey)
+                  : null,
             ),
             const SizedBox(height: 16),
             Text(
@@ -246,7 +250,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   _buildTextField('Ngày sinh', _displayValue(user.dob)),
                   const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
                   _buildTextField('Địa chỉ', _displayValue(user.address)),
-                  // Admin xem thì thấy thêm Role
                   if (isAdmin) ...[
                     const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
                     _buildTextField('Role', _displayValue(user.role)),
@@ -264,7 +267,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: _isViewingOtherUser
                 // === NÚT XÓA (ADMIN XEM) ===
                     ? ElevatedButton(
-                  onPressed: () => _deleteAccount(user.id), // Sửa: Thêm context
+                  onPressed: () => _deleteAccount(user.id),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red.shade100,
                     foregroundColor: Colors.red.shade900,
