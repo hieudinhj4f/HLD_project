@@ -5,7 +5,6 @@ import '../../domain/entities/user_entity.dart';
 
 class AuthProvider with ChangeNotifier {
   UserEntity? _user;
-
   UserEntity? get user => _user;
   bool get isLoggedIn => _user != null;
   bool get isAdmin => _user?.role == 'admin';

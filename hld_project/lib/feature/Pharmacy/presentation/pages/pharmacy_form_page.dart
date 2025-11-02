@@ -1,13 +1,14 @@
+// presentation/pages/pharmacy_form_page.dart
 import 'package:flutter/material.dart';
-// 1. IMPORT USECASE VÀ ENTITY
+import 'package:flutter/services.dart';
+import 'package:iconsax/iconsax.dart';
+
 import '../../domain/entity/pharmacy.dart';
 import '../../domain/usecase/createPharmacy.dart';
 import '../../domain/usecase/updatePharmacy.dart';
 
 class PharmacyFormPage extends StatefulWidget {
   final Pharmacy? pharmacy;
-
-  // 2. NHẬN CÁC USECASE
   final CreatePharmacy createPharmacy;
   final UpdatePharmacy updatePharmacy;
 
@@ -24,91 +25,81 @@ class PharmacyFormPage extends StatefulWidget {
 
 class _PharmacyFormPageState extends State<PharmacyFormPage> {
   final _formKey = GlobalKey<FormState>();
+  late final bool _isEditMode;
+  bool _isLoading = false;
 
+  // Controllers
   late final TextEditingController _nameController;
-  late final TextEditingController _destController;
-  late final TextEditingController _hotlineController;
-  late final TextEditingController _taxIdController;
-  late final TextEditingController _presController;
-  // (Bạn cũng cần controller cho 'imageUrl' nếu có)
   late final TextEditingController _imageUrlController;
+  late final TextEditingController _addressController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _staffCountController;
 
-  late bool _isEditMode;
+  // Toggle
+  bool _isActive = true;
 
   @override
   void initState() {
     super.initState();
-    _isEditMode = (widget.pharmacy != null);
+    _isEditMode = widget.pharmacy != null;
 
     _nameController = TextEditingController(text: widget.pharmacy?.name ?? '');
-    _destController =
-        TextEditingController(text: widget.pharmacy?.destination ?? '');
-    _hotlineController =
-        TextEditingController(text: widget.pharmacy?.hotline ?? '');
-    _taxIdController =
-        TextEditingController(text: widget.pharmacy?.taxId ?? '');
-    _presController =
-        TextEditingController(text: widget.pharmacy?.presentative ?? '');
-    // Khởi tạo controller cho imageUrl
-    _imageUrlController =
-        TextEditingController(text: widget.pharmacy?.imageUrl ?? '');
+    _imageUrlController = TextEditingController(text: widget.pharmacy?.imageUrl ?? '');
+    _addressController = TextEditingController(text: widget.pharmacy?.address ?? '');
+    _phoneController = TextEditingController(text: widget.pharmacy?.phone ?? '');
+    _staffCountController = TextEditingController(
+      text: widget.pharmacy?.staffCount.toString() ?? '0',
+    );
+    _isActive = widget.pharmacy?.isActive ?? true;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _destController.dispose();
-    _hotlineController.dispose();
-    _taxIdController.dispose();
-    _presController.dispose();
-    _imageUrlController.dispose(); // <-- Nhớ dispose
+    _imageUrlController.dispose();
+    _addressController.dispose();
+    _phoneController.dispose();
+    _staffCountController.dispose();
     super.dispose();
   }
 
-  // 3. VIẾT LẠI HÀM _onSave
-  void _onSave() {
-    if (_formKey.currentState?.validate() ?? false) {
-      // (Bạn có thể thêm logic hiển thị loading ở đây)
+  // === SAVE ===
+  Future<void> _onSave() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_isLoading) return;
 
-      // A. Gom dữ liệu từ form
-      final pharmacyData = Pharmacy(
-        // Nếu là 'Edit', dùng ID cũ.
-        // Nếu là 'Add', Firebase sẽ tự tạo ID,
-        // nên ta truyền 1 ID tạm (ví dụ: 'new' hoặc rỗng)
-        // (Kiểm tra lại Entity của bạn, nếu id không phải 'String?'
-        // mà là 'String', bạn bắt buộc phải truyền 1 giá trị)
+    setState(() => _isLoading = true);
+
+    try {
+      final now = DateTime.now();
+      final pharmacy = Pharmacy(
         id: widget.pharmacy?.id ?? '',
-        name: _nameController.text,
-        destination: _destController.text,
-        hotline: _hotlineController.text,
-        taxId: _taxIdController.text,
-        presentative: _presController.text,
-        imageUrl: _imageUrlController.text,
+        name: _nameController.text.trim(),
+        imageUrl: _imageUrlController.text.trim().isEmpty ? null : _imageUrlController.text.trim(),
+        address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+        state: _isEditMode ? (widget.pharmacy?.state ?? 'Pending') : 'Pending',
+        staffCount: int.tryParse(_staffCountController.text) ?? 0,
+        ownerId: widget.pharmacy?.ownerId ?? 'current_user_id', // Lấy từ AuthProvider sau
+        createdAt: _isEditMode ? (widget.pharmacy?.createdAt ?? now) : now,
+        isActive: _isActive,
       );
 
-      try {
-        // B. Quyết định gọi Usecase nào
-        if (_isEditMode) {
-          // Chế độ Cập nhật
-          print('Updating pharmacy...');
-          widget.updatePharmacy(pharmacyData); // <-- GỌI UPDATE USECASE
-        } else {
-          // Chế độ Tạo mới
-          print('Creating new pharmacy...');
-          widget.createPharmacy(pharmacyData); // <-- GỌI CREATE USECASE
-        }
+      if (_isEditMode) {
+        await widget.updatePharmacy(pharmacy);
+      } else {
+        await widget.createPharmacy(pharmacy);
+      }
 
-        // C. Quay lại trang trước
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
-      } catch (e) {
-        // (Xử lý lỗi nếu có)
-        print('Failed to save pharmacy: $e');
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save: $e')),
+          SnackBar(content: Text('Lỗi: $e')),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -116,64 +107,60 @@ class _PharmacyFormPageState extends State<PharmacyFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditMode ? 'Edit Pharmacy' : 'Add Pharmacy'),
+        title: Text(_isEditMode ? 'Sửa Nhà Thuốc' : 'Thêm Nhà Thuốc'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _onSave,
-          ),
+          _isLoading
+              ? const Padding(
+            padding: EdgeInsets.all(16),
+            child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white)),
+          )
+              : IconButton(icon: const Icon(Iconsax.save_2), onPressed: _onSave),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              _buildTextFormField(
-                controller: _nameController,
-                label: 'Pharmacy Name',
-                icon: Icons.store,
+              _buildField(_nameController, 'Tên Nhà Thuốc', Iconsax.shop, required: true),
+              _buildField(_imageUrlController, 'URL Hình Ảnh', Iconsax.gallery),
+              _buildField(_addressController, 'Địa Chỉ', Iconsax.location),
+              _buildField(_phoneController, 'Số Điện Thoại', Iconsax.call, keyboardType: TextInputType.phone),
+              _buildField(
+                _staffCountController,
+                'Số Nhân Viên',
+                Iconsax.people,
+                keyboardType: TextInputType.number,
+                required: true,
               ),
-              // THÊM TRƯỜNG IMAGE URL
-              _buildTextFormField(
-                controller: _imageUrlController,
-                label: 'Image URL',
-                icon: Icons.image,
+
+              // Toggle Active
+              SwitchListTile(
+                title: const Text('Hoạt động'),
+                value: _isActive,
+                onChanged: (val) => setState(() => _isActive = val),
+                secondary: Icon(_isActive ? Iconsax.tick_circle : Iconsax.close_circle, color: _isActive ? Colors.green : Colors.red),
               ),
-              _buildTextFormField(
-                controller: _destController,
-                label: 'Destination (Address)',
-                icon: Icons.location_on,
-              ),
-              _buildTextFormField(
-                controller: _hotlineController,
-                label: 'Hotline',
-                icon: Icons.phone,
-                keyboardType: TextInputType.phone,
-              ),
-              _buildTextFormField(
-                controller: _taxIdController,
-                label: 'Tax ID',
-                icon: Icons.description,
-              ),
-              _buildTextFormField(
-                controller: _presController,
-                label: 'Presentative',
-                icon: Icons.person,
-              ),
-              const SizedBox(height: 32),
+
+              const SizedBox(height: 24),
+
+              // Save Button
               ElevatedButton.icon(
-                icon: const Icon(Icons.save),
-                // Cập nhật tiêu đề nút
-                label: Text(_isEditMode ? 'Save Changes' : 'Add Pharmacy'),
+                onPressed: _isLoading ? null : _onSave,
+                icon: _isLoading
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Icon(Iconsax.save_2),
+                label: Text(_isLoading
+                    ? 'Đang lưu...'
+                    : (_isEditMode ? 'Lưu Thay Đổi' : 'Thêm Nhà Thuốc')),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
                   backgroundColor: const Color(0xFF4CAF50),
                   foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: _onSave,
-              )
+              ),
             ],
           ),
         ),
@@ -181,33 +168,31 @@ class _PharmacyFormPageState extends State<PharmacyFormPage> {
     );
   }
 
-  // (Widget _buildTextFormField giữ nguyên)
-  Widget _buildTextFormField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
+  Widget _buildField(
+      TextEditingController controller,
+      String label,
+      IconData icon, {
+        TextInputType keyboardType = TextInputType.text,
+        bool required = false,
+      }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
+        inputFormatters: keyboardType == TextInputType.number
+            ? [FilteringTextInputFormatter.digitsOnly]
+            : null,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
           fillColor: Colors.grey[50],
         ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return '$label cannot be empty';
-          }
-          return null;
-        },
+        validator: required
+            ? (value) => (value == null || value.trim().isEmpty) ? '$label không được để trống' : null
+            : null,
       ),
     );
   }

@@ -1,20 +1,28 @@
+// data/repository/pharmacy_repository_impl.dart
 import 'package:hld_project/feature/Pharmacy/data/datasource/pharmacy_remote_datasource.dart';
-import 'package:hld_project/feature/Pharmacy/data/model/pharmacy_model.dart';
+import 'package:hld_project/feature/Pharmacy/data/model/pharmacy_model.dart'; // ← CẦN TẠO NẾU CHƯA CÓ
 import 'package:hld_project/feature/Pharmacy/domain/entity/pharmacy.dart';
+import 'package:hld_project/feature/Pharmacy/domain/entity/kpi_stats.dart';
 import 'package:hld_project/feature/Pharmacy/domain/repository/pharmacy_repository.dart';
 
-class PharmacyRepositoryImpl implements PharmacyRepository {
-  // 1. Phụ thuộc vào lớp Abstract Datasource
-  final PharmacyRemoteDatasource remoteDatasource;
+import '../model/kip_stat_model.dart';
 
-  // 2. Tiêm (Inject) Datasource vào constructor
+class PharmacyRepositoryImpl implements PharmacyRepository {
+  final PharmacyRemoteDataSource remoteDatasource;
+
   PharmacyRepositoryImpl(this.remoteDatasource);
 
+  // === CRUD PHARMACY ===
   @override
   Future<void> createPharmacy(Pharmacy pharmacy) async {
-    // Chuyển Entity (sạch) -> Model (bẩn) để gửi đi
-    final pharmacyModel = PharmacyModel.fromEntity(pharmacy);
-    await remoteDatasource.add(pharmacyModel);
+    final model = PharmacyModel.fromEntity(pharmacy);
+    await remoteDatasource.add(model);
+  }
+
+  @override
+  Future<void> updatePharmacy(Pharmacy pharmacy) async {
+    final model = PharmacyModel.fromEntity(pharmacy);
+    await remoteDatasource.update(model);
   }
 
   @override
@@ -23,41 +31,38 @@ class PharmacyRepositoryImpl implements PharmacyRepository {
   }
 
   @override
-  Future<List<Pharmacy>> GetAllPharmacy() async {
-
-    // 1. Gọi Datasource, nhận về List<Model>
-    final pharmacyModels = await remoteDatasource.getAll();
-
-    // 2. Chuyển List<Model> -> List<Entity> và trả về cho Domain
-    final pharmacies = pharmacyModels
-        .map((model) => model.toEntity())
-        .toList();
-    return pharmacies;
-  }
-
-  @override
   Future<Pharmacy?> getPharmacyById(String id) async {
-    // 1. Gọi Datasource, nhận về Model?
-    final pharmacyModel = await remoteDatasource.getPharmacy(id);
-
-    // 2. Nếu model tồn tại, chuyển nó thành Entity và trả về
-    if (pharmacyModel != null) {
-      return pharmacyModel.toEntity();
-    }
-    return null;
+    final model = await remoteDatasource.getPharmacyById(id);
+    return model?.toEntity();
   }
 
   @override
-  Future<void> updatePharmacy(Pharmacy pharmacy) async {
-    // Chuyển Entity (sạch) -> Model (bẩn) để gửi đi
-    final pharmacyModel = PharmacyModel.fromEntity(pharmacy);
-    await remoteDatasource.update(pharmacyModel);
+  Future<List<Pharmacy>> getAllPharmacies() async {
+    final models = await remoteDatasource.getAll();
+    return models.map((m) => m.toEntity()).toList();
   }
 
-  // --- HÀM NÀY BỊ SAI TÊN TRONG FILE CỦA BẠN ---
-  // Bạn nên xóa hàm này và dùng hàm 'getAllPharmacies' ở trên
+  // === DASHBOARD STATS ===
   @override
-  Future<List<Pharmacy>> getAllProducts() {
-    return remoteDatasource.getAll();
+  Future<KpiStats> getDashboardStats(String pharmacyId) async {
+    final model = await remoteDatasource.getDashboardStats(pharmacyId);
+    return model.toEntity();
+  }
+
+  @override
+  Future<List<double>> getVendorActivity(String pharmacyId) async {
+    return await remoteDatasource.getVendorActivity(pharmacyId);
+  }
+
+  // === GLOBAL STATS (CHO ADMIN) ===
+  @override
+  Future<List<String>> getAllPharmacyIds() async {
+    return await remoteDatasource.getAllPharmacyIds();
+  }
+
+  @override
+  Future<KpiStats> getKpiStatsForPharmacy(String pharmacyId) async {
+    final model = await remoteDatasource.getKpiStatsForPharmacy(pharmacyId);
+    return model.toEntity();
   }
 }
