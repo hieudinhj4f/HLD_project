@@ -2,9 +2,16 @@ import 'package:hld_project/feature/Pharmacy/domain/repository/pharmacy_reposito
 
 import '../entity/pharmacy.dart';
 
-class UpdatePharmacy {
-  final PharmacyRepository p;
-  UpdatePharmacy(this.p);
+// domain/usecase/update_pharmacy.dart
+import '../entity/pharmacy.dart';
+import '../repository/pharmacy_repository.dart';
 
-  Future<void> call(Pharmacy pharma) async => await p.updatePharmacy(pharma);
+class UpdatePharmacy {
+  final PharmacyRepository repository;
+
+  const UpdatePharmacy(this.repository);
+
+  Future<void> call(Pharmacy pharmacy) {
+    return repository.updatePharmacy(pharmacy);
+  }
 }

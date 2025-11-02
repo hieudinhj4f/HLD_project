@@ -15,7 +15,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
 
   ProductRemoteDataSourceImpl()
       : _remoteSource = FirebaseRemoteDS<ProductModel>(
-      collectionName: 'product', // Tên collection trên Firestore
+      collectionName: 'product',
       fromFirestore: (doc) => ProductModel.fromFirestore(doc),
       toFirestore: (model) => model.toJson(),
   );

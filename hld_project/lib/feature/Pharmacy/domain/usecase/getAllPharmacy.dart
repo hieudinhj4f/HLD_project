@@ -5,5 +5,5 @@ class GetAllPharmacy{
   final PharmacyRepository p;
   GetAllPharmacy(this.p);
 
-  Future<List<Pharmacy>> call()  async => await p.GetAllPharmacy();
+  Future<List<Pharmacy>> call()  async => await p.getAllPharmacies();
 }

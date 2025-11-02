@@ -24,7 +24,7 @@ import 'package:hld_project/feature/chat/domain/usecases/update_doctor.dart';
 import 'package:hld_project/feature/chat/presentation/pages/chat_home_page.dart';
 
 // Dashboard
-import 'package:hld_project/feature/Dashboard/presentation/pages/Dashboard.dart';
+import 'package:hld_project/feature/Pharmacy/presentation/pages/Dashboard.dart';
 
 // Home
 import 'package:hld_project/feature/Home/presentation/pages/home_page.dart';
@@ -55,6 +55,7 @@ import 'package:hld_project/feature/Product/presentation/User/pages/product_list
 import 'package:hld_project/feature/Product/presentation/User/pages/qr_payment_page.dart';
 import 'package:hld_project/feature/chat/presentation/pages/doctor_detail_page.dart';
 import 'package:hld_project/feature/chat/presentation/pages/doctor_list_page.dart';
+import 'package:provider/provider.dart';
 
 // === 4. IMPORT TƯƠNG ĐỐI (RELATIVE IMPORTS - TỪ CHÍNH MODULE HIỆN TẠI) ===
 
@@ -81,8 +82,59 @@ import 'app_routers.dart';
 
 class AppRouter {
   final AuthProvider authProvider;
-  AppRouter(this.authProvider);
 
+  // === 4. LƯU TRỮ CÁC USECASE ===
+  // (Lấy từ constructor, được truyền từ main.dart)
+
+  // Pharmacy
+  final GetAllPharmacy getAllPharmacy;
+  final CreatePharmacy createPharmacy;
+  final UpdatePharmacy updatePharmacy;
+  final DeletePharmacy deletePharmacy;
+
+  // (Bạn cũng cần thêm các Usecase khác mà main.dart tạo)
+  // Product
+  final GetAllProduct getAllProduct;
+  final CreateProduct createProduct;
+  final UpdateProduct updateProduct;
+  final DeleteProduct deleteProduct;
+
+  // Doctor (Admin)
+  final GetAllDoctor getAllDoctors;
+  final CreateDoctor createDoctor;
+  final UpdateDoctor updateDoctor;
+  final DeleteDoctor deleteDoctor;
+
+  // Chat (User)
+  // final GetDoctors getDoctors; // (main.dart của bạn chưa tạo cái này)
+
+
+  // === 5. CẬP NHẬT CONSTRUCTOR ===
+  AppRouter({
+    required this.authProvider,
+
+    // Pharmacy
+    required this.getAllPharmacy,
+    required this.createPharmacy,
+    required this.updatePharmacy,
+    required this.deletePharmacy,
+
+    // Product (Giả sử bạn sẽ thêm vào main.dart)
+    required this.getAllProduct,
+    required this.createProduct,
+    required this.updateProduct,
+    required this.deleteProduct,
+
+    // Doctor (Giả sử bạn sẽ thêm vào main.dart)
+    required this.getAllDoctors,
+    required this.createDoctor,
+    required this.updateDoctor,
+    required this.deleteDoctor,
+
+    // required this.getDoctors,
+  });
+
+  // (Các tabs _adminTabs và _userTabs giữ nguyên)
   static const List<BottomNavItem> _adminTabs = [
     BottomNavItem(path: '/admin/home', label: 'Home', icon: Icons.home),
     BottomNavItem(
@@ -107,7 +159,6 @@ class AppRouter {
       icon: Icons.settings,
     ),
   ];
-
   static const List<BottomNavItem> _userTabs = [
     BottomNavItem(path: '/user/product', label: 'Product', icon: Icons.home),
     BottomNavItem(path: '/user/cart', label: 'Cart', icon: Icons.shopping_cart),
@@ -120,6 +171,7 @@ class AppRouter {
     debugLogDiagnostics: true,
     refreshListenable: authProvider,
 
+    // (Hàm redirect của bạn giữ nguyên)
     redirect: (context, state) {
       final bool isLoggedIn = authProvider.isLoggedIn;
       final bool isAdmin = authProvider.isAdmin;
@@ -129,6 +181,9 @@ class AppRouter {
           location == AppRoutes.login ||
           location == AppRoutes.signup ||
           location == AppRoutes.home;
+              location == AppRoutes.signup ||
+              location == AppRoutes.home;
+
       final bool isGoingToAdmin = location.startsWith('/admin');
       final bool isGoingToUser =
           location.startsWith('/user') || location == '/doctor-detail';
@@ -143,27 +198,28 @@ class AppRouter {
     },
 
     routes: [
-      GoRoute(
-        path: AppRoutes.login,
-        builder: (context, state) => const LoginPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.splash,
-        builder: (context, state) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.signup,
-        builder: (context, state) => const SignupPage(),
-      ),
+      // (Các route auth giữ nguyên)
+      GoRoute(path: AppRoutes.login,  builder: (context, state) => const LoginPage()),
+      GoRoute(path: AppRoutes.splash,  builder: (context, state) => const SplashScreen()),
+      GoRoute(path: AppRoutes.signup, builder: (context, state) => const SignupPage()),
 
+      // --- ADMIN SHELL (ĐÃ SỬA) ---
       // ADMIN SHELL
       ShellRoute(
         builder: (context, state, child) =>
             AppShell(tabs: _adminTabs, child: child),
         routes: [
+          // app_router.dart
           GoRoute(
             path: '/admin/home',
-            builder: (context, state) => AdminHomePage(),
+            builder: (context, state) => const AdminHomePage(),
+            redirect: (context, state) {
+              final auth = context.read<AuthProvider>();
+              if (!auth.isLoggedIn || !auth.isAdmin) {
+                return '/login';
+              }
+              return null;
+            },
           ),
           GoRoute(
             path: '/admin/product',
@@ -208,19 +264,18 @@ class AppRouter {
             builder: (context, state) => const SettingsPage(),
           ),
           GoRoute(
-            path: '/admin/doctors',
-            builder: (context, state) {
-              // ĐÃ SỬA: content → context
-              final remote = DoctorRemoteDataSourceImpl();
-              final repo = DoctorRepositoryImpl(remote);
-              return DoctorListPage(
-                getAllDoctors: GetAllDoctor(repo),
-                createDoctor: CreateDoctor(repo),
-                updateDoctor: UpdateDoctor(repo),
-                deleteDoctor: DeleteDoctor(repo),
-              );
-            },
-          ),
+              path: '/admin/doctors',
+              builder: (content , state ) {
+                final remote = DoctorRemoteDataSourceImpl();
+                final repo = DoctorRepositoryImpl(remote);
+                return DoctorListPage(
+                  getAllDoctors: GetAllDoctor(repo),
+                  createDoctor:  CreateDoctor(repo),
+                  updateDoctor:  UpdateDoctor(repo),
+                  deleteDoctor: DeleteDoctor(repo),
+                );
+              }
+          )
         ],
       ),
 
@@ -275,6 +330,7 @@ class AppRouter {
               final repo = ChatRepositoryImpl(remote);
               return ChatHomePage(getDoctors: GetDoctors(repo));
             },
+
           ),
           // ĐÃ DI CHUYỂN RA NGOÀI: /doctor-detail là route độc lập
           GoRoute(

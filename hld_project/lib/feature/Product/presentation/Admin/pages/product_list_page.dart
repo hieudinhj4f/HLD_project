@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../domain/entity/product/product.dart';
@@ -183,25 +184,18 @@ class _ProductListPageState extends State<ProductListPage> {
     @override
     Widget build(BuildContext context) {
         return Scaffold(
-            appBar: AppBar(
-                title: const Text(
-                    'Healthy Life Diagnosis',
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                    ),
-                ),
-                actions: [
-                    IconButton(
-                        icon: const Icon(Iconsax.notification, color: Colors.black),
-                        onPressed: () {},
-                    ),
-                    IconButton(
-                        icon: const Icon(Iconsax.refresh, color: Colors.black),
-                        onPressed: _isLoading ? null : _loadProducts,
-                    ),
-                ],
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            title: Text(
+              'HLD',
+              style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
+                fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
+                color: Colors.green,
+                fontSize: 30,
+              ),
             ),
+            centerTitle: true,
+          ),
             body: SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(

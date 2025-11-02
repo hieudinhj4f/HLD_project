@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hld_project/feature/Pharmacy/presentation/pages/pharmacy_form_page.dart';
 // 1. IMPORT CÁC USECASE VÀ ENTITY
 import '../../domain/entity/pharmacy.dart';
@@ -52,13 +53,16 @@ class _PharmacyListPageState extends State<PharmacyListPage> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'Pharmacy',
-          style: TextStyle(color: Color(0xFF4CAF50)),
-        ),
-        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
-        elevation: 1,
+        title: Text(
+          'HLD',
+          style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
+            fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
+            color: Colors.green,
+            fontSize: 30,
+          ),
+        ),
+        centerTitle: true,
       ),
       // --- BƯỚC 5: DÙNG BIẾN STATE _pharmaciesFuture ---
       body: FutureBuilder<List<Pharmacy>>(

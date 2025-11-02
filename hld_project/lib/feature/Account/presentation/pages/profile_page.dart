@@ -1,5 +1,5 @@
 // file: lib/feature/Account/presentation/pages/profile_page.dart
-// BẢN "THÔNG MINH" - ĐÃ SỬA ĐỂ DECODE ẢNH BASE64
+// BẢN "HOÀN CHỈNH" - ĐÃ SỬA SPACING, DIALOG, VÀ CÁC NÚT
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
@@ -21,6 +21,7 @@ import 'package:hld_project/feature/Account/domain/usecases/delete_account.dart'
 import '../../data/model/account_model.dart';
 import '../../domain/entities/account.dart';
 import 'profile_edit_page.dart'; // Import trang Edit
+import 'package:google_fonts/google_fonts.dart';
 
 
 // === 1. ĐỔI THÀNH STATEFULWIDGET ===
@@ -68,8 +69,9 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // === HÀM XÓA (CHO TRƯỜNG HỢP 1 - ADMIN VIEW) ===
+  // === HÀM XÓA (BẢN "XỊN") ===
   Future<void> _deleteAccount(String accountId) async {
+    // Phần logic use case giữ nguyên
     final dataSource = AccountRemoteDatasourceIpml();
     final repository = AccountRepositoryImpl(remoteDataSource: dataSource);
     final deleteUseCase = DeleteAccount(repository);
@@ -77,15 +79,50 @@ class _ProfilePageState extends State<ProfilePage> {
     final confirmed = await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: const Text('Bạn có chắc chắn muốn xóa tài khoản này không?'),
+        // 1. Icon cảnh báo
+        icon: Icon(Icons.warning_amber_rounded, color: Colors.red.shade600, size: 50),
+
+        // 2. Title
+        title: const Text('Xác nhận xóa', style: TextStyle(fontWeight: FontWeight.bold)),
+
+        // 3. Content (thêm câu cảnh báo)
+        content: const Text(
+          'Bạn có chắc chắn muốn xóa tài khoản này không? \nHành động này không thể hoàn tác.',
+          textAlign: TextAlign.center, // Căn giữa text
+        ),
+
+        // 5. Căn 2 nút ra giữa
+        actionsAlignment: MainAxisAlignment.center,
+
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Hủy')),
-          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('XÓA', style: TextStyle(color: Colors.red))),
+          // 4. Nút Hủy (style OutlinedButton)
+          OutlinedButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: Colors.grey.shade400),
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text('Hủy'),
+          ),
+
+          const SizedBox(width: 10), // Khoảng cách giữa 2 nút
+
+          // 4. Nút Xóa (style ElevatedButton màu đỏ)
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade700,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text('Xác nhận Xóa'),
+          ),
         ],
       ),
     );
 
+    // Phần logic xử lý sau khi dialog đóng
     if (confirmed == true) {
       try {
         await deleteUseCase.call(accountId);
@@ -98,6 +135,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     }
   }
+
 
   // Hàm helper (check null/rỗng)
   String _displayValue(String? value) {
@@ -122,19 +160,32 @@ class _ProfilePageState extends State<ProfilePage> {
     };
   }
 
-  // === WIDGET DÒNG TEXT PHẲNG ===
+  // === WIDGET DÒNG TEXT PHẲNG (ĐÃ SỬA SPACING + CĂN PHẢI) ===
   Widget _buildTextField(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      // Tăng padding ngang và dọc
+      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Căn 2 bên
         children: [
+          // Label
           Text(label, style: const TextStyle(fontSize: 16, color: Colors.black)),
-          Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+
+          // Value (dùng Expanded để nó đẩy ra hết cỡ bên phải)
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right, // <-- Căn phải
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis, // Xử lý tràn text (nếu có)
+              maxLines: 2, // Cho phép hiển thị tối đa 2 dòng nếu dài
+            ),
+          ),
         ],
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext cxt) { // Đổi tên context để tránh nhầm lẫn
@@ -162,38 +213,190 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
 
-  // === TÁCH APPBAR RA CHO SẠCH ===
+  // === TÁCH APPBAR RA CHO SẠCH (Đã bỏ nút logout) ===
   AppBar _buildProfileAppBar(BuildContext context, {required bool isAdmin}) {
     return AppBar(
       leading: _isViewingOtherUser
           ? IconButton(icon: const Icon(Iconsax.arrow_left, color: Colors.black), onPressed: () => context.pop())
           : null,
-      title: const Text('HLD Project', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+      backgroundColor: Colors.white,
+      title: Text(
+        'HLD',
+        style: GoogleFonts.montserrat(
+          fontWeight: FontWeight.w800,
+          color: Colors.green,
+          fontSize: 30,
+        ),
+      ),
       centerTitle: true,
-      actions: [
-        if (!_isViewingOtherUser)
-          IconButton(
-            icon: const Icon(Iconsax.notification, color: Colors.black),
-            onPressed: () {},
-          ),
-        if (!_isViewingOtherUser)
-          IconButton(
-            icon: const Icon(Iconsax.logout, color: Colors.black),
-            onPressed: () {
-              fb_auth.FirebaseAuth.instance.signOut();
-            },
-          ),
-      ],
+      // ĐÃ XÓA ACTIONS (NÚT LOGOUT)
     );
   }
 
-  // === TÁCH BODY UI (ĐÃ SỬA DECODE ẢNH) ===
+  // === HÀM HIỆN DIALOG ĐỔI MẬT KHẨU (BẢN "XỊN") ===
+  void _showChangePasswordDialog(BuildContext context) {
+    final _formKey = GlobalKey<FormState>();
+    final _oldPasswordController = TextEditingController();
+    final _newPasswordController = TextEditingController();
+    final _confirmPasswordController = TextEditingController();
+    String? _dialogError;
+    bool _isLoading = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: !_isLoading,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            return AlertDialog(
+              icon: Icon(Icons.lock_reset_outlined, color: Colors.blue.shade700, size: 50),
+              title: const Text('Đổi mật khẩu', style: TextStyle(fontWeight: FontWeight.bold)),
+              content: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_dialogError != null) ...[
+                        Text(
+                          _dialogError!,
+                          style: TextStyle(color: Colors.red, fontSize: 14),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                      TextFormField(
+                        controller: _oldPasswordController,
+                        obscureText: true,
+                        decoration: InputDecoration(labelText: 'Mật khẩu cũ'),
+                        validator: (val) =>
+                        val!.isEmpty ? 'Không được bỏ trống' : null,
+                      ),
+                      TextFormField(
+                        controller: _newPasswordController,
+                        obscureText: true,
+                        decoration: InputDecoration(labelText: 'Mật khẩu mới'),
+                        validator: (val) {
+                          if (val!.isEmpty) return 'Không được bỏ trống';
+                          if (val.length < 6)
+                            return 'Mật khẩu phải ít nhất 6 ký tự';
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        obscureText: true,
+                        decoration:
+                        InputDecoration(labelText: 'Xác nhận mật khẩu mới'),
+                        validator: (val) {
+                          if (val!.isEmpty) return 'Không được bỏ trống';
+                          if (val != _newPasswordController.text)
+                            return 'Mật khẩu không khớp';
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actionsAlignment: MainAxisAlignment.center,
+              actions: [
+                OutlinedButton(
+                  onPressed: _isLoading ? null : () => Navigator.of(ctx).pop(),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey.shade400),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  child: const Text('Hủy'),
+                ),
+
+                const SizedBox(width: 10),
+
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
+                    setDialogState(() { _dialogError = null; });
+                    if (!_formKey.currentState!.validate()) {
+                      return;
+                    }
+
+                    setDialogState(() { _isLoading = true; });
+
+                    final user = fb_auth.FirebaseAuth.instance.currentUser;
+                    final oldPassword = _oldPasswordController.text;
+                    final newPassword = _newPasswordController.text;
+
+                    if (user == null || user.email == null) {
+                      setDialogState(() {
+                        _dialogError = "Lỗi: Không tìm thấy người dùng.";
+                        _isLoading = false;
+                      });
+                      return;
+                    }
+
+                    try {
+                      final credential = fb_auth.EmailAuthProvider.credential(
+                        email: user.email!,
+                        password: oldPassword,
+                      );
+
+                      await user.reauthenticateWithCredential(credential);
+                      await user.updatePassword(newPassword);
+
+                      setDialogState(() { _isLoading = false; });
+                      Navigator.of(ctx).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Đổi mật khẩu thành công!')),
+                      );
+
+                    } on fb_auth.FirebaseAuthException catch (e) {
+                      String errorMessage = 'Đã xảy ra lỗi. Vui lòng thử lại.';
+                      if (e.code == 'wrong-password' || e.code == 'INVALID_LOGIN_CREDENTIALS') {
+                        errorMessage = 'Mật khẩu cũ không chính xác.';
+                      } else if (e.code == 'weak-password') {
+                        errorMessage = 'Mật khẩu mới quá yếu.';
+                      }
+                      setDialogState(() {
+                        _dialogError = errorMessage;
+                        _isLoading = false;
+                      });
+                    } catch (e) {
+                      setDialogState(() {
+                        _dialogError = 'Lỗi không xác định: $e';
+                        _isLoading = false;
+                      });
+                    }
+                  },
+                  child: _isLoading
+                      ? SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                      : const Text('Xác nhận'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+  // === TÁCH BODY UI (ĐÃ SỬA DECODE ẢNH VÀ CÁC NÚT BẤM) ===
   Widget _buildProfileBody(BuildContext context, Account user, {required bool isAdmin}) {
 
     // === LOGIC GIẢI MÃ (DECODE) ẢNH ===
     ImageProvider? avatarImage;
     if (user.avatarUrl.startsWith('data:image')) {
-      // TRƯỜNG HỢP 1: ẢNH LÀ BASE64
       try {
         final String base64String = user.avatarUrl.split(',')[1];
         final Uint8List imageBytes = base64Decode(base64String);
@@ -202,7 +405,6 @@ class _ProfilePageState extends State<ProfilePage> {
         avatarImage = null; // Lỗi decode
       }
     } else if (user.avatarUrl.startsWith('http')) {
-      // TRƯỜNG HỢP 2: ẢNH LÀ LINK (URL)
       avatarImage = NetworkImage(user.avatarUrl);
     }
     // =================================
@@ -214,11 +416,11 @@ class _ProfilePageState extends State<ProfilePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 24),
-            // Avatar (ĐÃ SỬA)
+            // Avatar
             CircleAvatar(
               radius: 50,
               backgroundColor: Colors.grey.shade200,
-              backgroundImage: avatarImage, // <-- DÙNG BIẾN MỚI
+              backgroundImage: avatarImage,
               child: (avatarImage == null)
                   ? const Icon(Iconsax.user, size: 50, color: Colors.grey)
                   : null,
@@ -233,7 +435,8 @@ class _ProfilePageState extends State<ProfilePage> {
             // === KHUNG THÔNG TIN TRẮNG (FLAT TEXT) ===
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 24),
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              // Bỏ padding vertical ở đây, vì _buildTextField đã có
+              padding: const EdgeInsets.symmetric(vertical: 0),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -242,24 +445,24 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 children: [
                   _buildTextField('Họ và tên', _displayValue(user.name)),
-                  const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+                  const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
                   _buildTextField('Số điện thoại', _displayValue(user.phone)),
-                  const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+                  const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
                   _buildTextField('Giới tính', _displayValue(user.gender)),
-                  const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+                  const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
                   _buildTextField('Ngày sinh', _displayValue(user.dob)),
-                  const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+                  const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
                   _buildTextField('Địa chỉ', _displayValue(user.address)),
                   if (isAdmin) ...[
-                    const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-                    _buildTextField('Role', _displayValue(user.role)),
+                    const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
+                    _buildTextField('Vai trò', _displayValue(user.role)),
                   ]
                 ],
               ),
             ),
             const SizedBox(height: 48),
 
-            // Nút Chỉnh sửa (nếu tự xem) HOẶC Nút Xóa (nếu Admin xem)
+            // === KHU VỰC CÁC NÚT (ĐÃ SỬA) ===
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: SizedBox(
@@ -298,6 +501,63 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
             ),
+
+            // === NÚT ĐỔI MK VÀ ĐĂNG XUẤT (SỬA LẠI SPACING) ===
+            if (!_isViewingOtherUser) ...[
+
+              const SizedBox(height: 12), // Khoảng cách
+
+              // NÚT ĐỔI MẬT KHẨU (DÙNG TEXTBUTTON CHO MẤT VIỀN)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: TextButton( // <-- Đổi thành TextButton
+                    onPressed: () {
+                      _showChangePasswordDialog(context);
+                    },
+                    style: TextButton.styleFrom( // <-- Đổi thành TextButton.styleFrom
+                      foregroundColor: Colors.blue.shade800,
+                      backgroundColor: Colors.blue.shade50, // Thêm nền nhạt cho nó "giống nút"
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text(
+                      'Đổi mật khẩu',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12), // Khoảng cách
+
+              // NÚT ĐĂNG XUẤT
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      fb_auth.FirebaseAuth.instance.signOut();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade100,
+                      foregroundColor: Colors.red.shade900,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Đăng xuất',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            // ================================
+
             const SizedBox(height: 48),
           ],
         ),
