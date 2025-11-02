@@ -14,4 +14,5 @@ class KpiStats {
     this.totalRevenue = 0.0,
     this.totalRevenuePercent = 0.0,
   });
+  factory KpiStats.zero() =>  KpiStats();
 }

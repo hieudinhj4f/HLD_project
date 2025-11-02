@@ -119,6 +119,7 @@ Future<void> main() async {
     getDashboardStats: getDashboardStats,
     getVendorActivity: getVendorActivity,
     getPharmacyInfo: getPharmacyById,
+    getAllPharmacies: getAllPharmacies,
   );
 
   // === APP ROUTER ===

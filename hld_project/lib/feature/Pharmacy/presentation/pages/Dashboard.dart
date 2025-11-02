@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hld_project/feature/Pharmacy/presentation/providers/dashboard_provider.dart';
 import 'package:hld_project/feature/Pharmacy/domain/entity/pharmacy.dart';
+import 'package:hld_project/feature/Pharmacy/domain/entity/kpi_stats.dart';
 
 // ==================== MÀU SẮC ====================
 const Color adminPrimaryGreen = Color(0xFF90D2B0);
@@ -28,7 +29,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DashboardProvider>().fetchDashboardData();
+      context.read<DashboardProvider>().fetchInitialData();
     });
   }
 
@@ -46,7 +47,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
           body: SafeArea(
             bottom: false,
             child: RefreshIndicator(
-              onRefresh: provider.refresh,
+              onRefresh: provider.refreshDataForSelectedPharmacy,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16.0),
@@ -65,7 +66,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     ),
                     const SizedBox(height: 24),
 
-                    // KPI Grid
+                    // PHARMACY SELECTOR
+                    const _PharmacySelector(),
+                    const SizedBox(height: 24),
+
+                    // KPI GRID
                     GridView.count(
                       crossAxisCount: 2,
                       shrinkWrap: true,
@@ -76,26 +81,26 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       children: [
                         _KpiCard(
                           title: 'Tổng Sản Phẩm',
-                          value: isLoading ? '0' : stats.totalProducts.toString(),
+                          value: isLoading ? '...' : stats.totalProducts.toString(),
                           backgroundColor: isLoading ? adminCardBackground : adminPrimaryGreen,
                           textColor: isLoading ? Colors.black : Colors.white,
                         ),
                         _KpiCard(
                           title: 'Đã Bán',
-                          value: isLoading ? '0' : stats.itemsSold.toString(),
+                          value: isLoading ? '...' : stats.itemsSold.toString(),
                           backgroundColor: adminCardBackground,
                           textColor: Colors.black,
                         ),
                         _KpiCard(
                           title: 'Doanh Thu Hôm Nay',
-                          value: isLoading ? '0' : formatRevenue(stats.todayRevenue),
+                          value: isLoading ? '...' : formatRevenue(stats.todayRevenue),
                           backgroundColor: adminCardBackground,
                           textColor: Colors.black,
                           changeIndicator: _ChangeChip(value: isLoading ? 0 : stats.todayRevenuePercent),
                         ),
                         _KpiCard(
                           title: 'Tổng Doanh Thu',
-                          value: isLoading ? '0' : formatRevenue(stats.totalRevenue),
+                          value: isLoading ? '...' : formatRevenue(stats.totalRevenue),
                           backgroundColor: adminCardBackground,
                           textColor: Colors.black,
                           changeIndicator: _ChangeChip(value: isLoading ? 0 : stats.totalRevenuePercent),
@@ -104,7 +109,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Vendor Activity
+                    // VENDOR ACTIVITY
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -114,7 +119,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Chart
+                    // CHART
                     Container(
                       height: 200,
                       padding: const EdgeInsets.all(16),
@@ -125,11 +130,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                           BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2)),
                         ],
                       ),
-                      child: _VendorChart(data: isLoading ? List.filled(6, 0.0) : chartData),
+                      child: _VendorChart(data: isLoading ? List.filled(7, 0.0) : chartData),
                     ),
                     const SizedBox(height: 24),
 
-                    // Pharmacy Card
+                    // PHARMACY CARD
                     if (isLoading || pharmacy == null)
                       const _PharmacyInfoCard.loading()
                     else
@@ -141,6 +146,89 @@ class _AdminHomePageState extends State<AdminHomePage> {
           ),
         );
       },
+    );
+  }
+}
+
+// ==================== PHARMACY SELECTOR ====================
+class _PharmacySelector extends StatelessWidget {
+  const _PharmacySelector();
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<DashboardProvider>();
+    final allPharmacies = provider.allAdminPharmacies;
+    final selectedId = provider.selectedPharmacyId;
+    final isListLoading = provider.isListLoading;
+
+    if (isListLoading) {
+      return Container(
+        height: 50,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+            SizedBox(width: 16),
+            Text("Đang tải danh sách nhà thuốc...", style: TextStyle(color: Colors.grey)),
+          ],
+        ),
+      );
+    }
+
+    if (allPharmacies.isEmpty) {
+      return Container(
+        height: 50,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 16),
+            Text("Chưa có nhà thuốc nào được gán.", style: TextStyle(color: Colors.grey)),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
+        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5, offset: const Offset(0, 3))],
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          isExpanded: true,
+          value: selectedId,
+          hint: const Text("Chọn nhà thuốc", style: TextStyle(color: Colors.grey)),
+          icon: const Icon(Icons.keyboard_arrow_down, color: adminPrimaryGreen),
+          items: allPharmacies.map((pharmacy) {
+            return DropdownMenuItem<String>(
+              value: pharmacy.id,
+              child: Text(
+                pharmacy.name,
+                style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+                overflow: TextOverflow.ellipsis,
+              ),
+            );
+          }).toList(),
+          onChanged: (newId) {
+            if (newId != null && newId != selectedId) {
+              context.read<DashboardProvider>().selectPharmacy(newId);
+            }
+          },
+        ),
+      ),
     );
   }
 }
@@ -267,9 +355,8 @@ class _VendorChart extends StatelessWidget {
               showTitles: true,
               getTitlesWidget: (value, meta) {
                 const style = TextStyle(color: Colors.grey, fontSize: 14);
-                const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-                return SideTitleWidget(
-                    meta: meta, child: Text(days[value.toInt()], style: style));
+                const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+                return SideTitleWidget(meta: meta, child: Text(days[value.toInt()], style: style));
               },
               reservedSize: 38,
             ),
@@ -296,7 +383,14 @@ class _VendorChart extends StatelessWidget {
         barGroups: data.asMap().entries.map((e) {
           return BarChartGroupData(
             x: e.key,
-            barRods: [BarChartRodData(toY: e.value, color: adminPrimaryGreen, width: 20, borderRadius: const BorderRadius.vertical(top: Radius.circular(4)))],
+            barRods: [
+              BarChartRodData(
+                toY: e.value,
+                color: adminPrimaryGreen,
+                width: 20,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+              ),
+            ],
           );
         }).toList(),
       ),
@@ -323,7 +417,6 @@ class _PharmacyInfoCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Image
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: isLoading
@@ -333,8 +426,6 @@ class _PharmacyInfoCard extends StatelessWidget {
                 : _placeholder(),
           ),
           const SizedBox(width: 16),
-
-          // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,17 +433,13 @@ class _PharmacyInfoCard extends StatelessWidget {
                 isLoading
                     ? _shimmer(150, 20)
                     : Text(pharmacy!.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-
                 const SizedBox(height: 8),
-
                 Row(children: [
                   const Text('Trạng thái:', style: TextStyle(color: Colors.grey, fontSize: 14)),
                   const SizedBox(width: 8),
                   isLoading ? _shimmer(100, 20) : _stateChip(pharmacy!.state),
                 ]),
-
                 const SizedBox(height: 4),
-
                 Row(children: [
                   const Text('Nhân viên:', style: TextStyle(color: Colors.grey, fontSize: 14)),
                   const SizedBox(width: 8),
