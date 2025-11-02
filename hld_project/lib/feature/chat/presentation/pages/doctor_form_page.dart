@@ -3,14 +3,23 @@ import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../domain/entities/doctor.dart'; // Đảm bảo đường dẫn này đúng
 
+// 1. IMPORT CÁC USECASE
+import '../../domain/usecases/create_doctor.dart';
+import '../../domain/usecases/update_doctor.dart';
+
+
 class DoctorFormPage extends StatefulWidget {
-  // Nếu 'doctor' là null, đây là form 'Tạo mới'
-  // Nếu 'doctor' có dữ liệu, đây là form 'Chỉnh sửa'
   final Doctor? doctor;
+
+  // 2. NHẬN CÁC USECASE
+  final CreateDoctor createDoctor;
+  final UpdateDoctor updateDoctor;
 
   const DoctorFormPage({
     super.key,
-    this.doctor
+    this.doctor,
+    required this.createDoctor,
+    required this.updateDoctor,
   });
 
   @override
@@ -20,8 +29,9 @@ class DoctorFormPage extends StatefulWidget {
 class _DoctorFormPageState extends State<DoctorFormPage> {
   final _formKey = GlobalKey<FormState>();
   late bool _isEditMode;
+  bool _isLoading = false; // Thêm biến để quản lý trạng thái loading
 
-  // 1. Khai báo controllers cho TẤT CẢ các trường
+  // (Khai báo 14 controllers - Giữ nguyên)
   late final TextEditingController _nameController;
   late final TextEditingController _specialtyController;
   late final TextEditingController _degreeController;
@@ -42,8 +52,7 @@ class _DoctorFormPageState extends State<DoctorFormPage> {
     super.initState();
     _isEditMode = (widget.doctor != null);
 
-    // 2. Khởi tạo giá trị cho controllers
-    // Nếu là 'Edit', điền thông tin cũ. Nếu là 'Add', điền giá trị mặc định.
+    // (Khởi tạo 14 controllers - Giữ nguyên)
     _nameController = TextEditingController(text: widget.doctor?.name ?? '');
     _specialtyController =
         TextEditingController(text: widget.doctor?.specialty ?? '');
@@ -73,7 +82,7 @@ class _DoctorFormPageState extends State<DoctorFormPage> {
 
   @override
   void dispose() {
-    // 3. Luôn dispose controllers
+    // (Dispose 14 controllers - Giữ nguyên)
     _nameController.dispose();
     _specialtyController.dispose();
     _degreeController.dispose();
@@ -91,24 +100,66 @@ class _DoctorFormPageState extends State<DoctorFormPage> {
     super.dispose();
   }
 
-  void _onSave() {
-    if (_formKey.currentState?.validate() ?? false) {
-      // 4. Thu thập dữ liệu
-      // Bạn sẽ cần gọi Usecase 'createDoctor' hoặc 'updateDoctor' ở đây
-      // Dữ liệu đã có sẵn trong các controllers, ví dụ:
-      final String name = _nameController.text;
-      final int experienceYears =
-          int.tryParse(_experienceYearsController.text) ?? 0;
-      final double averageRating =
-          double.tryParse(_averageRatingController.text) ?? 0.0;
+  // 3. VIẾT LẠI HOÀN TOÀN HÀM _onSave
+  void _onSave() async {
+    // Kiểm tra form hợp lệ
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
 
-      print('Saving Doctor: $name');
-      print('Experience: $experienceYears years');
-      print('Rating: $averageRating');
+    // Nếu đang loading thì không làm gì cả
+    if (_isLoading) return;
 
-      // Tạm thời chỉ quay lại trang trước
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // A. Thu thập và Phân tích (Parse) dữ liệu
+      final doctorData = Doctor(
+        id: widget.doctor?.id ?? '', // Dùng ID cũ nếu 'Edit'
+        name: _nameController.text,
+        specialty: _specialtyController.text,
+        degree: _degreeController.text,
+        type: _typeController.text,
+        experienceYears: int.tryParse(_experienceYearsController.text) ?? 0,
+        imageUrl: _imageUrlController.text,
+        totalExaminations: int.tryParse(_totalExaminationsController.text) ?? 0,
+        accurateRate: double.tryParse(_accurateRateController.text) ?? 0.0,
+        averageRating: double.tryParse(_averageRatingController.text) ?? 0.0,
+        totalReviews: int.tryParse(_totalReviewsController.text) ?? 0,
+        totalConsultations: int.tryParse(_totalConsultationsController.text) ?? 0,
+        onlineHours: int.tryParse(_onlineHoursController.text) ?? 0,
+        responseRate: double.tryParse(_responseRateController.text) ?? 0.0,
+        activeDays: int.tryParse(_activeDaysController.text) ?? 0,
+      );
+
+      // B. Quyết định gọi Usecase nào
+      if (_isEditMode) {
+        // Chế độ Cập nhật
+        await widget.updateDoctor(doctorData);
+      } else {
+        // Chế độ Tạo mới
+        await widget.createDoctor(doctorData);
+      }
+
+      // C. Quay lại trang trước (nếu thành công)
       if (mounted) {
         Navigator.of(context).pop();
+      }
+    } catch (e) {
+      // D. Xử lý lỗi
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save doctor: $e')),
+        );
+      }
+    } finally {
+      // Dừng loading
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -119,10 +170,20 @@ class _DoctorFormPageState extends State<DoctorFormPage> {
       appBar: AppBar(
         title: Text(_isEditMode ? 'Edit Doctor' : 'Add Doctor'),
         actions: [
-          IconButton(
-            icon: const Icon(Iconsax.save_2),
-            onPressed: _onSave,
-          ),
+          // Hiển thị loading hoặc nút save
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(color: Colors.white)),
+            )
+          else
+            IconButton(
+              icon: const Icon(Iconsax.save_2),
+              onPressed: _onSave,
+            ),
         ],
       ),
       body: SingleChildScrollView(
@@ -131,7 +192,7 @@ class _DoctorFormPageState extends State<DoctorFormPage> {
           key: _formKey,
           child: Column(
             children: [
-              // --- NHÓM THÔNG TIN CƠ BẢN ---
+              // --- (Toàn bộ 14 TextFormField giữ nguyên) ---
               _buildTextFormField(
                 controller: _nameController,
                 label: 'Doctor Name',
@@ -158,10 +219,7 @@ class _DoctorFormPageState extends State<DoctorFormPage> {
                 label: 'Type (e.g., Online, Offline)',
                 icon: Iconsax.monitor,
               ),
-
               const SizedBox(height: 24),
-
-              // --- NHÓM KINH NGHIỆM VÀ CHỈ SỐ ---
               _buildTextFormField(
                 controller: _experienceYearsController,
                 label: 'Experience (Years)',
@@ -180,10 +238,7 @@ class _DoctorFormPageState extends State<DoctorFormPage> {
                 icon: Iconsax.percentage_circle,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
               ),
-
               const SizedBox(height: 24),
-
-              // --- NHÓM ĐÁNH GIÁ ---
               _buildTextFormField(
                 controller: _averageRatingController,
                 label: 'Average Rating (0.0 - 5.0)',
@@ -196,10 +251,7 @@ class _DoctorFormPageState extends State<DoctorFormPage> {
                 icon: Iconsax.messages_2,
                 keyboardType: TextInputType.number,
               ),
-
               const SizedBox(height: 24),
-
-              // --- NHÓM HOẠT ĐỘNG ONLINE ---
               _buildTextFormField(
                 controller: _totalConsultationsController,
                 label: 'Total Consultations',
@@ -224,17 +276,30 @@ class _DoctorFormPageState extends State<DoctorFormPage> {
                 icon: Iconsax.calendar_1,
                 keyboardType: TextInputType.number,
               ),
-
               const SizedBox(height: 32),
+
+              // Nút Save
               ElevatedButton.icon(
-                icon: const Icon(Iconsax.save_2),
-                label: Text(_isEditMode ? 'Save Changes' : 'Add Doctor'),
+                icon: _isLoading
+                    ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                    : const Icon(Iconsax.save_2),
+                label: Text(_isLoading
+                    ? 'Saving...'
+                    : (_isEditMode ? 'Save Changes' : 'Add Doctor')),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
-                  backgroundColor: const Color(0xFF4CAF50), // Màu xanh lá
+                  backgroundColor: const Color(0xFF4CAF50),
                   foregroundColor: Colors.white,
                 ),
-                onPressed: _onSave,
+                // Chặn nhấn nút nếu đang loading
+                onPressed: _isLoading ? null : _onSave,
               )
             ],
           ),
@@ -243,7 +308,7 @@ class _DoctorFormPageState extends State<DoctorFormPage> {
     );
   }
 
-  // Widget con để tạo TextFormField cho gọn
+  // --- (Hàm helper _buildTextFormField giữ nguyên) ---
   Widget _buildTextFormField({
     required TextEditingController controller,
     required String label,
@@ -255,7 +320,6 @@ class _DoctorFormPageState extends State<DoctorFormPage> {
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
-        // Thêm bộ lọc cho đầu vào số
         inputFormatters: (keyboardType == TextInputType.number ||
             keyboardType.decimal == true)
             ? <TextInputFormatter>[

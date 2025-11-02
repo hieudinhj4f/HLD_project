@@ -65,6 +65,8 @@ class DoctorListPage extends StatelessWidget {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => DoctorFormPage(
+                        createDoctor:  createDoctor,
+                        updateDoctor: updateDoctor,
                         doctor: doctor,
                         // Bạn cũng nên truyền 'updateDoctor' vào đây
                       ),
@@ -88,6 +90,8 @@ class DoctorListPage extends StatelessWidget {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => DoctorFormPage(
+                createDoctor: createDoctor,
+                updateDoctor: updateDoctor,
                 doctor: null, // Truyền 'null' để báo là form Add
                 // Bạn cũng nên truyền 'createDoctor' vào đây
               ),
