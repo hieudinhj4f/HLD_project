@@ -144,7 +144,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
         String base64Image = base64Encode(_newAvatarBytes!);
         newAvatarData = 'data:image/jpeg;base64,$base64Image';
         if (newAvatarData.length > 1000000) {
-          throw Exception('Ảnh quá lớn (trên 1MB), Firestore đéo cho lưu.');
+          throw Exception('Ảnh quá lớn (trên 1MB), Firestore không cho lưu.');
         }
       }
 
@@ -250,7 +250,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-            isEditing ? 'Chỉnh Sửa (Admin)' : 'Tạo Mới (Admin)',
+            isEditing ? 'Chỉnh Sửa' : 'Tạo Mới',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)
         ),
         centerTitle: true,
@@ -281,7 +281,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
               GestureDetector(
                 onTap: _pickImage,
                 child: const Text(
-                  'Change avatar',
+                  'Chọn ảnh',
                   style: TextStyle(
                     color: Color(0xFF388E3C),
                     fontWeight: FontWeight.bold,
@@ -304,34 +304,34 @@ class _AccountFormPageState extends State<AccountFormPage> {
               // === PASSWORD (CHỈ HIỆN KHI TẠO MỚI) ===
               if (!isEditing) ...[
                 _buildTextField(
-                  controller: _passwordController, label: 'Password', hintText: 'Nhập mật khẩu',
+                  controller: _passwordController, label: 'Mật khẩu', hintText: 'Nhập mật khẩu',
                   obscureText: true,
-                  validator: (value) => value!.length < 6 ? 'Mật khẩu phải > 6 ký tự' : null,
+                  validator: (value) => value!.length < 6 ? 'Mật khẩu phải lớn hơn hoặc bằng 6 ký tự' : null,
                 ),
                 const SizedBox(height: 24),
               ],
 
               // === CÁC TRƯỜNG CÒN LẠI ===
               _buildTextField(
-                controller: _nameController, label: 'Name', hintText: 'Nhập họ và tên',
+                controller: _nameController, label: 'Tên', hintText: 'Nhập họ và tên',
                 validator: (value) => value!.isEmpty ? 'Tên không được để trống' : null,
               ),
               const SizedBox(height: 24),
               _buildTextField(
-                controller: _phoneController, label: 'Phone', hintText: 'Nhập số điện thoại',
+                controller: _phoneController, label: 'Số điện thoại', hintText: 'Nhập số điện thoại',
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 24),
               _buildTextField(
-                controller: _addressController, label: 'Address', hintText: 'Nhập địa chỉ',
+                controller: _addressController, label: 'Địa chỉ', hintText: 'Nhập địa chỉ',
               ),
               const SizedBox(height: 24),
-              _buildRadioButtons(context, 'Gender', ['Nam', 'Nữ']),
+              _buildRadioButtons(context, 'Giới tính', ['Nam', 'Nữ']),
               const SizedBox(height: 24),
-              _buildRadioButtons(context, 'Role', ['Customer', 'Mangament', 'Staff', 'Admin'], isRole: true),
+              _buildRadioButtons(context, 'Vai trò', ['Khách hàng', 'Quản lý', 'Nhân viên', 'Admin'], isRole: true),
               const SizedBox(height: 24),
               _buildDatePickerField(
-                context: context, controller: _dobController, label: 'Birthday', hintText: 'Chọn ngày sinh',
+                context: context, controller: _dobController, label: 'Ngày sinh', hintText: 'Chọn ngày sinh',
               ),
               const SizedBox(height: 48),
 
@@ -350,7 +350,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
                   ),
                   child: _isSaving
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('SAVE', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      : const Text('Lưu', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

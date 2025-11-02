@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../domain/usecases/get_doctors.dart';
 import '../widgets/doctor_card.dart';
 import 'appointment_form_page.dart';
@@ -34,9 +35,16 @@ class _ChatHomePageState extends State<ChatHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('HLD', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
-        elevation: 0,
+        title: Text(
+          'HLD',
+          style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
+            fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
+            color: Colors.green,
+            fontSize: 30,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: Column(
         children: [

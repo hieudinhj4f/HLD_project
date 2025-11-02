@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer';
@@ -52,30 +53,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Healthy Life Diagnosis',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Iconsax.notification, color: Colors.black),
-            onPressed: () {},
-          ),
-
-          // --- NÚT LOGOUT MÀ TÔI ĐÃ THÊM VÀO ĐÂY ---
-          IconButton(
-            icon: const Icon(Iconsax.logout, color: Colors.black),
-            onPressed: _logout, // Gọi hàm đăng xuất
-          ),
-          // ---------------------------------------
-        ],
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

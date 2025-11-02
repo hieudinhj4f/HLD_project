@@ -190,7 +190,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
           icon: const Icon(Iconsax.arrow_left, color: Colors.black),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Chỉnh Sửa Profile', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+        title: const Text('Chỉnh Sửa thông tin', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -221,7 +221,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
               GestureDetector(
                 onTap: _pickImage,
                 child: const Text(
-                  'Change avatar',
+                  'Chọn ảnh',
                   style: TextStyle(
                     color: Color(0xFF388E3C),
                     fontWeight: FontWeight.bold,
@@ -233,27 +233,27 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
               // (Các TextFormField giữ nguyên)
               _buildTextField(
-                controller: _nameController, label: 'Name', hintText: 'Nhập họ và tên',
+                controller: _nameController, label: 'Tên', hintText: 'Nhập họ và tên',
                 validator: (value) => value!.isEmpty ? 'Tên không được để trống' : null,
               ),
               const SizedBox(height: 24),
               _buildTextField(
-                controller: _phoneController, label: 'Phone', hintText: 'Nhập số điện thoại',
+                controller: _phoneController, label: 'Số điện thoại', hintText: 'Nhập số điện thoại',
                 keyboardType: TextInputType.phone,
-                validator: (value) => value!.isEmpty ? 'SĐT không được để trống' : null,
+                validator: (value) => value!.isEmpty ? 'Số điện thoại không được để trống' : null,
               ),
               const SizedBox(height: 24),
               _buildTextField(
-                controller: _addressController, label: 'Address', hintText: 'Nhập địa chỉ',
+                controller: _addressController, label: 'Địa chỉ', hintText: 'Nhập địa chỉ',
                 validator: (value) => value!.isEmpty ? 'Địa chỉ không được để trống' : null,
               ),
               const SizedBox(height: 24),
-              _buildRadioButtons(context, 'Gender', ['Nam', 'Nữ']),
+              _buildRadioButtons(context, 'Giới tính', ['Nam', 'Nữ']),
               const SizedBox(height: 24),
-              _buildRadioButtons(context, 'Role', ['Customer', 'Mangament', 'Staff', 'Admin'], isRole: true),
+              _buildRadioButtons(context, 'Vai trò', ['Khách hàng', 'Quản lý', 'Nhân viên', 'Admin'], isRole: true),
               const SizedBox(height: 24),
               _buildDatePickerField(
-                context: context, controller: _dobController, label: 'Birthday', hintText: 'Chọn ngày sinh',
+                context: context, controller: _dobController, label: 'Ngày sinh', hintText: 'Chọn ngày sinh',
               ),
               const SizedBox(height: 48),
 
@@ -272,7 +272,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                   ),
                   child: _isSaving
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('EDIT', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      : const Text('Cập nhật', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
