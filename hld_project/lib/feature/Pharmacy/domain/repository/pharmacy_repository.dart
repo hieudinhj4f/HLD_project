@@ -2,7 +2,7 @@ import 'package:hld_project/feature/Pharmacy/domain/usecase/createPharmacy.dart'
 
 import '../entity/pharmacy.dart';
 abstract class PharmacyRepository {
-  Future<List<Pharmacy>> getAllProducts();
+  Future<List<Pharmacy>> GetAllPharmacy();
 
   Future<void> createPharmacy(Pharmacy p);
 

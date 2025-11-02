@@ -16,13 +16,8 @@ class PharmacyRemoteDataSourceImpl implements PharmacyRemoteDatasource {
   // 2. Khởi tạo nó trong constructor
   PharmacyRemoteDataSourceImpl()
       : _remoteSource = FirebaseRemoteDS<PharmacyModel>(
-    // Tên collection trên Firestore
     collectionName: 'pharmacy',
-
-    // Hàm chuyển đổi từ Firestore (snapshot) -> Model
     fromFirestore: (doc) => PharmacyModel.fromFirestore(doc),
-
-    // Hàm chuyển đổi từ Model -> JSON (Map)
     toFirestore: (model) => model.toJson(),
   );
 

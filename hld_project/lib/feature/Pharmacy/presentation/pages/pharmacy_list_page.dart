@@ -8,16 +8,14 @@ import '../../domain/usecase/getAllPharmacy.dart';
 import '../../domain/usecase/updatePharmacy.dart';
 import '../widgets/pharmacy_card.dart';
 
-
-class PharmacyListPage extends StatelessWidget {
-  // 2. KHAI BÁO CÁC BIẾN USECASE
+// --- BƯỚC 1: CHUYỂN THÀNH STATEFULWIDGET ---
+class PharmacyListPage extends StatefulWidget {
+  // (Constructor vẫn nhận Usecase như cũ)
   final GetAllPharmacy getAllPharmacies;
   final CreatePharmacy createPharmacy;
   final UpdatePharmacy updatePharmacy;
   final DeletePharmacy deletePharmacy;
 
-  // 3. CẬP NHẬT CONSTRUCTOR ĐỂ NHẬN USECASE
-  // Đây là bước quan trọng nhất để sửa lỗi "The named parameter ... isn't defined"
   const PharmacyListPage({
     super.key,
     required this.getAllPharmacies,
@@ -25,6 +23,29 @@ class PharmacyListPage extends StatelessWidget {
     required this.updatePharmacy,
     required this.deletePharmacy,
   });
+
+  @override
+  State<PharmacyListPage> createState() => _PharmacyListPageState();
+}
+
+// --- BƯỚC 2: TẠO CLASS STATE ---
+class _PharmacyListPageState extends State<PharmacyListPage> {
+  // --- BƯỚC 3: KHAI BÁO BIẾN FUTURE TRONG STATE ---
+  late Future<List<Pharmacy>> _pharmaciesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // --- BƯỚC 4: GỌI FUTURE MỘT LẦN KHI TRANG MỞ ---
+    _loadPharmacies();
+  }
+
+  // Hàm helper để tải/tải lại
+  void _loadPharmacies() {
+    setState(() {
+      _pharmaciesFuture = widget.getAllPharmacies();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,27 +60,20 @@ class PharmacyListPage extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 1,
       ),
-      // 4. THAY THẾ LISTVIEW.BUILDER BẰNG FUTUREBUILDER
+      // --- BƯỚC 5: DÙNG BIẾN STATE _pharmaciesFuture ---
       body: FutureBuilder<List<Pharmacy>>(
-        // Gọi Usecase để lấy dữ liệu thật
-        future: getAllPharmacies(),
+        future: _pharmaciesFuture, // <-- DÙNG BIẾN NÀY
         builder: (context, snapshot) {
-          // Trạng thái đang tải
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-
-          // Trạng thái có lỗi
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
-
-          // Trạng thái không có dữ liệu
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('No pharmacies found.'));
           }
 
-          // Trạng thái có dữ liệu
           final pharmacies = snapshot.data!;
 
           return ListView.builder(
@@ -70,39 +84,21 @@ class PharmacyListPage extends StatelessWidget {
               return PharmacyCard(
                 pharmacy: pharmacy,
                 onEdit: () {
-                  // Điều hướng đến trang Form
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => PharmacyFormPage(
-                        pharmacy: pharmacy,
-                        // Bạn cũng nên truyền usecase 'updatePharmacy'
-                        // vào trang Form nếu cần
-                      ),
-                    ),
-                  );
+                  // --- BƯỚC 6: SỬA 'onEdit' (async/await) ---
+                  _navigateToForm(pharmacy: pharmacy);
                 },
                 onDelete: () {
-                  // Hiển thị dialog xác nhận xóa
-                  // Truyền usecase 'deletePharmacy' vào hàm
-                  _showDeleteConfirmDialog(context, pharmacy, deletePharmacy);
+                  _showDeleteConfirmDialog(context, pharmacy, widget.deletePharmacy);
                 },
               );
             },
           );
         },
       ),
-      // Bạn có thể thêm nút FloatingActionButton để gọi 'createPharmacy'
+      // --- BƯỚC 7: SỬA 'floatingActionButton' (async/await) ---
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => PharmacyFormPage(
-                // Truyền null để báo hiệu đây là form TẠO MỚI
-                pharmacy: null,
-                // Bạn cũng nên truyền 'createPharmacy' vào trang Form
-              ),
-            ),
-          );
+          _navigateToForm(pharmacy: null); // Chế độ Add
         },
         backgroundColor: const Color(0xFF4CAF50),
         child: const Icon(Icons.add, color: Colors.white),
@@ -110,11 +106,29 @@ class PharmacyListPage extends StatelessWidget {
     );
   }
 
-  // 5. CẬP NHẬT HÀM DIALOG ĐỂ NHẬN USECASE
+  // Hàm helper để điều hướng (tránh lặp code)
+  void _navigateToForm({Pharmacy? pharmacy}) async {
+    // Chuyển sang async
+    // Đợi trang Form đóng lại
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PharmacyFormPage(
+          pharmacy: pharmacy, // (null cho Add, có data cho Edit)
+          createPharmacy: widget.createPharmacy,
+          updatePharmacy: widget.updatePharmacy,
+        ),
+      ),
+    );
+
+    // SAU KHI QUAY LẠI, GỌI LẠI FUTURE ĐỂ CẬP NHẬT UI
+    _loadPharmacies();
+  }
+
+  // --- BƯỚC 8: SỬA HÀM XÓA (async/await) ---
   void _showDeleteConfirmDialog(
       BuildContext context,
       Pharmacy pharmacy,
-      DeletePharmacy deletePharmacy, // <-- Nhận usecase
+      DeletePharmacy deletePharmacy,
       ) {
     showDialog(
       context: context,
@@ -129,14 +143,25 @@ class PharmacyListPage extends StatelessWidget {
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),
-            onPressed: () {
-              // Gọi Usecase/Provider để xóa ở đây
+            onPressed: () async { // <-- Sửa thành async
               print('Deleting ${pharmacy.id}...');
-              deletePharmacy(pharmacy.id); // <-- GỌI USECASE
 
-              // Tạm thời đóng dialog, lý tưởng nhất là bạn nên
-              // refresh lại list (ví dụ dùng Provider/Bloc)
-              Navigator.of(ctx).pop();
+              try {
+                await deletePharmacy(pharmacy.id); // <-- Sửa (await)
+
+                // Đóng dialog (kiểm tra mounted vì là async)
+                if (ctx.mounted) {
+                  Navigator.of(ctx).pop();
+                }
+
+                // SAU KHI XÓA, GỌI LẠI FUTURE ĐỂ CẬP NHẬT UI
+                _loadPharmacies();
+
+              } catch (e) {
+                // Xử lý lỗi nếu xóa thất bại
+                print('Delete failed: $e');
+                // (Bạn có thể hiển thị SnackBar ở đây)
+              }
             },
           ),
         ],

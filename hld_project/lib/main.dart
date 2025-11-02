@@ -4,8 +4,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'core/config/firebase_env.dart';
 import 'core/routing/app_router.dart';
-
-
 import 'feature/auth/presentation/providers/auth_provider.dart';
 
 Future<void> main() async {

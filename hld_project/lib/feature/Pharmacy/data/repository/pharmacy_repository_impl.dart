@@ -23,7 +23,7 @@ class PharmacyRepositoryImpl implements PharmacyRepository {
   }
 
   @override
-  Future<List<Pharmacy>> getAllPharmacies() async {
+  Future<List<Pharmacy>> GetAllPharmacy() async {
 
     // 1. Gọi Datasource, nhận về List<Model>
     final pharmacyModels = await remoteDatasource.getAll();
