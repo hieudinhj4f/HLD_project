@@ -14,6 +14,7 @@ import 'package:hld_project/feature/Account/presentation/pages/profile_page.dart
 // Auth
 import 'package:hld_project/feature/auth/presentation/pages/login_page.dart';
 import 'package:hld_project/feature/auth/presentation/pages/signup_page.dart';
+import 'package:hld_project/feature/chat/domain/entities/doctor.dart';
 
 // Chat & Doctor
 import 'package:hld_project/feature/chat/domain/repositories/doctor_repository.dart';
@@ -44,21 +45,20 @@ import 'package:hld_project/feature/Product/domain/usecase/deleteProduct.dart';
 import 'package:hld_project/feature/Product/domain/usecase/getProduct.dart';
 import 'package:hld_project/feature/Product/domain/usecase/updateProduct.dart';
 
-// Product (Pages - Tách biệt Admin và Setting)
+// Product (Pages - Tách biệt Admin và User)
 import 'package:hld_project/feature/Product/presentation/Admin/pages/product_list_page.dart'
-as admin_role; // <-- Dùng cho vai trò Admin
+    as admin_role;
 import 'package:hld_project/feature/Product/presentation/User/pages/cart_page.dart';
 import 'package:hld_project/feature/Product/presentation/User/pages/invoice_page.dart';
 import 'package:hld_project/feature/Product/presentation/User/pages/product_list_page.dart'
-as user_role; // <-- Dùng cho vai trò Setting
+    as user_role;
 import 'package:hld_project/feature/Product/presentation/User/pages/qr_payment_page.dart';
+import 'package:hld_project/feature/chat/presentation/pages/doctor_detail_page.dart';
 import 'package:hld_project/feature/chat/presentation/pages/doctor_list_page.dart';
 import 'package:provider/provider.dart';
 
-
 // === 4. IMPORT TƯƠNG ĐỐI (RELATIVE IMPORTS - TỪ CHÍNH MODULE HIỆN TẠI) ===
 
-// Imports từ các feature gần (../../)
 import '../../feature/Account/domain/entities/account.dart';
 import '../../feature/Account/presentation/pages/profile_edit_page.dart';
 import '../../feature/Configuration/presentation/configuration_page.dart';
@@ -73,11 +73,11 @@ import '../../feature/chat/data/repositories/doctor_repository_impl.dart';
 import '../../feature/chat/domain/usecases/get_all_doctor.dart';
 import '../../feature/chat/domain/usecases/get_doctors.dart';
 
-// Imports từ các file ngang cấp (../)
+// Navbar
 import '../navbar/domain/entity/bottom_nav_item.dart';
 import '../navbar/presentation/widget/app_shell.dart';
 
-// Imports từ file trong cùng thư mục (.)
+// App Routes
 import 'app_routers.dart';
 
 class AppRouter {
@@ -137,16 +137,32 @@ class AppRouter {
   // (Các tabs _adminTabs và _userTabs giữ nguyên)
   static const List<BottomNavItem> _adminTabs = [
     BottomNavItem(path: '/admin/home', label: 'Home', icon: Icons.home),
-    BottomNavItem(path: '/admin/product', label: 'Product', icon: Icons.shopping_cart),
-    BottomNavItem(path: '/admin/Pharmacy', label: 'Pharmacy', icon: Icons.local_pharmacy ),
-    BottomNavItem(path: '/admin/doctors', label: 'Doctors' , icon: Icons.person_2),
+    BottomNavItem(
+      path: '/admin/product',
+      label: 'Product',
+      icon: Icons.shopping_cart,
+    ),
+    BottomNavItem(
+      path: '/admin/Pharmacy',
+      label: 'Pharmacy',
+      icon: Icons.local_pharmacy,
+    ),
+    BottomNavItem(
+      path: '/admin/doctors',
+      label: 'Doctors',
+      icon: Icons.person_2,
+    ),
     BottomNavItem(path: '/admin/account', label: 'Account', icon: Icons.person),
-    BottomNavItem(path: '/admin/setting', label: 'Setting', icon: Icons.settings),
+    BottomNavItem(
+      path: '/admin/setting',
+      label: 'Setting',
+      icon: Icons.settings,
+    ),
   ];
   static const List<BottomNavItem> _userTabs = [
     BottomNavItem(path: '/user/product', label: 'Product', icon: Icons.home),
     BottomNavItem(path: '/user/cart', label: 'Cart', icon: Icons.shopping_cart),
-    BottomNavItem(path: '/user/chat', label: 'Chat',icon: Icons.message),
+    BottomNavItem(path: '/user/chat', label: 'Chat', icon: Icons.message),
     BottomNavItem(path: '/user/account', label: 'Account', icon: Icons.person),
   ];
 
@@ -163,11 +179,14 @@ class AppRouter {
 
       final bool isAuthFlow =
           location == AppRoutes.login ||
+          location == AppRoutes.signup ||
+          location == AppRoutes.home;
               location == AppRoutes.signup ||
               location == AppRoutes.home;
 
       final bool isGoingToAdmin = location.startsWith('/admin');
-      final bool isGoingToUser = location.startsWith('/user');
+      final bool isGoingToUser =
+          location.startsWith('/user') || location == '/doctor-detail';
 
       if (!isLoggedIn && !isAuthFlow) return AppRoutes.login;
       if (isLoggedIn) {
@@ -242,7 +261,7 @@ class AppRouter {
           ),
           GoRoute(
             path: '/admin/setting',
-            builder: (context, state) => SettingsPage(),
+            builder: (context, state) => const SettingsPage(),
           ),
           GoRoute(
               path: '/admin/doctors',
@@ -312,6 +331,14 @@ class AppRouter {
               return ChatHomePage(getDoctors: GetDoctors(repo));
             },
 
+          ),
+          // ĐÃ DI CHUYỂN RA NGOÀI: /doctor-detail là route độc lập
+          GoRoute(
+            path: '/doctor-detail',
+            builder: (context, state) {
+              final doctor = state.extra as Doctor;
+              return DoctorDetailPage(doctor: doctor);
+            },
           ),
           GoRoute(
             path: '/user/account',
