@@ -1,46 +1,50 @@
-import 'package:flutter/cupertino.dart';
-import 'package:go_router/go_router.dart';
-import '../../../presentation/widget/customeButtomNav.dart';
-import '../../domain/entity/bottom_nav_item.dart';
 import 'package:flutter/material.dart';
-// import 'package:firebase_auth/firebase_auth.dart'; // Thêm nếu bạn muốn dùng nút logout
+import 'package:go_router/go_router.dart';
+import '../../../presentation/widget/customeButtomNav.dart'; // Đảm bảo đúng đường dẫn
+import '../../domain/entity/bottom_nav_item.dart';
 
-// 1. SỬA LỖI CÚ PHÁP: Đổi thành StatelessWidget
-class AppShell extends StatelessWidget {
+class AppShell extends StatefulWidget {
   final Widget child;
   final List<BottomNavItem> tabs;
 
-  const AppShell({
-    Key? key,
-    required this.child,
-    required this.tabs,
-  }) : super(key: key);
+  const AppShell({super.key, required this.child, required this.tabs});
 
-  // Hàm tìm kiếm đường dẫn (vẫn hoạt động tốt)
-  int _caculateCurrentIndex(BuildContext context) {
-    final GoRouterState state = GoRouterState.of(context);
-    final String location = state.uri.toString();
-    int index = tabs.indexWhere((tab) => location.startsWith(tab.path));
-    return index == -1 ? 0 : index;
+  @override
+  State<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<AppShell> {
+  int _currentIndex = 0;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _updateIndexFromLocation();
+  }
+
+  void _updateIndexFromLocation() {
+    final location = GoRouterState.of(context).matchedLocation;
+    final index = widget.tabs.indexWhere(
+      (tab) => location.startsWith(tab.path),
+    );
+    if (index != -1 && index != _currentIndex) {
+      setState(() => _currentIndex = index);
+    }
+  }
+
+  void _onTabTapped(int index) {
+    final path = widget.tabs[index].path;
+    context.go(path);
   }
 
   @override
   Widget build(BuildContext context) {
-    final int currentIndex = _caculateCurrentIndex(context);
-    final String currentTitle = tabs[currentIndex].label;
-
     return Scaffold(
-      body: child,
+      body: widget.child,
       bottomNavigationBar: CustomBottomNav(
-        selectedIndex: currentIndex,
-        onItemTapped: (index) {
-          context.go(tabs[index].path);
-        },
-
-        // 2. KẾT NỐI:
-        // Bỏ comment và truyền 'tabs' (4 hoặc 5)
-        // vào thuộc tính 'items' mới của CustomBottomNav
-        items: tabs,
+        selectedIndex: _currentIndex,
+        onItemTapped: _onTabTapped,
+        items: widget.tabs, // Đảm bảo CustomBottomNav nhận đúng
       ),
     );
   }

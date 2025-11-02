@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // ĐÃ THÊM
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart'; // ĐÃ THÊM
 import '../../../domain/entity/product/product.dart';
 import '../widgets/product_card.dart';
 import 'product_detail_page.dart';
@@ -9,6 +10,7 @@ import '../../../domain/usecase/getProduct.dart';
 import '../../../domain/usecase/createProduct.dart';
 import '../../../domain/usecase/updateProduct.dart';
 import '../../../domain/usecase/deleteProduct.dart';
+import '../../../../auth/presentation/providers/auth_provider.dart'; // ĐÃ THÊM
 
 class ProductListPage extends StatefulWidget {
   final GetAllProduct getProducts;
@@ -75,16 +77,16 @@ class _ProductListPageState extends State<ProductListPage> {
           .get();
 
       if (snapshot.exists) {
-        debugPrint('✅ KẾT NỐI FIRESTORE THÀNH CÔNG');
+        debugPrint('KẾT NỐI FIRESTORE THÀNH CÔNG');
       } else {
         debugPrint(
-          '⚠️ KẾT NỐI FIRESTORE THÀNH CÔNG, nhưng document "products" không tồn tại.',
+          'KẾT NỐI FIRESTORE THÀNH CÔNG, nhưng document "products" không tồn tại.',
         );
       }
     } on FirebaseException catch (e) {
-      debugPrint('❌ LỖI FIRESTORE: ${e.code}');
+      debugPrint('LỖI FIRESTORE: ${e.code}');
     } catch (e) {
-      debugPrint('❌ LỖI KHÁC: $e');
+      debugPrint('LỖI KHÁC: $e');
     }
   }
 
@@ -99,19 +101,41 @@ class _ProductListPageState extends State<ProductListPage> {
     });
   }
 
+  // ĐÃ SỬA: THÊM VÀO GIỎ HÀNG RIÊNG CHO TỪNG USER
   Future<void> _addToCart(Product product) async {
-    final cartRef = FirebaseFirestore.instance.collection('cart');
-    await cartRef.add({
-      'productId': product.id,
-      'name': product.name,
-      'price': product.price,
-      'quantity': 1,
-      'imageUrl': product.imageUrl,
-      'timestamp': FieldValue.serverTimestamp(), // ĐÃ CÓ NHỜ IMPORT
-    });
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Đã thêm vào giỏ hàng!')));
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final userId = authProvider.userId;
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng đăng nhập để thêm vào giỏ hàng')),
+      );
+      return;
+    }
+
+    final cartRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('cart')
+        .doc(product.id);
+
+    final doc = await cartRef.get();
+    if (doc.exists) {
+      await cartRef.update({'quantity': FieldValue.increment(1)});
+    } else {
+      await cartRef.set({
+        'productId': product.id,
+        'name': product.name,
+        'price': product.price,
+        'imageUrl': product.imageUrl,
+        'quantity': 1,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Đã thêm vào giỏ hàng!')),
+    );
   }
 
   @override
@@ -151,26 +175,25 @@ class _ProductListPageState extends State<ProductListPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredProducts.isEmpty
-                ? const Center(child: Text('Không tìm thấy thuốc'))
-                : ListView.builder(
-              itemCount: _filteredProducts.length,
-              itemBuilder: (context, index) {
-                final product = _filteredProducts[index];
-                return ProductCard(
-                  product: product,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            ProductDetailPage(product: product),
+                    ? const Center(child: Text('Không tìm thấy thuốc'))
+                    : ListView.builder(
+                        itemCount: _filteredProducts.length,
+                        itemBuilder: (context, index) {
+                          final product = _filteredProducts[index];
+                          return ProductCard(
+                            product: product,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ProductDetailPage(product: product),
+                                ),
+                              );
+                            },
+                            onAddToCart: () => _addToCart(product),
+                          );
+                        },
                       ),
-                    );
-                  },
-                  onAddToCart: () => _addToCart(product),
-                );
-              },
-            ),
           ),
         ],
       ),

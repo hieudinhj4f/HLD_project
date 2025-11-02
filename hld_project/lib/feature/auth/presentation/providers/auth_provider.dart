@@ -1,47 +1,81 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart'; // Hoặc 'package:flutter/material.dart'
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/user_entity.dart';
 
 class AuthProvider with ChangeNotifier {
   UserEntity? _user;
 
+  // === GETTERS ===
   UserEntity? get user => _user;
+  String? get userId => _user?.uid; // DÙNG TRONG CART, ORDER, ADMIN
   bool get isLoggedIn => _user != null;
   bool get isAdmin => _user?.role == 'admin';
 
   AuthProvider() {
-    // 1. Tự động lắng nghe thay đổi trạng thái đăng nhập
     FirebaseAuth.instance.authStateChanges().listen(_onAuthStateChanged);
   }
 
-  Future<void> _onAuthStateChanged(User? user) async {
-    if (user == null) {
-      _user = null;
-    } else {
-      // Lấy thông tin role từ Firestore
-      DocumentSnapshot doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-
-      // Giả sử UserEntity.fromFirestore đã được định nghĩa
-      _user = UserEntity.fromFirestore(doc);
+  Future<void> _onAuthStateChanged(User? firebaseUser) async {
+    if (firebaseUser == null) {
+      if (_user != null) {
+        _user = null;
+        notifyListeners();
+      }
+      return;
     }
 
-    // 3. Thông báo cho toàn bộ ứng dụng (GoRouter) biết trạng thái đã đổi
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(firebaseUser.uid)
+          .get();
+
+      if (doc.exists) {
+        _user = UserEntity.fromFirestore(doc);
+      } else {
+        // Tạo user mặc định nếu chưa có trong Firestore
+        _user = UserEntity(
+          uid: firebaseUser.uid,
+          email: firebaseUser.email ?? '',
+          name: firebaseUser.displayName ?? 'User',
+          role: 'user', createdAt: null, updatedAt: null, // Mặc định là user
+        );
+        // Lưu vào Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(firebaseUser.uid)
+            .set(_user!.toMap());
+      }
+    } catch (e) {
+      debugPrint('Lỗi lấy user: $e');
+      _user = null;
+    }
+
     notifyListeners();
   }
 
-  // --- HÀM ĐĂNG XUẤT MỚI ---
+  // --- ĐĂNG XUẤT ---
   Future<void> signOut() async {
     try {
-      // 2. Chỉ cần gọi hàm này,
-      //    bước 1 và 3 sẽ tự động chạy
       await FirebaseAuth.instance.signOut();
+      // _onAuthStateChanged sẽ tự gọi → _user = null
     } catch (e) {
-      print('Lỗi khi đăng xuất: $e');
-      // (Bạn có thể xử lý lỗi ở đây nếu muốn)
+      debugPrint('Lỗi đăng xuất: $e');
+      rethrow;
+    }
+  }
+
+  // --- ĐĂNG NHẬP (nếu cần thủ công) ---
+  Future<void> signInWithEmail(String email, String password) async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      debugPrint('Lỗi đăng nhập: $e');
+      rethrow;
     }
   }
 }
