@@ -3,27 +3,23 @@ import 'package:flutter/cupertino.dart'; // Hoặc 'package:flutter/material.dar
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/user_entity.dart';
 
-// (Bạn có một import 'providers.dart' và 'firebase_auth.dart' bị trùng, tôi đã xóa bớt)
-
 class AuthProvider with ChangeNotifier {
   UserEntity? _user;
 
-  // SỬA LỖI 1: Đổi 'User' (viết hoa) thành 'user' (viết thường)
   UserEntity? get user => _user;
-
-  // SỬA LỖI 2: Đổi 'isLoggin' thành 'isLoggedIn'
   bool get isLoggedIn => _user != null;
   bool get isAdmin => _user?.role == 'admin';
 
   AuthProvider() {
+    // 1. Tự động lắng nghe thay đổi trạng thái đăng nhập
     FirebaseAuth.instance.authStateChanges().listen(_onAuthStateChanged);
   }
 
-  // Tên 'User' (viết hoa) ở tham số là đúng, vì nó đến từ Firebase
   Future<void> _onAuthStateChanged(User? user) async {
     if (user == null) {
       _user = null;
     } else {
+      // Lấy thông tin role từ Firestore
       DocumentSnapshot doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -33,7 +29,19 @@ class AuthProvider with ChangeNotifier {
       _user = UserEntity.fromFirestore(doc);
     }
 
-    // Rất quan trọng, phải có hàm này
+    // 3. Thông báo cho toàn bộ ứng dụng (GoRouter) biết trạng thái đã đổi
     notifyListeners();
+  }
+
+  // --- HÀM ĐĂNG XUẤT MỚI ---
+  Future<void> signOut() async {
+    try {
+      // 2. Chỉ cần gọi hàm này,
+      //    bước 1 và 3 sẽ tự động chạy
+      await FirebaseAuth.instance.signOut();
+    } catch (e) {
+      print('Lỗi khi đăng xuất: $e');
+      // (Bạn có thể xử lý lỗi ở đây nếu muốn)
+    }
   }
 }

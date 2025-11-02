@@ -44,13 +44,13 @@ import 'package:hld_project/feature/Product/domain/usecase/deleteProduct.dart';
 import 'package:hld_project/feature/Product/domain/usecase/getProduct.dart';
 import 'package:hld_project/feature/Product/domain/usecase/updateProduct.dart';
 
-// Product (Pages - Tách biệt Admin và User)
+// Product (Pages - Tách biệt Admin và Setting)
 import 'package:hld_project/feature/Product/presentation/Admin/pages/product_list_page.dart'
 as admin_role; // <-- Dùng cho vai trò Admin
 import 'package:hld_project/feature/Product/presentation/User/pages/cart_page.dart';
 import 'package:hld_project/feature/Product/presentation/User/pages/invoice_page.dart';
 import 'package:hld_project/feature/Product/presentation/User/pages/product_list_page.dart'
-as user_role; // <-- Dùng cho vai trò User
+as user_role; // <-- Dùng cho vai trò Setting
 import 'package:hld_project/feature/Product/presentation/User/pages/qr_payment_page.dart';
 import 'package:hld_project/feature/chat/presentation/pages/doctor_list_page.dart';
 
@@ -60,6 +60,7 @@ import 'package:hld_project/feature/chat/presentation/pages/doctor_list_page.dar
 // Imports từ các feature gần (../../)
 import '../../feature/Account/domain/entities/account.dart';
 import '../../feature/Account/presentation/pages/profile_edit_page.dart';
+import '../../feature/Configuration/presentation/configuration_page.dart';
 import '../../feature/Pharmacy/data/datasource/pharmacy_remote_datasource.dart';
 import '../../feature/Pharmacy/data/repository/pharmacy_repository_impl.dart';
 import '../../feature/Pharmacy/presentation/pages/pharmacy_list_page.dart';
@@ -189,7 +190,7 @@ class AppRouter {
           ),
           GoRoute(
             path: '/admin/setting',
-            builder: (context, state) => const Text("Setting"),
+            builder: (context, state) => SettingsPage(),
           ),
           GoRoute(
             path: '/admin/doctors',
