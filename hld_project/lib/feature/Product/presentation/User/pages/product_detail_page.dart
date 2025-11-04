@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../domain/entity/product/product.dart';
 
 class ProductDetailPage extends StatefulWidget {
@@ -31,10 +32,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('HLD', style: TextStyle(color: Colors.green)),
         backgroundColor: Colors.white,
-        elevation: 0,
+        title: Text(
+          'HLD',
+          style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
+            fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
+            color: Colors.green,
+            fontSize: 30,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

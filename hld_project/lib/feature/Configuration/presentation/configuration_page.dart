@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:hld_project/feature/auth/presentation/providers/auth_provider.dart';
+
+import '../../Account/presentation/pages/changePassword.dart';
+import '../../Account/presentation/pages/profile_page.dart';
 
 // --- ĐỊNH NGHĨA MÀU SẮC (Lấy từ Figma của bạn) ---
 const Color settingPrimaryGreen = Color(0xFF4CAF50); // Màu xanh lá chính
@@ -24,30 +28,18 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        // 1. APP BAR
         backgroundColor: Colors.white,
-        elevation: 1,
-        // Nút back
-        leading: IconButton(
-          icon: const Icon(Iconsax.arrow_left_2, color: settingPrimaryGreen),
-          onPressed: () {
-            // (Nếu dùng GoRouter, nó sẽ tự xử lý)
-            // Navigator.of(context).pop();
-          },
-        ),
-        // Tiêu đề
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-            color: settingPrimaryGreen,
-            fontWeight: FontWeight.bold,
+        title: Text(
+          'HLD',
+          style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
+            fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
+            color: Colors.green,
+            fontSize: 30,
           ),
         ),
         centerTitle: true,
-        // Bỏ nút back tự động (nếu có)
-        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -56,7 +48,7 @@ class _SettingsPageState extends State<SettingsPage> {
             // 2. THÔNG TIN USER
             const _UserInfoHeader(
               name: 'Nguyen Dinh Hieu',
-              email: 'dinhhieunguyen248@gmail.com',
+              email: 'dinhhieunguyen111@gmail.com',
               // imageUrl: '...' (Bạn có thể thêm URL ảnh)
             ),
             const SizedBox(height: 30),
@@ -64,14 +56,17 @@ class _SettingsPageState extends State<SettingsPage> {
             // 3. NHÓM TÙY CHỌN 1
             _SettingsTile(
               icon: Iconsax.edit,
-              title: 'EDIT PROFILE',
+              title: 'THÔNG TIN CÁ NHÂN',
               onTap: () {
-                // TODO: Điều hướng đến trang Profile Edit
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                );
               },
             ),
             _SettingsTile(
               icon: Iconsax.moon,
-              title: 'THEME MODE',
+              title: 'CHẾ ĐỘ TỐI',
               // Dùng 'trailing' để thêm nút Switch
               trailing: Switch(
                 value: _isThemeDark,
@@ -86,14 +81,11 @@ class _SettingsPageState extends State<SettingsPage> {
               onTap: null, // Không cần onTap vì đã có Switch
             ),
             _SettingsTile(
-              icon: Iconsax.notification,
-              title: 'CHANGE NOTIFICATION',
-              onTap: () {},
-            ),
-            _SettingsTile(
               icon: Iconsax.lock,
-              title: 'CHANGE PASSWORD',
-              onTap: () {},
+              title: 'ĐỔI MẬT KHẨU',
+              onTap: () {
+                showChangePasswordDialog(context);
+              },
             ),
 
             const SizedBox(height: 30),
@@ -101,7 +93,7 @@ class _SettingsPageState extends State<SettingsPage> {
             // 4. NÚT LOG OUT
             _SettingsTile(
               icon: Iconsax.logout,
-              title: 'LOG OUT',
+              title: 'ĐĂNG XUẤT',
               // Thêm màu đỏ cho nút Log Out
               iconColor: Colors.red[600],
               textColor: Colors.red[600],

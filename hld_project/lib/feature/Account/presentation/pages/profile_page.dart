@@ -20,6 +20,7 @@ import 'package:hld_project/feature/Account/domain/usecases/delete_account.dart'
 
 import '../../data/model/account_model.dart';
 import '../../domain/entities/account.dart';
+import 'changePassword.dart';
 import 'profile_edit_page.dart'; // Import trang Edit
 import 'package:google_fonts/google_fonts.dart';
 
@@ -233,164 +234,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // === HÀM HIỆN DIALOG ĐỔI MẬT KHẨU (BẢN "XỊN") ===
-  void _showChangePasswordDialog(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
-    final _oldPasswordController = TextEditingController();
-    final _newPasswordController = TextEditingController();
-    final _confirmPasswordController = TextEditingController();
-    String? _dialogError;
-    bool _isLoading = false;
-
-    showDialog(
-      context: context,
-      barrierDismissible: !_isLoading,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            return AlertDialog(
-              icon: Icon(Icons.lock_reset_outlined, color: Colors.blue.shade700, size: 50),
-              title: const Text('Đổi mật khẩu', style: TextStyle(fontWeight: FontWeight.bold)),
-              content: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_dialogError != null) ...[
-                        Text(
-                          _dialogError!,
-                          style: TextStyle(color: Colors.red, fontSize: 14),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 10),
-                      ],
-                      TextFormField(
-                        controller: _oldPasswordController,
-                        obscureText: true,
-                        decoration: InputDecoration(labelText: 'Mật khẩu cũ'),
-                        validator: (val) =>
-                        val!.isEmpty ? 'Không được bỏ trống' : null,
-                      ),
-                      TextFormField(
-                        controller: _newPasswordController,
-                        obscureText: true,
-                        decoration: InputDecoration(labelText: 'Mật khẩu mới'),
-                        validator: (val) {
-                          if (val!.isEmpty) return 'Không được bỏ trống';
-                          if (val.length < 6)
-                            return 'Mật khẩu phải ít nhất 6 ký tự';
-                          return null;
-                        },
-                      ),
-                      TextFormField(
-                        controller: _confirmPasswordController,
-                        obscureText: true,
-                        decoration:
-                        InputDecoration(labelText: 'Xác nhận mật khẩu mới'),
-                        validator: (val) {
-                          if (val!.isEmpty) return 'Không được bỏ trống';
-                          if (val != _newPasswordController.text)
-                            return 'Mật khẩu không khớp';
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actionsAlignment: MainAxisAlignment.center,
-              actions: [
-                OutlinedButton(
-                  onPressed: _isLoading ? null : () => Navigator.of(ctx).pop(),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey.shade400),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                  child: const Text('Hủy'),
-                ),
-
-                const SizedBox(width: 10),
-
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                  onPressed: _isLoading
-                      ? null
-                      : () async {
-                    setDialogState(() { _dialogError = null; });
-                    if (!_formKey.currentState!.validate()) {
-                      return;
-                    }
-
-                    setDialogState(() { _isLoading = true; });
-
-                    final user = fb_auth.FirebaseAuth.instance.currentUser;
-                    final oldPassword = _oldPasswordController.text;
-                    final newPassword = _newPasswordController.text;
-
-                    if (user == null || user.email == null) {
-                      setDialogState(() {
-                        _dialogError = "Lỗi: Không tìm thấy người dùng.";
-                        _isLoading = false;
-                      });
-                      return;
-                    }
-
-                    try {
-                      final credential = fb_auth.EmailAuthProvider.credential(
-                        email: user.email!,
-                        password: oldPassword,
-                      );
-
-                      await user.reauthenticateWithCredential(credential);
-                      await user.updatePassword(newPassword);
-
-                      setDialogState(() { _isLoading = false; });
-                      Navigator.of(ctx).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Đổi mật khẩu thành công!')),
-                      );
-
-                    } on fb_auth.FirebaseAuthException catch (e) {
-                      String errorMessage = 'Đã xảy ra lỗi. Vui lòng thử lại.';
-                      if (e.code == 'wrong-password' || e.code == 'INVALID_LOGIN_CREDENTIALS') {
-                        errorMessage = 'Mật khẩu cũ không chính xác.';
-                      } else if (e.code == 'weak-password') {
-                        errorMessage = 'Mật khẩu mới quá yếu.';
-                      }
-                      setDialogState(() {
-                        _dialogError = errorMessage;
-                        _isLoading = false;
-                      });
-                    } catch (e) {
-                      setDialogState(() {
-                        _dialogError = 'Lỗi không xác định: $e';
-                        _isLoading = false;
-                      });
-                    }
-                  },
-                  child: _isLoading
-                      ? SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                      : const Text('Xác nhận'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-
   // === TÁCH BODY UI (ĐÃ SỬA DECODE ẢNH VÀ CÁC NÚT BẤM) ===
   Widget _buildProfileBody(BuildContext context, Account user, {required bool isAdmin}) {
 
@@ -503,7 +346,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
 
             // === NÚT ĐỔI MK VÀ ĐĂNG XUẤT (SỬA LẠI SPACING) ===
-            if (!_isViewingOtherUser) ...[
+            if (!_isViewingOtherUser && !isAdmin) ...[
 
               const SizedBox(height: 12), // Khoảng cách
 
@@ -514,7 +357,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   width: double.infinity,
                   child: TextButton( // <-- Đổi thành TextButton
                     onPressed: () {
-                      _showChangePasswordDialog(context);
+                      showChangePasswordDialog(context);
                     },
                     style: TextButton.styleFrom( // <-- Đổi thành TextButton.styleFrom
                       foregroundColor: Colors.blue.shade800,
@@ -556,8 +399,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
             ],
-            // ================================
-
             const SizedBox(height: 48),
           ],
         ),
