@@ -134,7 +134,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         // (Kiểm tra kích thước - NẾU TO QUÁ 1MB SẼ CRASH)
         if (newAvatarData.length > 1000000) {
           // Firestore có giới hạn 1MB cho 1 document
-          throw Exception('Ảnh quá lớn (trên 1MB), Firestore đéo cho lưu.');
+          throw Exception('Ảnh quá lớn (trên 1MB), Firestore không cho lưu.');
         }
         print("Encode ảnh thành công.");
       }
@@ -181,11 +181,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    // === TOÀN BỘ CODE UI GIỮ NGUYÊN ===
-    // (Nó dùng _newAvatarBytes để hiển thị MemoryImage,
-    // nên UI không cần sửa)
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        backgroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Iconsax.arrow_left, color: Colors.black),
           onPressed: () => context.pop(),
@@ -332,34 +331,48 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     );
   }
 
+  // === HÀM SỬA: RADIO BUTTONS (DÙNG ROW CĂN CHỈNH) ===
   Widget _buildRadioButtons(BuildContext context, String label, List<String> options, {bool isRole = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Label
         Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 16.0,
+        const SizedBox(height: 12), // Tăng khoảng cách chút cho đẹp
+
+        // Group các nút Radio
+        Row(
+          // Dùng MainAxisAlignment.start để các nút căn sát lề trái
+          mainAxisAlignment: MainAxisAlignment.start,
           children: options.map((value) {
             final currentValue = isRole ? _selectedRole : _selectedGender;
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Radio<String>(
-                  value: value,
-                  groupValue: currentValue,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      if (isRole) {
-                        _selectedRole = newValue;
-                      } else {
-                        _selectedGender = newValue;
-                      }
-                    });
-                  },
-                ),
-                Text(value),
-              ],
+
+            // Dùng Flexible/SizedBox để kiểm soát kích thước nếu cần, nhưng
+            // ở đây ta chỉ cần Row để căn chỉnh
+            return Padding(
+              padding: const EdgeInsets.only(right: 16.0), // Khoảng cách giữa các lựa chọn
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Nút Radio (Padding mặc định của nó hơi lớn)
+                  Radio<String>(
+                    value: value,
+                    groupValue: currentValue,
+                    activeColor: const Color(0xFF388E3C), // Màu xanh lá chủ đạo
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        if (isRole) {
+                          _selectedRole = newValue;
+                        } else {
+                          _selectedGender = newValue;
+                        }
+                      });
+                    },
+                  ),
+                  // Text (đặt ngay cạnh Radio)
+                  Text(value, style: const TextStyle(fontSize: 15)),
+                ],
+              ),
             );
           }).toList(),
         ),

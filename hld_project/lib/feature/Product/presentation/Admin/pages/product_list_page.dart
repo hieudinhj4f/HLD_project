@@ -184,6 +184,7 @@ class _ProductListPageState extends State<ProductListPage> {
     @override
     Widget build(BuildContext context) {
         return Scaffold(
+          backgroundColor: Colors.grey[50],
           appBar: AppBar(
             backgroundColor: Colors.white,
             title: Text(

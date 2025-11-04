@@ -92,6 +92,7 @@ class _CartPageState extends State<CartPage> {
         .collection('cart');
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: Text(

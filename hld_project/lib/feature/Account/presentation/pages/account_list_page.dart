@@ -181,8 +181,9 @@ class _AccountListPageState extends State<AccountListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text(
           'HLD',
           style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
@@ -272,6 +273,7 @@ class _AccountListPageState extends State<AccountListPage> {
         // ============================================
 
         return Card(
+          color: Colors.white,
           margin: const EdgeInsets.symmetric(vertical: 8.0),
           elevation: 1,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
