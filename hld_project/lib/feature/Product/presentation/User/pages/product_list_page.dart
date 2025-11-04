@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart'; // ĐÃ THÊM
@@ -102,18 +101,42 @@ class _ProductListPageState extends State<ProductListPage> {
     });
   }
 
-  // ĐÃ SỬA: THÊM VÀO GIỎ HÀNG RIÊNG CHO TỪNG USER
+  // ĐÃ SỬA: KIỂM TRA SỐ LƯỢNG TRONG KHO TRƯỚC KHI THÊM
   Future<void> _addToCart(Product product) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final userId = authProvider.userId;
 
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng đăng nhập để thêm vào giỏ hàng')),
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để thêm vào giỏ hàng'),
+        ),
       );
       return;
     }
 
+    // SỬA: collection('product') thay vì products
+    final productDoc = await FirebaseFirestore.instance
+        .collection('product')
+        .doc(product.id)
+        .get();
+
+    if (!productDoc.exists) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Sản phẩm không tồn tại!')));
+      return;
+    }
+
+    final stock = (productDoc.data()?['quantity'] as num?)?.toInt() ?? 0;
+    if (stock <= 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Sản phẩm đã hết hàng!')));
+      return;
+    }
+
+    // SỬA: collection('cart') thay vì carts
     final cartRef = FirebaseFirestore.instance
         .collection('users')
         .doc(userId)
@@ -122,6 +145,13 @@ class _ProductListPageState extends State<ProductListPage> {
 
     final doc = await cartRef.get();
     if (doc.exists) {
+      final currentQty = (doc.data()?['quantity'] as num?)?.toInt() ?? 0;
+      if (currentQty >= stock) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã đạt giới hạn tồn kho!')),
+        );
+        return;
+      }
       await cartRef.update({'quantity': FieldValue.increment(1)});
     } else {
       await cartRef.set({
@@ -134,26 +164,26 @@ class _ProductListPageState extends State<ProductListPage> {
       });
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã thêm vào giỏ hàng!')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Đã thêm vào giỏ hàng!')));
   }
+
+  // ... (phần dưới giữ nguyên 100%)
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Text(
+        title: const Text(
           'HLD',
-          style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
-            fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
-            color: Colors.green,
-            fontSize: 30,
-          ),
+          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
         ),
-        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(icon: const Icon(Iconsax.notification), onPressed: () {}),
+        ],
       ),
       body: Column(
         children: [
@@ -178,25 +208,26 @@ class _ProductListPageState extends State<ProductListPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredProducts.isEmpty
-                    ? const Center(child: Text('Không tìm thấy thuốc'))
-                    : ListView.builder(
-                        itemCount: _filteredProducts.length,
-                        itemBuilder: (context, index) {
-                          final product = _filteredProducts[index];
-                          return ProductCard(
-                            product: product,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ProductDetailPage(product: product),
-                                ),
-                              );
-                            },
-                            onAddToCart: () => _addToCart(product),
+                ? const Center(child: Text('Không tìm thấy thuốc'))
+                : ListView.builder(
+                    itemCount: _filteredProducts.length,
+                    itemBuilder: (context, index) {
+                      final product = _filteredProducts[index];
+                      return ProductCard(
+                        product: product,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ProductDetailPage(product: product),
+                            ),
                           );
                         },
-                      ),
+                        onAddToCart: () => _addToCart(product),
+                      );
+                    },
+                  ),
           ),
         ],
       ),

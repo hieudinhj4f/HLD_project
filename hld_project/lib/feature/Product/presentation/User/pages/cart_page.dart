@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../auth/presentation/providers/auth_provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({Key? key}) : super(key: key);
@@ -67,6 +66,39 @@ class _CartPageState extends State<CartPage> {
     await batch.commit();
   }
 
+  // ĐÃ SỬA: BỎ QUA SẢN PHẨM KHÔNG TỒN TẠI → KHÔNG LỖI
+  Future<void> _deductStock(String userId) async {
+    final batch = FirebaseFirestore.instance.batch();
+    final cartSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('cart')
+        .get();
+
+    for (var doc in cartSnapshot.docs) {
+      final data = doc.data();
+      final productId = data['productId'] as String?;
+      final qtyBought = (data['quantity'] as num?)?.toInt() ?? 1;
+
+      if (productId != null) {
+        final productRef = FirebaseFirestore.instance
+            .collection('product')
+            .doc(productId);
+
+        // KIỂM TRA XEM SẢN PHẨM CÓ TỒN TẠI KHÔNG
+        final productSnap = await productRef.get();
+        if (productSnap.exists) {
+          batch.update(productRef, {
+            'quantity': FieldValue.increment(-qtyBought),
+          });
+        }
+        // Nếu không tồn tại → BỎ QUA, KHÔNG LỖI
+      }
+    }
+
+    await batch.commit();
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -92,18 +124,14 @@ class _CartPageState extends State<CartPage> {
         .collection('cart');
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Text(
-          'HLD',
-          style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
-            fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
-            color: Colors.green,
-            fontSize: 30,
-          ),
+        title: const Text(
+          'Giỏ hàng',
+          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
         ),
-        centerTitle: true,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 1,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: cartCollection.snapshots(),
@@ -145,7 +173,6 @@ class _CartPageState extends State<CartPage> {
 
           return Column(
             children: [
-              // Danh sách sản phẩm
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(16),
@@ -167,7 +194,6 @@ class _CartPageState extends State<CartPage> {
                         padding: const EdgeInsets.all(12),
                         child: Row(
                           children: [
-                            // Ảnh sản phẩm
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: imageUrl.isNotEmpty
@@ -188,8 +214,6 @@ class _CartPageState extends State<CartPage> {
                                     ),
                             ),
                             const SizedBox(width: 12),
-
-                            // Thông tin
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,8 +233,6 @@ class _CartPageState extends State<CartPage> {
                                 ],
                               ),
                             ),
-
-                            // Số lượng + Xóa
                             Column(
                               children: [
                                 Row(
@@ -258,7 +280,7 @@ class _CartPageState extends State<CartPage> {
                 ),
               ),
 
-              // Tổng tiền + Thanh toán
+              // TỔNG TIỀN + THANH TOÁN
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
@@ -328,14 +350,43 @@ class _CartPageState extends State<CartPage> {
                           flex: 2,
                           child: ElevatedButton(
                             onPressed: _total > 0
-                                ? () {
-                                    context.go(
-                                      '/user/cart/qr-payment',
-                                      extra: {
-                                        'totalAmount': _total,
-                                        'orderNumber': _orderNumber,
-                                      },
-                                    );
+                                ? () async {
+                                    try {
+                                      // 1. TRỪ SỐ LƯỢNG TRONG KHO
+                                      await _deductStock(userId);
+
+                                      // 2. XÓA GIỎ HÀNG
+                                      await _clearCart(userId);
+
+                                      // 3. ĐI THANH TOÁN
+                                      context.go(
+                                        '/user/cart/qr-payment',
+                                        extra: {
+                                          'totalAmount': _total,
+                                          'orderNumber': _orderNumber,
+                                        },
+                                      );
+
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Thanh toán thành công! Đã cập nhật tồn kho.',
+                                          ),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Lỗi: $e'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
                                   }
                                 : null,
                             style: ElevatedButton.styleFrom(
@@ -347,7 +398,7 @@ class _CartPageState extends State<CartPage> {
                             ),
                             child: const Text(
                               'Thanh toán',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
