@@ -80,26 +80,26 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       childAspectRatio: 1.25,
                       children: [
                         _KpiCard(
-                          title: 'Total Products', // <-- Đã dịch
+                          title: 'Total Products',
                           value: isLoading ? '...' : stats.totalProducts.toString(),
                           backgroundColor: isLoading ? adminCardBackground : adminPrimaryGreen,
                           textColor: isLoading ? Colors.black : Colors.white,
                         ),
                         _KpiCard(
-                          title: 'Items Sold', // <-- Đã dịch
+                          title: 'Items Sold',
                           value: isLoading ? '...' : stats.itemsSold.toString(),
                           backgroundColor: adminCardBackground,
                           textColor: Colors.black,
                         ),
                         _KpiCard(
-                          title: 'Today\'s Revenue', // <-- Đã dịch
+                          title: 'Today\'s Revenue',
                           value: isLoading ? '...' : formatRevenue(stats.todayRevenue),
                           backgroundColor: adminCardBackground,
                           textColor: Colors.black,
                           changeIndicator: _ChangeChip(value: isLoading ? 0 : stats.todayRevenuePercent),
                         ),
                         _KpiCard(
-                          title: 'Total Revenue', // <-- Đã dịch
+                          title: 'Total Revenue',
                           value: isLoading ? '...' : formatRevenue(stats.totalRevenue),
                           backgroundColor: adminCardBackground,
                           textColor: Colors.black,
@@ -192,7 +192,7 @@ class _PharmacySelector extends StatelessWidget {
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange),
             SizedBox(width: 16),
-            Text("No pharmacies assigned yet.", style: TextStyle(color: Colors.grey)), // <-- Đã dịch
+            Text("No pharmacies assigned yet.", style: TextStyle(color: Colors.grey)),
           ],
         ),
       );
@@ -210,7 +210,7 @@ class _PharmacySelector extends StatelessWidget {
         child: DropdownButton<String>(
           isExpanded: true,
           value: selectedId,
-          hint: const Text("Select a pharmacy", style: TextStyle(color: Colors.grey)), // <-- Đã dịch
+          hint: const Text("Select a pharmacy", style: TextStyle(color: Colors.grey)),
           icon: const Icon(Icons.keyboard_arrow_down, color: adminPrimaryGreen),
           items: allPharmacies.map((pharmacy) {
             return DropdownMenuItem<String>(

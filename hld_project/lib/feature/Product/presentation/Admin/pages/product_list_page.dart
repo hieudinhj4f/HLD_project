@@ -17,13 +17,11 @@ import '../../../domain/usecase/deleteProduct.dart';
 
 class ProductListPage extends StatefulWidget {
 
-    // Add final fields to RECEIVE use cases
     final GetAllProduct getProducts;
     final CreateProduct createProduct;
     final UpdateProduct updateProduct;
     final DeleteProduct deleteProduct;
 
-    // Require them in the constructor
     const ProductListPage({
         Key? key,
         required this.getProducts,
@@ -51,34 +49,15 @@ class _ProductListPageState extends State<ProductListPage> {
     @override
     void initState() {
         super.initState();
-        _checkFirestoreConnection();
         _loadProducts();
     }
 
     @override
     void dispose() {
         _debouncer?.cancel();
-        _searchController.dispose();
         super.dispose();
     }
 
-    Future<void> _checkFirestoreConnection() async {
-        debugPrint('Checking Firestore connection...');
-        final firestore = FirebaseFirestore.instance;
-        try {
-            final snapshot = await firestore.collection('product').doc('products').get();
-
-            if (snapshot.exists) {
-                debugPrint('✅ FIRESTORE CONNECTION SUCCESSFUL');
-            } else {
-                debugPrint('⚠️ FIRESTORE CONNECTION SUCCESSFUL, but "products" document does not exist.');
-            }
-        } on FirebaseException catch (e) {
-            debugPrint('❌ FIRESTORE ERROR: ${e.code}');
-        } catch (e) {
-            debugPrint('❌ OTHER ERROR: $e');
-        }
-    }
 
     Future<void> _loadProducts() async {
         setState(() {
@@ -86,7 +65,7 @@ class _ProductListPageState extends State<ProductListPage> {
             _error = null;
         });
         try {
-            // Use the Usecase "injected" via "widget"
+
             final products = await widget.getProducts.call();
             final uniqueCategoriesName = products.map((p) => p.categories).toSet().toList();
 

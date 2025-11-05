@@ -105,8 +105,6 @@ class AppRouter {
   final UpdateDoctor updateDoctor;
   final DeleteDoctor deleteDoctor;
 
-  // Chat (User)
-  // final GetDoctors getDoctors; // (main.dart của bạn chưa tạo cái này)
 
 
   // === 5. CẬP NHẬT CONSTRUCTOR ===
@@ -134,7 +132,6 @@ class AppRouter {
     // required this.getDoctors,
   });
 
-  // (Các tabs _adminTabs và _userTabs giữ nguyên)
   static const List<BottomNavItem> _adminTabs = [
     BottomNavItem(path: '/admin/home', label: 'Home', icon: Icons.home),
     BottomNavItem(path: '/admin/product', label: 'Product', icon: Icons.shopping_cart,),
@@ -155,7 +152,6 @@ class AppRouter {
     debugLogDiagnostics: true,
     refreshListenable: authProvider,
 
-    // (Hàm redirect của bạn giữ nguyên)
     redirect: (context, state) {
       final bool isLoggedIn = authProvider.isLoggedIn;
       final bool isAdmin = authProvider.isAdmin;
@@ -165,8 +161,6 @@ class AppRouter {
           location == AppRoutes.login ||
           location == AppRoutes.signup ||
           location == AppRoutes.home;
-              location == AppRoutes.signup ||
-              location == AppRoutes.home;
 
       final bool isGoingToAdmin = location.startsWith('/admin');
       final bool isGoingToUser =

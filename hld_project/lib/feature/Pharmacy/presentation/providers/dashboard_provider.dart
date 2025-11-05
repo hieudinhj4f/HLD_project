@@ -31,8 +31,8 @@ class DashboardProvider with ChangeNotifier {
   // === State ===
   bool _isLoading = false;
   String? _error;
-  KpiStats _stats = KpiStats.zero(); // ĐÃ SỬA: DÙNG ZERO
-  List<double> _chartData = List.filled(7, 0.0); // ĐÃ SỬA: 7 NGÀY
+  KpiStats _stats = KpiStats.zero();
+  List<double> _chartData = List.filled(7, 0.0);
   Pharmacy? _pharmacy;
 
   // Dropdown

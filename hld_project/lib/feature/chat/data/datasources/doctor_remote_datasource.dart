@@ -48,5 +48,4 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDatasource{
   Future<DoctorModel?> getDoctorByID(String id) async {
     return await  _remoteDS.getById(id);
   }
-    
 }
