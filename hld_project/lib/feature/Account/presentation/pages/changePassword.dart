@@ -1,12 +1,12 @@
-// [CẦN IMPORT CÁI NÀY NẾU CHƯA CÓ]
+// [NEEDS THIS IMPORT IF NOT ALREADY PRESENT]
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
-// import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // Mày đã có
+// import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // You already have this
 
-// === HÀM HIỆN DIALOG ĐỔI MẬT KHẨU (BẢN TÚT LẠI UI) ===
+// === FUNCTION TO SHOW CHANGE PASSWORD DIALOG (REFINED UI VERSION) ===
 void showChangePasswordDialog(BuildContext context) {
-  // Mấy cái này phải ở ngoài để giữ state
+  // These must be outside to maintain state
   final _formKey = GlobalKey<FormState>();
   final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
@@ -16,14 +16,14 @@ void showChangePasswordDialog(BuildContext context) {
 
   showDialog(
     context: context,
-    barrierDismissible: !_isLoading, // Không cho tắt khi đang loading
+    barrierDismissible: !_isLoading, // Don't allow dismissal while loading
     builder: (ctx) {
-      // Dùng StatefulBuilder để dialog tự cập nhật state của nó
+      // Use StatefulBuilder so the dialog can update its own state
       return StatefulBuilder(
         builder: (dialogContext, setDialogState) {
 
-          // [GỌN HƠN] Tách logic 'onPressed' ra một hàm riêng
-          // Nó vẫn nằm trong scope của 'builder' nên truy cập được setDialogState
+          // [CLEANER] Separate 'onPressed' logic into its own function
+          // It's still within the 'builder' scope so it can access setDialogState
           Future<void> _submitChangePassword() async {
             setDialogState(() { _dialogError = null; });
             if (!_formKey.currentState!.validate()) {
@@ -38,7 +38,7 @@ void showChangePasswordDialog(BuildContext context) {
 
             if (user == null || user.email == null) {
               setDialogState(() {
-                _dialogError = "Lỗi: Không tìm thấy người dùng.";
+                _dialogError = "Error. Can't find any users";
                 _isLoading = false;
               });
               return;
@@ -53,24 +53,24 @@ void showChangePasswordDialog(BuildContext context) {
               await user.reauthenticateWithCredential(credential);
               await user.updatePassword(newPassword);
 
-              // Xong thì tắt loading VÀ đóng dialog
+              // Done, so turn off loading AND close the dialog
               setDialogState(() { _isLoading = false; });
               Navigator.of(ctx).pop();
 
-              // Báo thành công ở màn hình chính
+              // Show success on the main screen
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Đổi mật khẩu thành công!'),
+                  content: Text('Change password success!'),
                   backgroundColor: Colors.green,
                 ),
               );
 
             } on fb_auth.FirebaseAuthException catch (e) {
-              String errorMessage = 'Đã xảy ra lỗi. Vui lòng thử lại.';
+              String errorMessage = 'There has been some error .Please check again.';
               if (e.code == 'wrong-password' || e.code == 'INVALID_LOGIN_CREDENTIALS') {
-                errorMessage = 'Mật khẩu cũ không chính xác.';
+                errorMessage = 'Incorrect old password.';
               } else if (e.code == 'weak-password') {
-                errorMessage = 'Mật khẩu mới quá yếu.';
+                errorMessage = 'The new password is too weak.';
               }
               setDialogState(() {
                 _dialogError = errorMessage;
@@ -78,19 +78,19 @@ void showChangePasswordDialog(BuildContext context) {
               });
             } catch (e) {
               setDialogState(() {
-                _dialogError = 'Lỗi không xác định: $e';
+                _dialogError = 'Unknown error: $e';
                 _isLoading = false;
               });
             }
           }
 
-          // === PHẦN UI ĐÃ TÚT LẠI ===
+          // === REFINED UI PART ===
           return AlertDialog(
-            // [UI ĐẸP HƠN]
+            // [NICER UI]
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             icon: Icon(Iconsax.lock_1, color: Colors.blue.shade700, size: 44),
-            title: const Text('Đổi mật khẩu',
+            title: const Text('Change Password',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontWeight: FontWeight.bold)),
             content: Form(
@@ -99,7 +99,7 @@ void showChangePasswordDialog(BuildContext context) {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // [UI ĐẸP HƠN] - Hiện lỗi tập trung ở trên
+                    // [NICER UI] - Show centralized error above
                     if (_dialogError != null) ...[
                       Text(
                         _dialogError!,
@@ -108,23 +108,23 @@ void showChangePasswordDialog(BuildContext context) {
                       ),
                       const SizedBox(height: 12),
                     ],
-                    // [UI ĐẸP HƠN] - Dùng TextFormField với OutlineBorder
+                    // [NICER UI] - Use TextFormField with OutlineBorder
                     TextFormField(
                       controller: _oldPasswordController,
                       obscureText: true,
-                      decoration: _buildInputDecoration('Mật khẩu cũ'), // Dùng hàm helper
+                      decoration: _buildInputDecoration('Old Password'), // Use helper function
                       validator: (val) =>
-                      val!.isEmpty ? 'Không được bỏ trống' : null,
+                      val!.isEmpty ? 'Cannot be empty' : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _newPasswordController,
                       obscureText: true,
-                      decoration: _buildInputDecoration('Mật khẩu mới (ít nhất 6 ký tự)'),
+                      decoration: _buildInputDecoration('New Password (at least 6 characters)'),
                       validator: (val) {
-                        if (val!.isEmpty) return 'Không được bỏ trống';
+                        if (val!.isEmpty) return 'Cannot be empty';
                         if (val.length < 6)
-                          return 'Mật khẩu phải ít nhất 6 ký tự';
+                          return 'Password must be at least 6 characters';
                         return null;
                       },
                     ),
@@ -132,20 +132,20 @@ void showChangePasswordDialog(BuildContext context) {
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: true,
-                      decoration: _buildInputDecoration('Xác nhận mật khẩu mới'),
+                      decoration: _buildInputDecoration('Confirm New Password'),
                       validator: (val) {
-                        if (val!.isEmpty) return 'Không được bỏ trống';
+                        if (val!.isEmpty) return 'Cannot be empty';
                         if (val != _newPasswordController.text)
-                          return 'Mật khẩu không khớp';
+                          return 'Passwords do not match';
                         return null;
                       },
                     ),
                     const SizedBox(height: 30),
-                    // Dùng Row bọc 2 nút và MainAxisAlignment.spaceBetween để đẩy ra 2 bên
+                    // Use Row to wrap 2 buttons and MainAxisAlignment.spaceBetween to push them apart
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // NÚT HỦY (Dùng Expanded để nó chiếm 50% không gian)
+                        // CANCEL BUTTON (Use Expanded so it takes up 50% of space)
                         Expanded(
                           child: OutlinedButton(
                             onPressed: _isLoading ? null : () => Navigator.of(ctx).pop(),
@@ -154,36 +154,36 @@ void showChangePasswordDialog(BuildContext context) {
                               side: BorderSide(color: Colors.grey.shade400),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            child: const Text('Hủy'),
-                           ),
+                            child: const Text('Cancel'),
                           ),
-                          const SizedBox(width: 16),
-                          // NÚT XÁC NHẬN (Dùng Expanded để nó chiếm 50% không gian)
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue.shade700,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: _isLoading ? null : _submitChangePassword,
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                    )
-                                  : const Text('Xác nhận'),
+                        ),
+                        const SizedBox(width: 16),
+                        // CONFIRM BUTTON (Use Expanded so it takes up 50% of space)
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade700,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
+                            onPressed: _isLoading ? null : _submitChangePassword,
+                            child: _isLoading
+                                ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                                : const Text('Confirm'),
                           ),
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
             ),
-            // XÓA HẾT MẤY CÁI ACTION NÀY ĐI
+            // REMOVE ALL OF THESE ACTIONS
             // actionsAlignment: MainAxisAlignment.center,
             // actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
             // actions: [],
@@ -194,8 +194,8 @@ void showChangePasswordDialog(BuildContext context) {
   );
 }
 
-// [UI ĐẸP HƠN] - Tách hàm build InputDecoration ra cho gọn
-// Mày phải đặt hàm này BÊN NGOÀI hàm _showChangePasswordDialog
+// [NICER UI] - Extract the build InputDecoration function to keep it clean
+// You must place this function OUTSIDE the showChangePasswordDialog function
 InputDecoration _buildInputDecoration(String label) {
   return InputDecoration(
     labelText: label,

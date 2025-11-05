@@ -14,7 +14,7 @@ class DashboardProvider with ChangeNotifier {
   final GetDashboardStats _getDashboardStats;
   final GetVendorActivity _getVendorActivity;
   final GetPharmacyById _getPharmacyInfo;
-  final GetAllPharmacy _getAllPharmacies; // ĐÃ SỬA TÊN
+  final GetAllPharmacy _getAllPharmacies;
 
   DashboardProvider({
     required AuthProvider? authProvider,

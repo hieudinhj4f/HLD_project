@@ -25,7 +25,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     });
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Đã thêm vào giỏ hàng!')));
+    ).showSnackBar(const SnackBar(content: Text('Added to cart!'))); // <-- Đã dịch
     Navigator.pop(context);
   }
 
@@ -37,8 +37,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         backgroundColor: Colors.white,
         title: Text(
           'HLD',
-          style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
-            fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
+          style: GoogleFonts.montserrat( // <-- Change to GoogleFonts.font_name
+            fontWeight: FontWeight.w800, // This is the Black weight (super bold)
             color: Colors.green,
             fontSize: 30,
           ),
@@ -66,13 +66,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             Text(widget.product.description),
             const SizedBox(height: 16),
             Text(
-              '${widget.product.price.toInt()}đ / Viên',
+              '${widget.product.price.toInt()}đ / Unit', // <-- Đã dịch
               style: const TextStyle(fontSize: 18, color: Colors.green),
             ),
             const SizedBox(height: 24),
             Row(
               children: [
-                const Text('Chọn số lượng', style: TextStyle(fontSize: 16)),
+                const Text(
+                  'Select quantity', // <-- Đã dịch
+                  style: TextStyle(fontSize: 16),
+                ),
                 const Spacer(),
                 IconButton(
                   onPressed: () => setState(
@@ -95,7 +98,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 minimumSize: const Size(double.infinity, 50),
               ),
               child: const Text(
-                'Chọn mua',
+                'Add to cart', // <-- Đã dịch
                 style: TextStyle(color: Colors.white),
               ),
             ),

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-// Chỉ cần import 'cloud_firestore.dart' là đủ cho cả mobile và web
+// Importing 'cloud_firestore.dart' is sufficient for both mobile and web
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../domain/entity/product/product.dart';
 import '../../../domain/usecase/createProduct.dart';
 import '../../../domain/usecase/updateProduct.dart';
 
 class ProductFormPage extends StatefulWidget {
-  final Product? product; // Product (có thể null) được truyền vào để chỉnh sửa
+  final Product? product; // Product (nullable) passed in for editing
   final CreateProduct createUseCase;
   final UpdateProduct updateUseCase;
 
@@ -22,32 +22,31 @@ class ProductFormPage extends StatefulWidget {
 }
 
 class _ProductFormPageState extends State<ProductFormPage> {
-  // 1. STATE VARIABLES (Biến trạng thái)
+  // 1. STATE VARIABLES
 
-  // Key này dùng để theo dõi và xác thực (validate) Form
+  // This key is used to track and validate the Form
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers để "kiểm soát" các trường văn bản
+  // Controllers to "control" the text fields
   late TextEditingController _nameController;
   late TextEditingController _priceController;
   late TextEditingController _quantityController;
   late TextEditingController _imageUrlController;
-  // === FIX: Thêm các controller còn thiếu ===
+  // === FIX: Add missing controllers ===
   late TextEditingController _descriptionController;
   late TextEditingController _categoriesController;
-  // (categoryId sẽ tốt hơn, nhưng dùng categories (String) theo code của bạn)
+  // (categoryId would be better, but using categories (String) based on your code)
 
-  // Biến trạng thái cho việc tải
+  // State variable for loading
   bool _isSaving = false;
 
-  // 2. INIT STATE (Khởi tạo)
+  // 2. INIT STATE (Initialization)
   @override
   void initState() {
     super.initState();
 
     final isEditing = widget.product != null;
     final product = widget.product;
-
 
     _nameController = TextEditingController(text: isEditing ? product!.name : '');
     _priceController = TextEditingController(text: isEditing ? product!.price.toString() : '');
@@ -56,15 +55,15 @@ class _ProductFormPageState extends State<ProductFormPage> {
     _descriptionController = TextEditingController(text: isEditing ? product!.description : '');
     _categoriesController = TextEditingController(text: isEditing ? product!.categories : '');
 
-    // 2 biến Timestamp bạn khai báo không cần thiết phải là state variable,
-    // vì chúng được đặt giá trị lúc LƯU, không phải do người dùng nhập.
-    // Chúng ta sẽ xử lý chúng trong hàm _saveForm().
+    // The 2 Timestamp variables you declared don't need to be state variables,
+    // because their values are set on SAVE, not entered by the user.
+    // We will handle them in the _saveForm() function.
   }
 
-  // 3. DISPOSE (Dọn dẹp)
+  // 3. DISPOSE (Cleanup)
   @override
   void dispose() {
-    // === FIX: Dọn dẹp TẤT CẢ controller để tránh rò rỉ bộ nhớ ===
+    // === FIX: Dispose ALL controllers to avoid memory leaks ===
     _nameController.dispose();
     _priceController.dispose();
     _quantityController.dispose();
@@ -91,35 +90,35 @@ class _ProductFormPageState extends State<ProductFormPage> {
         price: double.parse(_priceController.text),
         quantity: int.parse(_quantityController.text),
         imageUrl: _imageUrlController.text,
-        // === FIX: Lấy giá trị từ controller thay vì chuỗi rỗng ===
+        // === FIX: Get values from controllers instead of empty strings ===
         description: _descriptionController.text,
         categories: _categoriesController.text,
         createdAt: widget.product?.createdAt ?? now,
         updateAt: now,
       );
 
-      // 4.5. Gọi UseCase
+      // 4.5. Call UseCase
       if (widget.product == null) {
-        // Tình huống 1: THÊM MỚI
+        // Scenario 1: ADD NEW
         await widget.createUseCase.call(productToSave);
       } else {
-        // Tình huống 2: CHỈNH SỬA
+        // Scenario 2: EDIT
         await widget.updateUseCase.call(productToSave);
       }
 
-      // 4.6. Đóng form nếu thành công
-      // Trả về 'true' để báo cho trang trước (ProductListPage) biết cần tải lại danh sách
+      // 4.6. Close form if successful
+      // Return 'true' to let the previous page (ProductListPage) know it needs to reload the list
       if (mounted) Navigator.pop(context, true);
 
     } catch (e) {
-      // 4.7. Xử lý lỗi
+      // 4.7. Handle error
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi lưu dữ liệu: $e')),
+          SnackBar(content: Text('Error saving data: $e')),
         );
       }
     } finally {
-      // 4.8. Tắt trạng thái loading (dù thành công hay thất bại)
+      // 4.8. Turn off loading state (whether success or failure)
       if (mounted) {
         setState(() {
           _isSaving = false;
@@ -128,26 +127,26 @@ class _ProductFormPageState extends State<ProductFormPage> {
     }
   }
 
-  // 5. BUILD (Xây dựng UI)
+  // 5. BUILD (Build UI)
   @override
   Widget build(BuildContext context) {
-    // Lấy lại biến này cho dễ đọc
+    // Get this variable again for readability
     final isEditing = widget.product != null;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Chỉnh Sửa Sản Phẩm' : 'Thêm Sản Phẩm Mới'),
+        title: Text(isEditing ? 'Edit Product' : 'Add New Product'),
         actions: [
-          // Nút Save với trạng thái loading
+          // Save button with loading state
           IconButton(
             icon: _isSaving
-                ? const SizedBox( // Hiển thị vòng xoay nếu đang lưu
+                ? const SizedBox( // Show spinner if saving
               width: 24,
               height: 24,
               child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.0),
             )
-                : const Icon(Icons.save), // Hiển thị icon save
-            // Vô hiệu hóa nút khi đang lưu
+                : const Icon(Icons.save), // Show save icon
+            // Disable button when saving
             onPressed: _isSaving ? null : _saveForm,
           ),
         ],
@@ -155,56 +154,56 @@ class _ProductFormPageState extends State<ProductFormPage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey, // Gắn key vào Form
-          child: ListView( // Dùng ListView để tránh lỗi tràn màn hình khi bàn phím hiện lên
+          key: _formKey, // Attach key to Form
+          child: ListView( // Use ListView to avoid overflow errors when keyboard appears
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Tên Sản Phẩm'),
-                validator: (value) { // Logic kiểm tra
-                  if (value == null || value.isEmpty) return 'Vui lòng nhập tên sản phẩm.';
+                decoration: const InputDecoration(labelText: 'Product Name'),
+                validator: (value) { // Validation logic
+                  if (value == null || value.isEmpty) return 'Please enter a product name.';
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _priceController,
-                decoration: const InputDecoration(labelText: 'Giá'),
-                keyboardType: TextInputType.number, // Bàn phím số
+                decoration: const InputDecoration(labelText: 'Price'),
+                keyboardType: TextInputType.number, // Number keyboard
                 validator: (value) {
-                  if (value == null || double.tryParse(value) == null) return 'Vui lòng nhập giá hợp lệ.';
+                  if (value == null || double.tryParse(value) == null) return 'Please enter a valid price.';
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _quantityController,
-                decoration: const InputDecoration(labelText: 'Số lượng'),
+                decoration: const InputDecoration(labelText: 'Quantity'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || int.tryParse(value) == null) return 'Vui lòng nhập số lượng hợp lệ.';
+                  if (value == null || int.tryParse(value) == null) return 'Please enter a valid quantity.';
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _imageUrlController,
-                decoration: const InputDecoration(labelText: 'URL Hình ảnh'),
-                // Không bắt buộc nên không cần validator
+                decoration: const InputDecoration(labelText: 'Image URL'),
+                // Not required, so no validator needed
               ),
               const SizedBox(height: 16),
 
-              // === FIX: Thêm các trường UI còn thiếu ===
+              // === FIX: Add missing UI fields ===
               TextFormField(
                 controller: _categoriesController,
-                decoration: const InputDecoration(labelText: 'Danh mục (ID)'),
-                // (Sau này bạn nên đổi thành DropdownButton để chọn)
+                decoration: const InputDecoration(labelText: 'Category (ID)'),
+                // (You should change this to a DropdownButton later)
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Mô tả', alignLabelWithHint: true),
-                maxLines: 3, // Cho phép nhập nhiều dòng
+                decoration: const InputDecoration(labelText: 'Description', alignLabelWithHint: true),
+                maxLines: 3, // Allow multiple lines
               ),
             ],
           ),

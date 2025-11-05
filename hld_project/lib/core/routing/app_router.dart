@@ -137,33 +137,17 @@ class AppRouter {
   // (Các tabs _adminTabs và _userTabs giữ nguyên)
   static const List<BottomNavItem> _adminTabs = [
     BottomNavItem(path: '/admin/home', label: 'Home', icon: Icons.home),
-    BottomNavItem(
-      path: '/admin/product',
-      label: 'Product',
-      icon: Icons.shopping_cart,
-    ),
-    BottomNavItem(
-      path: '/admin/Pharmacy',
-      label: 'Pharmacy',
-      icon: Icons.local_pharmacy,
-    ),
-    BottomNavItem(
-      path: '/admin/doctors',
-      label: 'Doctors',
-      icon: Icons.person_2,
-    ),
+    BottomNavItem(path: '/admin/product', label: 'Product', icon: Icons.shopping_cart,),
+    BottomNavItem(path: '/admin/Pharmacy', label: 'Pharmacy', icon: Icons.local_pharmacy,),
+    BottomNavItem(path: '/admin/doctors', label: 'Doctors', icon: Icons.person_2,),
     BottomNavItem(path: '/admin/account', label: 'Account', icon: Icons.person),
-    BottomNavItem(
-      path: '/admin/setting',
-      label: 'Setting',
-      icon: Icons.settings,
-    ),
+    BottomNavItem(path: '/admin/setting',label: 'Setting', icon: Icons.settings ),
   ];
   static const List<BottomNavItem> _userTabs = [
-    BottomNavItem(path: '/user/product', label: 'Product', icon: Icons.home),
+    BottomNavItem(path: '/user/product', label: 'Home', icon: Icons.home),
     BottomNavItem(path: '/user/cart', label: 'Cart', icon: Icons.shopping_cart),
     BottomNavItem(path: '/user/chat', label: 'Chat', icon: Icons.message),
-    BottomNavItem(path: '/user/account', label: 'Account', icon: Icons.person),
+    BottomNavItem(path: '/user/account', label: 'Profile', icon: Icons.person),
   ];
 
   late final GoRouter router = GoRouter(

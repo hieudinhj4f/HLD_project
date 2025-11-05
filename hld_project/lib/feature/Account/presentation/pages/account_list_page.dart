@@ -42,7 +42,6 @@ class _AccountListPageState extends State<AccountListPage> {
   late UpdateAccount _updateAccountUseCase;
   late DeleteAccount _deleteAccountUseCase;
 
-  // (State variables)
   List<Account> _allAccounts = [];
   List<Account> _filteredAccounts = [];
   bool _isLoading = false;
@@ -54,15 +53,14 @@ class _AccountListPageState extends State<AccountListPage> {
   void initState() {
     super.initState();
 
-    // === PHẦN CODE "BẨN" (KHỞI TẠO TẠI CHỖ) ===
-    final dataSource = AccountRemoteDatasourceIpml(); // (Mày tự sửa tên Ipml nếu cần)
+    final dataSource = AccountRemoteDatasourceIpml();
     final repository = AccountRepositoryImpl(remoteDataSource: dataSource);
     _getAccountUseCase = GetAccount(repository);
     _createAccountUseCase = CreateAccount(repository);
     _updateAccountUseCase = UpdateAccount(repository);
     _deleteAccountUseCase = DeleteAccount(repository);
 
-    _loadAccounts(); // Tải data
+    _loadAccounts();
   }
 
   @override
@@ -72,7 +70,6 @@ class _AccountListPageState extends State<AccountListPage> {
     super.dispose();
   }
 
-  // (Hàm tải data - ĐÃ FIX LỖI TỰ HỦY)
   Future<void> _loadAccounts() async {
     setState(() { _isLoading = true; _error = null; });
     try {
@@ -127,11 +124,11 @@ class _AccountListPageState extends State<AccountListPage> {
     final confirmed = await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: const Text('Bạn có chắc chắn muốn xóa tài khoản này không?'),
+        title: const Text('Delete Account'),
+        content: const Text('Are you sure to delete this accounts'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Hủy')),
-          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Xóa', style: TextStyle(color: Colors.red))),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
         ],
       ),
     );
@@ -145,7 +142,7 @@ class _AccountListPageState extends State<AccountListPage> {
     }
   }
 
-  // (Hàm mở Form Edit - Giữ nguyên)
+
   Future<void> _openEditForm(Account? account) async {
     final result = await Navigator.push(
       context,
@@ -206,7 +203,7 @@ class _AccountListPageState extends State<AccountListPage> {
               controller: _searchController,
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm người dùng (tên, email)...',
+                hintText: 'Search for user .... ',
                 prefixIcon: const Icon(Iconsax.search_normal),
                 filled: true,
                 fillColor: Colors.grey.shade100,
@@ -220,7 +217,7 @@ class _AccountListPageState extends State<AccountListPage> {
 
             // Tiêu đề
             const Text(
-              'Danh sách người dùng',
+              'User list',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -286,7 +283,7 @@ class _AccountListPageState extends State<AccountListPage> {
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: Colors.grey.shade200,
-                  backgroundImage: avatarImage, // <-- DÙNG BIẾN MỚI
+                  backgroundImage: avatarImage,
                   child: (avatarImage == null)
                       ? const Icon(Iconsax.user, color: Colors.grey)
                       : null,
@@ -322,7 +319,7 @@ class _AccountListPageState extends State<AccountListPage> {
                         minimumSize: const Size(80, 35),
                         padding: EdgeInsets.zero,
                       ),
-                      child: const Text('Chỉnh sửa', style: TextStyle(fontSize: 14)),
+                      child: const Text('Edit', style: TextStyle(fontSize: 14)),
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton(
@@ -333,7 +330,7 @@ class _AccountListPageState extends State<AccountListPage> {
                         minimumSize: const Size(80, 35),
                         padding: EdgeInsets.zero,
                       ),
-                      child: const Text('Mở', style: TextStyle(fontSize: 14)),
+                      child: const Text('Open', style: TextStyle(fontSize: 14)),
                     ),
                   ],
                 ),

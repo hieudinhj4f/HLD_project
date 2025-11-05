@@ -8,7 +8,7 @@ import '../../../domain/entity/product/product.dart';
 import '../widget/product_card.dart';
 import 'product_form_page.dart'; // ProductFormPage
 
-// Import các Usecase mà Page này cần
+// Import the Usecases this Page needs
 import '../../../domain/usecase/getProduct.dart';
 import '../../../domain/usecase/createProduct.dart';
 import '../../../domain/usecase/updateProduct.dart';
@@ -17,13 +17,13 @@ import '../../../domain/usecase/deleteProduct.dart';
 
 class ProductListPage extends StatefulWidget {
 
-    // Thêm các trường final để NHẬN use case
+    // Add final fields to RECEIVE use cases
     final GetAllProduct getProducts;
     final CreateProduct createProduct;
     final UpdateProduct updateProduct;
     final DeleteProduct deleteProduct;
 
-    // Yêu cầu chúng trong constructor
+    // Require them in the constructor
     const ProductListPage({
         Key? key,
         required this.getProducts,
@@ -63,20 +63,20 @@ class _ProductListPageState extends State<ProductListPage> {
     }
 
     Future<void> _checkFirestoreConnection() async {
-        debugPrint('Đang kiểm tra kết nối Firestore...');
+        debugPrint('Checking Firestore connection...');
         final firestore = FirebaseFirestore.instance;
         try {
             final snapshot = await firestore.collection('product').doc('products').get();
 
             if (snapshot.exists) {
-                debugPrint('✅ KẾT NỐI FIRESTORE THÀNH CÔNG');
+                debugPrint('✅ FIRESTORE CONNECTION SUCCESSFUL');
             } else {
-                debugPrint('⚠️ KẾT NỐI FIRESTORE THÀNH CÔNG, nhưng document "products" không tồn tại.');
+                debugPrint('⚠️ FIRESTORE CONNECTION SUCCESSFUL, but "products" document does not exist.');
             }
         } on FirebaseException catch (e) {
-            debugPrint('❌ LỖI FIRESTORE: ${e.code}');
+            debugPrint('❌ FIRESTORE ERROR: ${e.code}');
         } catch (e) {
-            debugPrint('❌ LỖI KHÁC: $e');
+            debugPrint('❌ OTHER ERROR: $e');
         }
     }
 
@@ -86,7 +86,7 @@ class _ProductListPageState extends State<ProductListPage> {
             _error = null;
         });
         try {
-            // Dùng Usecase được "tiêm" vào thông qua "widgets"
+            // Use the Usecase "injected" via "widget"
             final products = await widget.getProducts.call();
             final uniqueCategoriesName = products.map((p) => p.categories).toSet().toList();
 
@@ -157,14 +157,14 @@ class _ProductListPageState extends State<ProductListPage> {
             return const Center(child: CircularProgressIndicator());
         }
         if (_error != null) {
-            return Center(child: Text('Lỗi: $_error. Vui lòng thử lại.'));
+            return Center(child: Text('Error: $_error. Please try again.'));
         }
 
         if (_filteredProducts.isEmpty) {
             if (_searchController.text.isNotEmpty || _selectedCategory != 'All') {
-                return const Center(child: Text('Không tìm thấy kết quả phù hợp.'));
+                return const Center(child: Text('No matching results found.'));
             }
-            return const Center(child: Text('Không có sản phẩm nào.'));
+            return const Center(child: Text('There are no products.'));
         }
 
         return ListView.builder(
@@ -184,30 +184,30 @@ class _ProductListPageState extends State<ProductListPage> {
     @override
     Widget build(BuildContext context) {
         return Scaffold(
-          backgroundColor: Colors.grey[50],
-          appBar: AppBar(
-            backgroundColor: Colors.white,
-            title: Text(
-              'HLD',
-              style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
-                fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
-                color: Colors.green,
-                fontSize: 30,
-              ),
+            backgroundColor: Colors.grey[50],
+            appBar: AppBar(
+                backgroundColor: Colors.white,
+                title: Text(
+                    'HLD',
+                    style: GoogleFonts.montserrat( // <-- Change to GoogleFonts.font_name
+                        fontWeight: FontWeight.w800, // This is the Black weight (super bold)
+                        color: Colors.green,
+                        fontSize: 30,
+                    ),
+                ),
+                centerTitle: true,
             ),
-            centerTitle: true,
-          ),
             body: SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                        // Thanh tìm kiếm
+                        // Search bar
                         TextField(
                             controller: _searchController,
                             onChanged: _onSearchChanged,
                             decoration: InputDecoration(
-                                hintText: 'Tìm kiếm thuốc, bệnh lý...',
+                                hintText: 'Search medicine, conditions...',
                                 prefixIcon: const Icon(Iconsax.search_normal, color: Colors.grey),
                                 suffixIcon: _searchController.text.isNotEmpty
                                     ? IconButton(
@@ -259,7 +259,7 @@ class _ProductListPageState extends State<ProductListPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Ưu đãi & Khuyến mãi
+                        // Offers & Promotions
                         Container(
                             height: 150,
                             decoration: BoxDecoration(
@@ -268,7 +268,7 @@ class _ProductListPageState extends State<ProductListPage> {
                             ),
                             child: const Center(
                                 child: Text(
-                                    'Ưu đãi & Khuyến mãi',
+                                    'Offers & Promotions',
                                     style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
@@ -279,21 +279,21 @@ class _ProductListPageState extends State<ProductListPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Tiêu đề Sản phẩm nổi bật
+                        // Featured Products Title
                         const Text(
-                            'Sản phẩm nổi bật',
+                            'Featured Products',
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
 
-                        // NHÚNG DANH SÁCH SẢN PHẨM VÀO ĐÂY
+                        // EMBED PRODUCT LIST HERE
                         _buildProductList(),
 
                         const SizedBox(height: 40),
                     ],
                 ),
             ),
-            // Nút Thêm mới sản phẩm
+            // Add New Product Button
             floatingActionButton: FloatingActionButton(
                 onPressed: () => _openForm(),
                 backgroundColor: Colors.blue,

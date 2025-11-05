@@ -27,12 +27,12 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  // Cập nhật số lượng
+  // Update quantity
   Future<void> _updateQuantity(
-    String userId,
-    String productId,
-    int change,
-  ) async {
+      String userId,
+      String productId,
+      int change,
+      ) async {
     final docRef = FirebaseFirestore.instance
         .collection('users')
         .doc(userId)
@@ -51,7 +51,7 @@ class _CartPageState extends State<CartPage> {
     }
   }
 
-  // Xóa toàn bộ giỏ hàng
+  // Clear the entire cart
   Future<void> _clearCart(String userId) async {
     final batch = FirebaseFirestore.instance.batch();
     final snapshot = await FirebaseFirestore.instance
@@ -66,7 +66,7 @@ class _CartPageState extends State<CartPage> {
     await batch.commit();
   }
 
-  // ĐÃ SỬA: BỎ QUA SẢN PHẨM KHÔNG TỒN TẠI → KHÔNG LỖI
+  // FIXED: SKIP NON-EXISTENT PRODUCTS -> NO ERROR
   Future<void> _deductStock(String userId) async {
     final batch = FirebaseFirestore.instance.batch();
     final cartSnapshot = await FirebaseFirestore.instance
@@ -85,14 +85,14 @@ class _CartPageState extends State<CartPage> {
             .collection('product')
             .doc(productId);
 
-        // KIỂM TRA XEM SẢN PHẨM CÓ TỒN TẠI KHÔNG
+        // CHECK IF THE PRODUCT EXISTS
         final productSnap = await productRef.get();
         if (productSnap.exists) {
           batch.update(productRef, {
             'quantity': FieldValue.increment(-qtyBought),
           });
         }
-        // Nếu không tồn tại → BỎ QUA, KHÔNG LỖI
+        // If it doesn't exist -> SKIP, NO ERROR
       }
     }
 
@@ -108,13 +108,13 @@ class _CartPageState extends State<CartPage> {
       return Scaffold(
         appBar: AppBar(
           title: const Text(
-            'Giỏ hàng',
+            'Cart',
             style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
         ),
-        body: const Center(child: Text('Vui lòng đăng nhập để xem giỏ hàng')),
+        body: const Center(child: Text('Please log in to see your cart')),
       );
     }
 
@@ -126,7 +126,7 @@ class _CartPageState extends State<CartPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Giỏ hàng',
+          'Cart',
           style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
@@ -154,7 +154,7 @@ class _CartPageState extends State<CartPage> {
                   ),
                   SizedBox(height: 16),
                   Text(
-                    'Giỏ hàng trống',
+                    'Cart is empty',
                     style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
                 ],
@@ -180,7 +180,7 @@ class _CartPageState extends State<CartPage> {
                   itemBuilder: (context, index) {
                     final doc = cartItems[index];
                     final data = doc.data() as Map<String, dynamic>;
-                    final name = data['name'] ?? 'Sản phẩm';
+                    final name = data['name'] ?? 'Product';
                     final price = (data['price'] as num?)?.toDouble() ?? 0.0;
                     final quantity = (data['quantity'] as num?)?.toInt() ?? 1;
                     final imageUrl = data['imageUrl'] ?? '';
@@ -198,20 +198,20 @@ class _CartPageState extends State<CartPage> {
                               borderRadius: BorderRadius.circular(12),
                               child: imageUrl.isNotEmpty
                                   ? Image.network(
-                                      imageUrl,
-                                      width: 70,
-                                      height: 70,
-                                      fit: BoxFit.cover,
-                                    )
+                                imageUrl,
+                                width: 70,
+                                height: 70,
+                                fit: BoxFit.cover,
+                              )
                                   : Container(
-                                      width: 70,
-                                      height: 70,
-                                      color: Colors.grey[300],
-                                      child: const Icon(
-                                        Icons.image,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
+                                width: 70,
+                                height: 70,
+                                color: Colors.grey[300],
+                                child: const Icon(
+                                  Icons.image,
+                                  color: Colors.grey,
+                                ),
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -280,7 +280,7 @@ class _CartPageState extends State<CartPage> {
                 ),
               ),
 
-              // TỔNG TIỀN + THANH TOÁN
+              // TOTAL + CHECKOUT
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
@@ -292,7 +292,7 @@ class _CartPageState extends State<CartPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Tổng tiền', style: TextStyle(fontSize: 16)),
+                        const Text('Subtotal', style: TextStyle(fontSize: 16)),
                         Text(
                           '${_total.toStringAsFixed(0)}đ',
                           style: const TextStyle(
@@ -306,7 +306,7 @@ class _CartPageState extends State<CartPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Phí vận chuyển'),
+                        const Text('Shipping fee'),
                         Text('0đ', style: TextStyle(color: Colors.grey[600])),
                       ],
                     ),
@@ -315,7 +315,7 @@ class _CartPageState extends State<CartPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Tổng cộng',
+                          'Total',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -342,7 +342,7 @@ class _CartPageState extends State<CartPage> {
                               side: const BorderSide(color: Colors.red),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
-                            child: const Text('Xóa hết'),
+                            child: const Text('Clear all'),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -351,43 +351,43 @@ class _CartPageState extends State<CartPage> {
                           child: ElevatedButton(
                             onPressed: _total > 0
                                 ? () async {
-                                    try {
-                                      // 1. TRỪ SỐ LƯỢNG TRONG KHO
-                                      await _deductStock(userId);
+                              try {
+                                // 1. DEDUCT STOCK
+                                await _deductStock(userId);
 
-                                      // 2. XÓA GIỎ HÀNG
-                                      await _clearCart(userId);
+                                // 2. CLEAR CART
+                                await _clearCart(userId);
 
-                                      // 3. ĐI THANH TOÁN
-                                      context.go(
-                                        '/user/cart/qr-payment',
-                                        extra: {
-                                          'totalAmount': _total,
-                                          'orderNumber': _orderNumber,
-                                        },
-                                      );
+                                // 3. GO TO PAYMENT
+                                context.go(
+                                  '/user/cart/qr-payment',
+                                  extra: {
+                                    'totalAmount': _total,
+                                    'orderNumber': _orderNumber,
+                                  },
+                                );
 
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Thanh toán thành công! Đã cập nhật tồn kho.',
-                                          ),
-                                          backgroundColor: Colors.green,
-                                        ),
-                                      );
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text('Lỗi: $e'),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                    }
-                                  }
+                                ScaffoldMessenger.of(
+                                  context,
+                                ).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Checkout successful! Stock updated.',
+                                    ),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              } catch (e) {
+                                ScaffoldMessenger.of(
+                                  context,
+                                ).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
                                 : null,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
@@ -397,7 +397,7 @@ class _CartPageState extends State<CartPage> {
                               ),
                             ),
                             child: const Text(
-                              'Thanh toán',
+                              'Checkout',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,

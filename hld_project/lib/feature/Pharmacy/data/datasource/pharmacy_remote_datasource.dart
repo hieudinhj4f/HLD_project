@@ -3,11 +3,6 @@ import '../../../../core/data/firebase_remote_datasource.dart';
 import '../model/kip_stat_model.dart';
 import '../model/pharmacy_model.dart';
 
-// feature/Pharmacy/data/datasource/pharmacy_remote_datasource.dart
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../core/data/firebase_remote_datasource.dart';
-import '../model/pharmacy_model.dart';
-
 abstract class PharmacyRemoteDataSource {
   Future<List<PharmacyModel>> getAll();
   Future<PharmacyModel?> getPharmacyById(String id);
@@ -17,6 +12,7 @@ abstract class PharmacyRemoteDataSource {
 
   // Dashboard
   Future<KpiStatsModel> getDashboardStats(String pharmacyId);
+
   Future<List<double>> getVendorActivity(String pharmacyId);
 
   // Global
@@ -33,7 +29,7 @@ class PharmacyRemoteDataSourceImpl implements PharmacyRemoteDataSource {
 
   PharmacyRemoteDataSourceImpl()
       : _remoteSource = FirebaseRemoteDS<PharmacyModel>(
-    collectionName: 'pharmacy', // ĐÚNG TÊN COLLECTION
+    collectionName: 'pharmacy',
     fromFirestore: (doc) => PharmacyModel.fromFirestore(doc),
     toFirestore: (model) => model.toJson(),
   );
@@ -64,11 +60,10 @@ class PharmacyRemoteDataSourceImpl implements PharmacyRemoteDataSource {
     await _remoteSource.delete(id);
   }
 
-  // === DASHBOARD STATS (CHO 1 PHARMACY) ===
   @override
   Future<KpiStatsModel> getDashboardStats(String pharmacyId) async {
     final doc = await _firestore
-        .collection('pharmacies')
+        .collection('pharmacy')
         .doc(pharmacyId)
         .collection('stats')
         .doc('daily')
@@ -91,7 +86,7 @@ class PharmacyRemoteDataSourceImpl implements PharmacyRemoteDataSource {
   @override
   Future<List<double>> getVendorActivity(String pharmacyId) async {
     final doc = await _firestore
-        .collection('pharmacies')
+        .collection('pharmacy')
         .doc(pharmacyId)
         .collection('stats')
         .doc('activity_week')
@@ -121,14 +116,14 @@ class PharmacyRemoteDataSourceImpl implements PharmacyRemoteDataSource {
   // === GLOBAL STATS (CHO ADMIN) ===
   @override
   Future<List<String>> getAllPharmacyIds() async {
-    final snapshot = await _firestore.collection('pharmacies').get();
+    final snapshot = await _firestore.collection('pharmacy').get();
     return snapshot.docs.map((doc) => doc.id).toList();
   }
 
   @override
   Future<KpiStatsModel> getKpiStatsForPharmacy(String pharmacyId) async {
     final doc = await _firestore
-        .collection('pharmacies')
+        .collection('pharmacy')
         .doc(pharmacyId)
         .collection('stats')
         .doc('daily')

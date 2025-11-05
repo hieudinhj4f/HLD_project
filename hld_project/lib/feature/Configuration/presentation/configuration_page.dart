@@ -33,8 +33,8 @@ class _SettingsPageState extends State<SettingsPage> {
         backgroundColor: Colors.white,
         title: Text(
           'HLD',
-          style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
-            fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.w800,
             color: Colors.green,
             fontSize: 30,
           ),
@@ -49,14 +49,13 @@ class _SettingsPageState extends State<SettingsPage> {
             const _UserInfoHeader(
               name: 'Nguyen Dinh Hieu',
               email: 'dinhhieunguyen111@gmail.com',
-              // imageUrl: '...' (Bạn có thể thêm URL ảnh)
             ),
             const SizedBox(height: 30),
 
             // 3. NHÓM TÙY CHỌN 1
             _SettingsTile(
               icon: Iconsax.edit,
-              title: 'THÔNG TIN CÁ NHÂN',
+              title: 'Profile',
               onTap: () {
                 Navigator.push(
                   context,
@@ -66,8 +65,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             _SettingsTile(
               icon: Iconsax.moon,
-              title: 'CHẾ ĐỘ TỐI',
-              // Dùng 'trailing' để thêm nút Switch
+              title: 'Dark Mode',
               trailing: Switch(
                 value: _isThemeDark,
                 onChanged: (value) {
@@ -82,7 +80,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             _SettingsTile(
               icon: Iconsax.lock,
-              title: 'ĐỔI MẬT KHẨU',
+              title: 'Change password',
               onTap: () {
                 showChangePasswordDialog(context);
               },
@@ -93,11 +91,10 @@ class _SettingsPageState extends State<SettingsPage> {
             // 4. NÚT LOG OUT
             _SettingsTile(
               icon: Iconsax.logout,
-              title: 'ĐĂNG XUẤT',
-              // Thêm màu đỏ cho nút Log Out
+              title: 'Log out',
               iconColor: Colors.red[600],
               textColor: Colors.red[600],
-              hideArrow: true, // Ẩn mũi tên
+              hideArrow: true,
               onTap: () {
                 final authProvider = context.read<AuthProvider>();
                 authProvider.signOut();
@@ -206,9 +203,9 @@ class _SettingsTile extends StatelessWidget {
         ),
         // Widget bên phải (Nút switch hoặc mũi tên)
         trailing: (trailing != null)
-            ? trailing // Ưu tiên widget 'trailing' (cho nút Switch)
+            ? trailing
             : (hideArrow)
-            ? null // Ẩn mũi tên (cho Log Out)
+            ? null
             : const Icon(
           Iconsax.arrow_right_3,
           color: settingIconGrey,
