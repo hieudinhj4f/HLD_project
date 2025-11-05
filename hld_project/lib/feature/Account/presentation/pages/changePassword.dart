@@ -38,7 +38,7 @@ void showChangePasswordDialog(BuildContext context) {
 
             if (user == null || user.email == null) {
               setDialogState(() {
-                _dialogError = "Error. Can't find any users";
+                _dialogError = "Error: User not found.";
                 _isLoading = false;
               });
               return;
@@ -60,15 +60,15 @@ void showChangePasswordDialog(BuildContext context) {
               // Show success on the main screen
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Change password success!'),
+                  content: Text('Password changed successfully!'),
                   backgroundColor: Colors.green,
                 ),
               );
 
             } on fb_auth.FirebaseAuthException catch (e) {
-              String errorMessage = 'There has been some error .Please check again.';
+              String errorMessage = 'An error has occurred. Please try again.';
               if (e.code == 'wrong-password' || e.code == 'INVALID_LOGIN_CREDENTIALS') {
-                errorMessage = 'Incorrect old password.';
+                errorMessage = 'The old password is incorrect.';
               } else if (e.code == 'weak-password') {
                 errorMessage = 'The new password is too weak.';
               }
@@ -90,7 +90,7 @@ void showChangePasswordDialog(BuildContext context) {
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             icon: Icon(Iconsax.lock_1, color: Colors.blue.shade700, size: 44),
-            title: const Text('Change Password',
+            title: const Text('Change password',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontWeight: FontWeight.bold)),
             content: Form(
@@ -112,19 +112,19 @@ void showChangePasswordDialog(BuildContext context) {
                     TextFormField(
                       controller: _oldPasswordController,
                       obscureText: true,
-                      decoration: _buildInputDecoration('Old Password'), // Use helper function
+                      decoration: _buildInputDecoration('Old password'), // Dùng hàm helper
                       validator: (val) =>
-                      val!.isEmpty ? 'Cannot be empty' : null,
+                      val!.isEmpty ? 'Cannot be left blank' : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _newPasswordController,
                       obscureText: true,
-                      decoration: _buildInputDecoration('New Password (at least 6 characters)'),
+                      decoration: _buildInputDecoration('New password (at least 6 characters)'),
                       validator: (val) {
-                        if (val!.isEmpty) return 'Cannot be empty';
+                        if (val!.isEmpty) return 'Cannot be left blank!';
                         if (val.length < 6)
-                          return 'Password must be at least 6 characters';
+                          return 'The password must be at least 6 characters long';
                         return null;
                       },
                     ),
@@ -132,9 +132,9 @@ void showChangePasswordDialog(BuildContext context) {
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: true,
-                      decoration: _buildInputDecoration('Confirm New Password'),
+                      decoration: _buildInputDecoration('Confirm new password'),
                       validator: (val) {
-                        if (val!.isEmpty) return 'Cannot be empty';
+                        if (val!.isEmpty) return 'Cannot be left blank';
                         if (val != _newPasswordController.text)
                           return 'Passwords do not match';
                         return null;
@@ -155,17 +155,26 @@ void showChangePasswordDialog(BuildContext context) {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             child: const Text('Cancel'),
+                           ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        // CONFIRM BUTTON (Use Expanded so it takes up 50% of space)
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade700,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          const SizedBox(width: 16),
+                          // NÚT XÁC NHẬN (Dùng Expanded để nó chiếm 50% không gian)
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue.shade700,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: _isLoading ? null : _submitChangePassword,
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                    )
+                                  : const Text('Confirm'),
                             ),
                             onPressed: _isLoading ? null : _submitChangePassword,
                             child: _isLoading

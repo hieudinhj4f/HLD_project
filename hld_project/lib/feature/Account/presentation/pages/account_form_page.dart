@@ -1,8 +1,10 @@
 // file: lib/feature/Account/presentation/pages/account_form_page.dart
+// BẢN "SẠCH" 100% - DÙNG USECASE TỪ WIDGET
 // "DIRTY" VERSION - FIXED REDIRECT ERROR ON CREATE
 
 import 'package:firebase_core/firebase_core.dart' as fb_auth;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -25,9 +27,15 @@ import 'package:hld_project/feature/Account/data/model/account_model.dart'; // <
 class AccountFormPage extends StatefulWidget {
   final Account? account;
 
+  // === NHẬN USECASE "SẠCH" ===
+  final CreateAccount createAccountUseCase;
+  final UpdateAccount updateAccountUseCase;
+
   const AccountFormPage({
     super.key,
     this.account,
+    required this.createAccountUseCase,
+    required this.updateAccountUseCase,
   });
 
   @override
@@ -51,22 +59,14 @@ class _AccountFormPageState extends State<AccountFormPage> {
   bool _isSaving = false;
   Uint8List? _newAvatarBytes;
 
-  late UpdateAccount _updateUseCase;
-  late Account _originalAccount; // Variable to hold the original Entity
+ 
+  late Account _originalAccount; 
 
-  // 2. INIT STATE
+
   @override
   void initState() {
     super.initState();
-
-    // === "DIRTY" CODE SECTION (IN-PLACE INITIALIZATION) ===
-    final dataSource = AccountRemoteDatasourceIpml(); // (Fix the 'Ipml' typo if needed)
-    final repository = AccountRepositoryImpl(remoteDataSource: dataSource);
-    // (Ignoring CreateUseCase, logic is flawed, we'll call Firestore directly)
-    _updateUseCase = UpdateAccount(repository);
-    // =================================================
-
-    // (Controller initialization code)
+    
     final isEditing = widget.account != null;
     if (isEditing) {
       _originalAccount = widget.account!;
@@ -74,7 +74,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
       // Create an empty Account for Create mode
       final now = DateTime.now();
       _originalAccount = Account(
-          id: '', name: '', email: '', phone: '', gender: 'Male', dob: '', // Changed 'Nam' to 'Male'
+          id: '', name: '', email: '', phone: '', gender: 'Male', dob: '',
           age: '', address: '', role: 'user', createAt: now, updateAt: now,
           avatarUrl: ''
       );
@@ -91,7 +91,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
     _selectedRole = _originalAccount.role;
   }
 
-  // 3. DISPOSE
+  // 3. DISPOSE (GIỮ NGUYÊN)
   @override
   void dispose() {
     _nameController.dispose();
@@ -130,7 +130,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
     }
   }
 
-  // 4. SAVE FUNCTION (FIXED CREATE LOGIC TO AVOID REDIRECT)
+
   Future<void> _saveForm() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _isSaving = true; });
@@ -152,8 +152,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
       if (widget.account == null) {
         // --- CREATE LOGIC (NEW) ---
 
-        // === FIX: USE A TEMPORARY APP TO CREATE AUTH ===
-        // 1. Get the config of the current app (the Admin app that is running)
+        
         final currentApp = fb_auth.FirebaseAuth.instance.app;
 
         // 2. Create a temporary app (with a random name)
@@ -165,7 +164,6 @@ class _AccountFormPageState extends State<AccountFormPage> {
 
         // 3. Create an Auth instance from the temporary app
         final fb_auth.FirebaseAuth tempAuth = fb_auth.FirebaseAuth.instanceFor(app: tempApp);
-        // ========================================
 
         // 4. CREATE USER WITH TEMP AUTH (SO IT DOESN'T KICK OUT THE ADMIN)
         final userCredential = await tempAuth.createUserWithEmailAndPassword(
@@ -195,9 +193,8 @@ class _AccountFormPageState extends State<AccountFormPage> {
           avatarUrl: newAvatarData,
         );
 
-        // C. Save to Firestore
-        final model = AccountModel.fromEntity(accountToSave);
-        await FirebaseFirestore.instance.collection('users').doc(newUid).set(model.toJson());
+        // === SỬA: GỌI USECASE "SẠCH" (TỪ WIDGET) ===
+        await widget.createAccountUseCase.call(accountToSave);
 
       } else {
         // --- EDIT LOGIC (MODIFY) ---
@@ -215,22 +212,34 @@ class _AccountFormPageState extends State<AccountFormPage> {
           updateAt: now,
           avatarUrl: newAvatarData,
         );
-        await _updateUseCase.call(updatedAccount);
+
+        // === SỬA: GỌI USECASE "SẠCH" (TỪ WIDGET) ===
+        await widget.updateAccountUseCase.call(updatedAccount);
       }
 
-      if (mounted) context.pop(true); // Return 'true' to signal the list to RELOAD
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Information updated successfully!', style: TextStyle(fontWeight: FontWeight.bold)),
+            // THAY MÀU NỀN SANG XANH LÁ
+            backgroundColor: const Color(0xFF388E3C), // Màu xanh lá cây đậm (Giống nút SAVE/EDIT)
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        context.pop(true); // Hoặc context.pop() nếu không cần refresh
+      } // Trả về 'true' để báo list TẢI LẠI
 
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Eror: $e')));
     } finally {
       if (mounted) { setState(() { _isSaving = false; }); }
     }
   }
 
-  // 5. BUILD (UI)
+  // 5. BUILD (UI GIỮ NGUYÊN)
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.account != null;
+    final isEditing = widget.account != null; // Biến check mode
 
     // === LOGIC TO DISPLAY OLD IMAGE (BASE64 OR URL) ===
     ImageProvider? currentAvatarImage;
@@ -246,14 +255,18 @@ class _AccountFormPageState extends State<AccountFormPage> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Iconsax.arrow_left, color: Colors.black),
           onPressed: () => context.pop(),
         ),
+        backgroundColor: Colors.white,
         title: Text(
-            isEditing ? 'Edit' : 'Create',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)
+          'HLD',
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.w800,
+            color: Colors.green,
+            fontSize: 30,
+          ),
         ),
         centerTitle: true,
       ),
@@ -283,7 +296,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
               GestureDetector(
                 onTap: _pickImage,
                 child: const Text(
-                  'Select image',
+                  'Change avatar',
                   style: TextStyle(
                     color: Color(0xFF388E3C),
                     fontWeight: FontWeight.bold,
@@ -295,45 +308,51 @@ class _AccountFormPageState extends State<AccountFormPage> {
 
               const SizedBox(height: 32),
 
-              // === EMAIL ===
-              _buildTextField(
-                controller: _emailController, label: 'Email', hintText: 'Enter email.. ',
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) => value!.isEmpty || !value.contains('@') ? 'Email not correct' : null,
-              ),
-              const SizedBox(height: 24),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start, // <--- THÊM DÒNG NÀY
+                children: [
+                  // === EMAIL ===
+                  _buildTextField(
+                    controller: _emailController, label: 'Email', hintText: 'Enter email',
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) => value!.isEmpty || !value.contains('@') ? 'Invalid email' : null,
+                  ),
+                  const SizedBox(height: 24),
 
-              // === PASSWORD (ONLY SHOWN WHEN CREATING NEW) ===
-              if (!isEditing) ...[
-                _buildTextField(
-                  controller: _passwordController, label: 'Password', hintText: 'Enter password',
-                  obscureText: true,
-                  validator: (value) => value!.length < 6 ? 'Password is too short' : null,
-                ),
-                const SizedBox(height: 24),
-              ],
+                  // === PASSWORD (CHỈ HIỆN KHI TẠO MỚI) ===
+                  if (!isEditing) ...[
+                    _buildTextField(
+                      controller: _passwordController, label: 'Password', hintText: 'Enter password',
+                      obscureText: true,
+                      validator: (value) => value!.length < 6 ? 'The password must be more than 6 characters long' : null,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
 
-              // === REMAINING FIELDS ===
-              _buildTextField(
-                controller: _nameController, label: 'Name', hintText: 'Enter full name',
-                validator: (value) => value!.isEmpty ? 'Name cannot be empty' : null,
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: _phoneController, label: 'Phone number', hintText: 'Enter phone number',
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: _addressController, label: 'Address', hintText: 'Enter address',
-              ),
-              const SizedBox(height: 24),
-              _buildRadioButtons(context, 'Gender', ['Male', 'Female']),
-              const SizedBox(height: 24),
-              _buildRadioButtons(context, 'Role', ['Customer', 'Manager', 'Staff', 'Admin'], isRole: true),
-              const SizedBox(height: 24),
-              _buildDatePickerField(
-                context: context, controller: _dobController, label: 'Date of Birth', hintText: 'Select date of birth',
+                  // === CÁC TRƯỜNG CÒN LẠI ===
+                  _buildTextField(
+                    controller: _nameController, label: 'Name', hintText: 'Enter name',
+                    validator: (value) => value!.isEmpty ? 'Name cannot be empty' : null,
+                  ),
+                  const SizedBox(height: 24),
+                  _buildTextField(
+                    controller: _phoneController, label: 'Phone', hintText: 'Enter phone',
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 24),
+                  _buildTextField(
+                    controller: _addressController, label: 'Address', hintText: 'Enter address',
+                  ),
+                  const SizedBox(height: 24),
+                  _buildRadioButtons(context, 'Gender', ['Male', 'Female']),
+                  const SizedBox(height: 24),
+                  // Nhớ sửa "Mangament" -> "Management" cho chuẩn nhé!
+                  _buildRadioButtons(context, 'Role', ['Customer', 'Management', 'Staff', 'Admin'], isRole: true),
+                  const SizedBox(height: 24),
+                  _buildDatePickerField(
+                    context: context, controller: _dobController, label: 'Birthday', hintText: 'Enter birthday',
+                  ),
+                ], // <--- KẾT THÚC COLUMN MỚI
               ),
               const SizedBox(height: 48),
 
@@ -417,43 +436,30 @@ class _AccountFormPageState extends State<AccountFormPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label
         Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12), // Increase spacing a bit to look better
-
-        // Group of Radio buttons
-        Row(
-          // Use MainAxisAlignment.start to align buttons to the left
-          mainAxisAlignment: MainAxisAlignment.start,
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 16.0,
           children: options.map((value) {
             final currentValue = isRole ? _selectedRole : _selectedGender;
-
-            // Use Flexible/SizedBox to control size if needed, but
-            // here we just need a Row for alignment
-            return Padding(
-              padding: const EdgeInsets.only(right: 16.0), // Space between options
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Radio button (its default padding is a bit large)
-                  Radio<String>(
-                    value: value,
-                    groupValue: currentValue,
-                    activeColor: const Color(0xFF388E3C), // Main green color
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        if (isRole) {
-                          _selectedRole = newValue;
-                        } else {
-                          _selectedRole = newValue;
-                        }
-                      });
-                    },
-                  ),
-                  // Text (placed right next to the Radio)
-                  Text(value, style: const TextStyle(fontSize: 15)),
-                ],
-              ),
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Radio<String>(
+                  value: value,
+                  groupValue: currentValue,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      if (isRole) {
+                        _selectedRole = newValue;
+                      } else {
+                        _selectedGender = newValue;
+                      }
+                    });
+                  },
+                ),
+                Text(value),
+              ],
             );
           }).toList(),
         ),

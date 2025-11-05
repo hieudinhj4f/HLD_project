@@ -1,33 +1,31 @@
 // file: lib/feature/Account/presentation/pages/profile_edit_page.dart
-// "MAX DIRTY" VERSION - SAVE BASE64 IMAGE TO FIRESTORE
+// BẢN "SẠCH" 100% - NHẬN USECASE TỪ CONSTRUCTOR
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
-import 'dart:convert'; // <-- REQUIRED FOR ENCODE/DECODE
-import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import 'dart:convert'; // <-- BẮT BUỘC CÓ ĐỂ ENCODE/DECODE
 
-// (All Storage imports removed)
-
-// === "DIRTY" DATA LAYER IMPORTS ===
+// === XÓA IMPORT "BẨN" ===
 import 'package:hld_project/feature/Account/domain/entities/account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/update_account.dart';
-import 'package:hld_project/feature/Account/data/datasource/account_remote_datasource.dart';
-import 'package:hld_project/feature/Account/data/repositories/account_repository_impl.dart';
-import 'package:hld_project/feature/auth/presentation/providers/auth_provider.dart';
-
 
 class ProfileEditPage extends StatefulWidget {
   final Map<String, dynamic> initialData;
 
+  // === THÊM DÒNG NÀY (ĐỂ NHẬN USECASE "SẠCH") ===
+  final UpdateAccount updateAccountUseCase;
+
   const ProfileEditPage({
     Key? key,
     required this.initialData,
+    required this.updateAccountUseCase, // <-- THÊM REQUIRED
   }) : super(key: key);
 
   @override
@@ -46,7 +44,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   String? _selectedRole;
   Uint8List? _newAvatarBytes; // Use Bytes
   bool _isSaving = false;
-  late UpdateAccount _updateUseCase;
+  // late UpdateAccount _updateUseCase; // <-- XÓA BIẾN "BẨN"
   late Account _originalAccount;
 
   @override
@@ -70,12 +68,11 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       updateAt: DateTime.parse(data['updateAt'] as String),
     );
 
-    // 2. CREATE "DIRTY" USECASE
-    final dataSource = AccountRemoteDatasourceIpml(); // (Fix the 'Ipml' typo if needed)
-    final repository = AccountRepositoryImpl(remoteDataSource: dataSource);
-    _updateUseCase = UpdateAccount(repository);
+    // 2. === XÓA HẾT CODE TẠO USECASE "BẨN" ===
+    // (Xóa dataSource = ..., repository = ..., _updateUseCase = ...)
+    // =======================================
 
-    // 3. INITIALIZE CONTROLLERS
+    // 3. KHỞI TẠO CONTROLLER (GIỮ NGUYÊN)
     _nameController = TextEditingController(text: _originalAccount.name);
     _phoneController = TextEditingController(text: _originalAccount.phone);
     _dobController = TextEditingController(text: _originalAccount.dob);
@@ -107,7 +104,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     // ... (same old code)
   }
 
-  // === SAVE PROFILE FUNCTION (FIXED: SAVE BASE64 TO FIRESTORE) ===
+  // === HÀM LƯU PROFILE (SỬA: DÙNG USECASE "SẠCH") ===
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedGender == null || _selectedRole == null) {
@@ -125,18 +122,12 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
       // === STEP 1: CONVERT IMAGE TO TEXT (BASE64) ===
       if (_newAvatarBytes != null) {
-        print("Encoding image to Base64...");
-        // 1. Convert the bytes into a Base64 String
+        // (Code encode Base64 y như cũ)
         String base64Image = base64Encode(_newAvatarBytes!);
-        // 2. Add prefix (so the app knows this is Base64 data)
         newAvatarData = 'data:image/jpeg;base64,$base64Image';
-
-        // (Check size - WILL CRASH IF OVER 1MB)
         if (newAvatarData.length > 1000000) {
-          // Firestore has a 1MB limit per document
-          throw Exception('Image too large (over 1MB), Firestore cannot save.');
+          throw Exception('The image is too large (over 1MB), Firestore does not allow saving it.');
         }
-        print("Image encoding successful.");
       }
       // ===========================================
 
@@ -156,22 +147,25 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         avatarUrl: newAvatarData, // <-- USE NEW DATA
       );
 
-      // === STEP 3: SAVE TO FIRESTORE ===
-      await _updateUseCase.call(updatedAccount);
+      // === BƯỚC 3: LƯU VÀO FIRESTORE (DÙNG USECASE "SẠCH") ===
+      await widget.updateAccountUseCase.call(updatedAccount);
 
-      // ... (Skipping AuthProvider logic) ...
+      // (Bỏ qua logic AuthProvider)
 
       // === STEP 4: REPORT SUCCESS AND POP(TRUE) ===
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully!')),
+          const SnackBar(
+              content: Text('Information updated successfully!'),
+              backgroundColor: Colors.green,
+          ),
         );
         context.pop(true); // <-- RETURN TRUE TO SIGNAL REFRESH
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating: $e')),
+          SnackBar(content: Text('Error when updating: $e')),
         );
       }
     } finally {
@@ -181,17 +175,38 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
   @override
   Widget build(BuildContext context) {
+    // === TOÀN BỘ CODE UI GIỮ NGUYÊN ===
+    // (Nó dùng _newAvatarBytes để hiển thị MemoryImage,
+    // nên UI không cần sửa)
+
+    // (Logic decode ảnh cũ)
+    ImageProvider? currentAvatarImage;
+    if (_originalAccount.avatarUrl.startsWith('data:image')) {
+      try {
+        currentAvatarImage = MemoryImage(base64Decode(_originalAccount.avatarUrl.split(',')[1]));
+      } catch (e) { currentAvatarImage = null; }
+    } else if (_originalAccount.avatarUrl.startsWith('http')) {
+      currentAvatarImage = NetworkImage(_originalAccount.avatarUrl);
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Iconsax.arrow_left, color: Colors.black),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Edit Profile', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
-        centerTitle: true,
-      ),
+          backgroundColor: Colors.white,
+          title: Text(
+            'HLD',
+            style: GoogleFonts.montserrat(
+              fontWeight: FontWeight.w800,
+              color: Colors.green,
+              fontSize: 30,
+            ),
+          ),
+          centerTitle: true,
+        ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Form(
@@ -207,10 +222,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                     backgroundColor: Colors.grey.shade200,
                     backgroundImage: _newAvatarBytes != null
                         ? MemoryImage(_newAvatarBytes!)
-                        : (_originalAccount.avatarUrl.isNotEmpty
-                        ? NetworkImage(_originalAccount.avatarUrl)
-                        : null) as ImageProvider?,
-                    child: (_newAvatarBytes == null && _originalAccount.avatarUrl.isEmpty)
+                        : currentAvatarImage,
+                    child: (_newAvatarBytes == null && currentAvatarImage == null)
                         ? const Icon(Iconsax.user, size: 60, color: Colors.grey)
                         : null,
                   ),
@@ -220,7 +233,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
               GestureDetector(
                 onTap: _pickImage,
                 child: const Text(
-                  'Select Image',
+                  'Change avatar',
                   style: TextStyle(
                     color: Color(0xFF388E3C),
                     fontWeight: FontWeight.bold,
@@ -229,30 +242,34 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                 ),
               ),
               const SizedBox(height: 32),
-
-              // (TextFormFields unchanged)
-              _buildTextField(
-                controller: _nameController, label: 'Name', hintText: 'Enter full name',
-                validator: (value) => value!.isEmpty ? 'Name cannot be empty' : null,
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: _phoneController, label: 'Phone Number', hintText: 'Enter phone number',
-                keyboardType: TextInputType.phone,
-                validator: (value) => value!.isEmpty ? 'Phone number cannot be empty' : null,
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: _addressController, label: 'Address', hintText: 'Enter address',
-                validator: (value) => value!.isEmpty ? 'Address cannot be empty' : null,
-              ),
-              const SizedBox(height: 24),
-              _buildRadioButtons(context, 'Gender', ['Male', 'Female']),
-              const SizedBox(height: 24),
-              _buildRadioButtons(context, 'Role', ['Customer', 'Manager', 'Staff', 'Admin'], isRole: true),
-              const SizedBox(height: 24),
-              _buildDatePickerField(
-                context: context, controller: _dobController, label: 'Date of Birth', hintText: 'Select date of birth',
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start, // <-- THÊM VÀO ĐÂY
+                children: [
+                  _buildTextField(
+                    controller: _nameController, label: 'Name', hintText: 'Enter name',
+                    validator: (value) => value!.isEmpty ? 'Name cannot be empty' : null,
+                  ),
+                  const SizedBox(height: 24),
+                  _buildTextField(
+                    controller: _phoneController, label: 'Phone', hintText: 'Enter phone',
+                    keyboardType: TextInputType.phone,
+                    validator: (value) => value!.isEmpty ? 'Phone number cannot be left blank' : null,
+                  ),
+                  const SizedBox(height: 24),
+                  _buildTextField(
+                    controller: _addressController, label: 'Address', hintText: 'Enter address',
+                    validator: (value) => value!.isEmpty ? 'Address cannot be empty' : null,
+                  ),
+                  const SizedBox(height: 24),
+                  _buildRadioButtons(context, 'Gender', ['Male', 'Female']),
+                  const SizedBox(height: 24),
+                  // Nhớ sửa lỗi chính tả "Mangament" -> "Management" nhé
+                  _buildRadioButtons(context, 'Role', ['Customer', 'Management', 'Staff', 'Admin'], isRole: true),
+                  const SizedBox(height: 24),
+                  _buildDatePickerField(
+                    context: context, controller: _dobController, label: 'Birthday', hintText: 'Select birth date',
+                  ),
+                ], // <-- KẾT THÚC CHILDREN CỦA COLUMN MỚI
               ),
               const SizedBox(height: 48),
 
@@ -271,7 +288,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                   ),
                   child: _isSaving
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Update', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      : const Text('EDIT', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -325,54 +342,40 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             filled: true,
             fillColor: Colors.white,
           ),
-          validator: (value) => value!.isEmpty ? 'Date of birth cannot be empty' : null,
+          validator: (value) => value!.isEmpty ? 'Date of birth cannot be left blank' : null,
         ),
       ],
     );
   }
 
-  // === FIX: RADIO BUTTONS (USING ROW FOR ALIGNMENT) ===
   Widget _buildRadioButtons(BuildContext context, String label, List<String> options, {bool isRole = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label
         Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12), // Increase spacing a bit
-
-        // Group of Radio buttons
-        Row(
-          // Use MainAxisAlignment.start to align buttons to the left
-          mainAxisAlignment: MainAxisAlignment.start,
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 16.0,
           children: options.map((value) {
             final currentValue = isRole ? _selectedRole : _selectedGender;
-
-            // Use Flexible/SizedBox to control size if needed, but
-            // here we just need a Row for alignment
-            return Padding(
-              padding: const EdgeInsets.only(right: 16.0), // Space between options
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Radio button (its default padding is a bit large)
-                  Radio<String>(
-                    value: value,
-                    groupValue: currentValue,
-                    activeColor: const Color(0xFF388E3C), // Main green color
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        if (isRole) {
-                          _selectedRole = newValue;
-                        } else {
-                          _selectedGender = newValue;
-                        }
-                      });
-                    },
-                  ),
-                  // Text (placed right next to the Radio)
-                  Text(value, style: const TextStyle(fontSize: 15)),
-                ],
-              ),
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Radio<String>(
+                  value: value,
+                  groupValue: currentValue,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      if (isRole) {
+                        _selectedRole = newValue;
+                      } else {
+                        _selectedGender = newValue;
+                      }
+                    });
+                  },
+                ),
+                Text(value),
+              ],
             );
           }).toList(),
         ),

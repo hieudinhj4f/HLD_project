@@ -57,16 +57,16 @@ class _ProfilePageState extends State<ProfilePage> {
   // === HÀM TỰ LẤY DATA (CHO TRƯỜNG HỢP 2) ===
   Future<Account> _fetchMyProfile() async {
     final String? uid = fb_auth.FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) throw Exception('Bạn chưa đăng nhập!');
+    if (uid == null) throw Exception('You are not logged in!');
     try {
       final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
       if (doc.exists) {
         return AccountModel.fromFirestore(doc);
       } else {
-        throw Exception('Không tìm thấy thông tin profile.');
+        throw Exception('Profile information not found.');
       }
     } catch (e) {
-      throw Exception('Lỗi khi tải profile: ${e.toString()}');
+      throw Exception('Error loading profile: ${e.toString()}');
     }
   }
 
@@ -84,11 +84,11 @@ class _ProfilePageState extends State<ProfilePage> {
         icon: Icon(Icons.warning_amber_rounded, color: Colors.red.shade600, size: 50),
 
         // 2. Title
-        title: const Text('Xác nhận xóa', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Confirm deletion', style: TextStyle(fontWeight: FontWeight.bold)),
 
         // 3. Content (thêm câu cảnh báo)
         content: const Text(
-          'Bạn có chắc chắn muốn xóa tài khoản này không? \nHành động này không thể hoàn tác.',
+          'Are you sure you want to delete this account? \nThis action cannot be undone.',
           textAlign: TextAlign.center, // Căn giữa text
         ),
 
@@ -104,7 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
               foregroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            child: const Text('Hủy'),
+            child: const Text('Cancel'),
           ),
 
           const SizedBox(width: 10), // Khoảng cách giữa 2 nút
@@ -117,7 +117,7 @@ class _ProfilePageState extends State<ProfilePage> {
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            child: const Text('Xác nhận Xóa'),
+            child: const Text('Confirm'),
           ),
         ],
       ),
@@ -128,11 +128,18 @@ class _ProfilePageState extends State<ProfilePage> {
       try {
         await deleteUseCase.call(accountId);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Xóa tài khoản thành công.')));
-          context.pop(true); // Trả về 'true' để AccountListPage refresh
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Account deleted successfully.', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                // THÊM DÒNG NÀY ĐỂ ĐỔI NỀN
+                backgroundColor:Colors.green, // Màu xanh lá chủ đạo
+                duration: const Duration(seconds: 2),
+              )
+          );
+          context.pop(true);
         }
       } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi khi xóa: $e')));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error when deleting: $e')));
       }
     }
   }
@@ -140,7 +147,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Hàm helper (check null/rỗng)
   String _displayValue(String? value) {
-    return (value == null || value.isEmpty) ? 'Chưa cập nhật' : value;
+    return (value == null || value.isEmpty) ? 'Not updated' : value;
   }
 
   // === HÀM CHUYỂN ACCOUNT OBJECT THÀNH MAP<STRING, STRING> THỦ CÔNG ===
@@ -198,8 +205,8 @@ class _ProfilePageState extends State<ProfilePage> {
           future: _profileFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-            if (snapshot.hasError) return Center(child: Text('Lỗi: ${snapshot.error}'));
-            if (!snapshot.hasData) return const Center(child: Text('Không tìm thấy dữ liệu.'));
+            if (snapshot.hasError) return Center(child: Text('Eror: ${snapshot.error}'));
+            if (!snapshot.hasData) return const Center(child: Text('No data found.'));
             final Account user = snapshot.data!;
             return _buildProfileBody(context, user, isAdmin: cxt.read<AuthProvider>().isAdmin);
           },
@@ -287,18 +294,18 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               child: Column(
                 children: [
-                  _buildTextField('Họ và tên', _displayValue(user.name)),
+                  _buildTextField('Name', _displayValue(user.name)),
                   const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
-                  _buildTextField('Số điện thoại', _displayValue(user.phone)),
+                  _buildTextField('Phone', _displayValue(user.phone)),
                   const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
-                  _buildTextField('Giới tính', _displayValue(user.gender)),
+                  _buildTextField('Gender', _displayValue(user.gender)),
                   const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
-                  _buildTextField('Ngày sinh', _displayValue(user.dob)),
+                  _buildTextField('Birthday', _displayValue(user.dob)),
                   const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
-                  _buildTextField('Địa chỉ', _displayValue(user.address)),
+                  _buildTextField('Address', _displayValue(user.address)),
                   if (isAdmin) ...[
                     const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
-                    _buildTextField('Vai trò', _displayValue(user.role)),
+                    _buildTextField('Role', _displayValue(user.role)),
                   ]
                 ],
               ),
@@ -321,7 +328,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
-                  child: const Text('Xóa Tài Khoản Này', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: const Text('Delete This Account', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 )
                 // === NÚT CHỈNH SỬA (TỰ XEM) ===
                     : ElevatedButton(
@@ -340,7 +347,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
-                  child: const Text('Chỉnh sửa thông tin', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: const Text('Edit information', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),
@@ -366,7 +373,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: const Text(
-                      'Đổi mật khẩu',
+                      'Change password',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -392,7 +399,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       elevation: 0,
                     ),
                     child: const Text(
-                      'Đăng xuất',
+                      'Sign Out',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),

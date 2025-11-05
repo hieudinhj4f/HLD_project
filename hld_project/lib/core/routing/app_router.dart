@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 // === 2. IMPORT CỦA CÁC GÓI BÊN THỨ BA (3RD PARTY PACKAGES) ===
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hld_project/feature/Account/domain/usecases/create_account.dart';
+import 'package:hld_project/feature/Account/domain/usecases/delete_account.dart';
+import 'package:hld_project/feature/Account/domain/usecases/get_account.dart';
+import 'package:hld_project/feature/Account/domain/usecases/update_account.dart';
 
 // === 3. IMPORT TỪ CÁC FEATURE KHÁC TRONG DỰ ÁN (PROJECT IMPORTS) ===
 
@@ -105,7 +109,11 @@ class AppRouter {
   final UpdateDoctor updateDoctor;
   final DeleteDoctor deleteDoctor;
 
-
+ 
+  final GetAccount getAccountUseCase;
+  final CreateAccount createAccountUseCase;
+  final UpdateAccount updateAccountUseCase;
+  final DeleteAccount deleteAccountUseCase;
 
   // === 5. CẬP NHẬT CONSTRUCTOR ===
   AppRouter({
@@ -130,6 +138,11 @@ class AppRouter {
     required this.deleteDoctor,
 
     // required this.getDoctors,
+    // Account
+    required this.getAccountUseCase,
+    required this.createAccountUseCase,
+    required this.updateAccountUseCase,
+    required this.deleteAccountUseCase,
   });
 
   static const List<BottomNavItem> _adminTabs = [
@@ -227,13 +240,22 @@ class AppRouter {
           ),
           GoRoute(
             path: '/admin/account',
-            builder: (context, state) => const AccountListPage(),
+            builder: (context, state) => AccountListPage(
+              getAccountUseCase: getAccountUseCase,
+              createAccountUseCase: createAccountUseCase,
+              updateAccountUseCase: updateAccountUseCase,
+              deleteAccountUseCase: deleteAccountUseCase,
+            ),
             routes: [
               GoRoute(
                 path: 'edit',
-                builder: (context, state) => ProfileEditPage(
-                  initialData: state.extra as Map<String, dynamic>,
-                ),
+                builder: (context, state) {
+                  final Map<String, dynamic> initialData = state.extra as Map<String, dynamic>;
+                  return ProfileEditPage(
+                    initialData: initialData,
+                    updateAccountUseCase: updateAccountUseCase,
+                  );
+                },
               ),
             ],
           ),
@@ -324,9 +346,13 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: 'edit',
-                builder: (context, state) => ProfileEditPage(
-                  initialData: state.extra as Map<String, dynamic>,
-                ),
+                builder: (context, state) {
+                  final Map<String, dynamic> initialData = state.extra as Map<String, dynamic>;
+                  return ProfileEditPage(
+                    initialData: initialData,
+                    updateAccountUseCase: updateAccountUseCase,
+                  );
+                },
               ),
             ],
           ),

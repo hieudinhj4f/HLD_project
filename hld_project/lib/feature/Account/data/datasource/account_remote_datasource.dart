@@ -15,12 +15,11 @@ abstract class AccountRemoteDatasource {
 }
 
 class AccountRemoteDatasourceIpml implements AccountRemoteDatasource {
-  // FirebaseRemoteDS là lớp generic giúp tương tác với Firestore
   final FirebaseRemoteDS<AccountModel> _remoteSource;
 
   AccountRemoteDatasourceIpml()
       : _remoteSource = FirebaseRemoteDS<AccountModel>(
-    collectionName: 'users', // Tên collection trên Firestore
+    collectionName: 'users',
     fromFirestore: (doc) => AccountModel.fromEntity(doc as Account),
     toFirestore: (model) => model.toJson(),
   );

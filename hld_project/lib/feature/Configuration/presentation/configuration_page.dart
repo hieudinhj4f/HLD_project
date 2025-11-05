@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart';
@@ -46,9 +48,28 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           children: [
             // 2. THÔNG TIN USER
-            const _UserInfoHeader(
-              name: 'Nguyen Dinh Hieu',
-              email: 'dinhhieunguyen111@gmail.com',
+            FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(fb_auth.FirebaseAuth.instance.currentUser?.uid)
+                  .get(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  return const Text('Không tìm thấy thông tin người dùng');
+                }
+
+                final data = snapshot.data!.data() as Map<String, dynamic>;
+
+                return _UserInfoHeader(
+                  name: data['name'] ?? '',
+                  email: data['email'] ?? '',
+                  imageUrl: data['avatarUrl'],
+                );
+              },
             ),
             const SizedBox(height: 30),
 
