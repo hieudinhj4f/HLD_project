@@ -38,7 +38,7 @@ void showChangePasswordDialog(BuildContext context) {
 
             if (user == null || user.email == null) {
               setDialogState(() {
-                _dialogError = "Lỗi: Không tìm thấy người dùng.";
+                _dialogError = "Error: User not found.";
                 _isLoading = false;
               });
               return;
@@ -60,17 +60,17 @@ void showChangePasswordDialog(BuildContext context) {
               // Báo thành công ở màn hình chính
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Đổi mật khẩu thành công!'),
+                  content: Text('Password changed successfully!'),
                   backgroundColor: Colors.green,
                 ),
               );
 
             } on fb_auth.FirebaseAuthException catch (e) {
-              String errorMessage = 'Đã xảy ra lỗi. Vui lòng thử lại.';
+              String errorMessage = 'An error has occurred. Please try again.';
               if (e.code == 'wrong-password' || e.code == 'INVALID_LOGIN_CREDENTIALS') {
-                errorMessage = 'Mật khẩu cũ không chính xác.';
+                errorMessage = 'The old password is incorrect.';
               } else if (e.code == 'weak-password') {
-                errorMessage = 'Mật khẩu mới quá yếu.';
+                errorMessage = 'The new password is too weak.';
               }
               setDialogState(() {
                 _dialogError = errorMessage;
@@ -78,7 +78,7 @@ void showChangePasswordDialog(BuildContext context) {
               });
             } catch (e) {
               setDialogState(() {
-                _dialogError = 'Lỗi không xác định: $e';
+                _dialogError = 'Unknown error: $e';
                 _isLoading = false;
               });
             }
@@ -90,7 +90,7 @@ void showChangePasswordDialog(BuildContext context) {
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             icon: Icon(Iconsax.lock_1, color: Colors.blue.shade700, size: 44),
-            title: const Text('Đổi mật khẩu',
+            title: const Text('Change password',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontWeight: FontWeight.bold)),
             content: Form(
@@ -112,19 +112,19 @@ void showChangePasswordDialog(BuildContext context) {
                     TextFormField(
                       controller: _oldPasswordController,
                       obscureText: true,
-                      decoration: _buildInputDecoration('Mật khẩu cũ'), // Dùng hàm helper
+                      decoration: _buildInputDecoration('Old password'), // Dùng hàm helper
                       validator: (val) =>
-                      val!.isEmpty ? 'Không được bỏ trống' : null,
+                      val!.isEmpty ? 'Cannot be left blank' : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _newPasswordController,
                       obscureText: true,
-                      decoration: _buildInputDecoration('Mật khẩu mới (ít nhất 6 ký tự)'),
+                      decoration: _buildInputDecoration('New password (at least 6 characters)'),
                       validator: (val) {
-                        if (val!.isEmpty) return 'Không được bỏ trống';
+                        if (val!.isEmpty) return 'Cannot be left blank!';
                         if (val.length < 6)
-                          return 'Mật khẩu phải ít nhất 6 ký tự';
+                          return 'The password must be at least 6 characters long';
                         return null;
                       },
                     ),
@@ -132,11 +132,11 @@ void showChangePasswordDialog(BuildContext context) {
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: true,
-                      decoration: _buildInputDecoration('Xác nhận mật khẩu mới'),
+                      decoration: _buildInputDecoration('Confirm new password'),
                       validator: (val) {
-                        if (val!.isEmpty) return 'Không được bỏ trống';
+                        if (val!.isEmpty) return 'Cannot be left blank';
                         if (val != _newPasswordController.text)
-                          return 'Mật khẩu không khớp';
+                          return 'Passwords do not match';
                         return null;
                       },
                     ),
@@ -154,7 +154,7 @@ void showChangePasswordDialog(BuildContext context) {
                               side: BorderSide(color: Colors.grey.shade400),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            child: const Text('Hủy'),
+                            child: const Text('Cancel'),
                            ),
                           ),
                           const SizedBox(width: 16),
@@ -174,7 +174,7 @@ void showChangePasswordDialog(BuildContext context) {
                                       width: 20,
                                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                                     )
-                                  : const Text('Xác nhận'),
+                                  : const Text('Confirm'),
                             ),
                           ),
                       ],

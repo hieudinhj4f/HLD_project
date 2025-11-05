@@ -1,23 +1,19 @@
 // file: lib/feature/Account/presentation/pages/account_list_page.dart
-// BẢN "BẨN" - GIAO DIỆN 2 NÚT (ĐÃ SỬA LỖI HIỂN THỊ ẢNH BASE64)
+// BẢN "SẠCH" - NHẬN USECASE TỪ CONSTRUCTOR (APP_ROUTER)
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:google_fonts/google_fonts.dart'; // <-- THÊM IMPORT NÀY
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
-
-// === THÊM 2 IMPORT ĐỂ GIẢI MÃ ẢNH ===
 import 'dart:convert';
 import 'dart:typed_data';
-// ==================================
 
-// === IMPORT "BẨN": UI IMPORT THẲNG TẦNG DATA ===
-import 'package:hld_project/feature/Account/data/datasource/account_remote_datasource.dart';
-import 'package:hld_project/feature/Account/data/repositories/account_repository_impl.dart';
+// (Không cần import DataSource hay Repository "bẩn" nữa)
+// import 'package:hld_project/feature/Account/data/datasource/account_remote_datasource.dart';
+// import 'package:hld_project/feature/Account/data/repositories/account_repository_impl.dart';
 
-// === IMPORT ENTITY, USECASE, VÀ CÁC PAGE LIÊN QUAN ===
 import 'package:hld_project/feature/Account/domain/entities/account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/get_account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/create_account.dart';
@@ -29,18 +25,29 @@ import 'package:hld_project/feature/Account/data/model/account_model.dart'; // B
 
 
 class AccountListPage extends StatefulWidget {
-  const AccountListPage({Key? key}) : super(key: key);
+  // === NHẬN USECASE "SẠCH" TỪ APP_ROUTER ===
+  final GetAccount getAccountUseCase;
+  final CreateAccount createAccountUseCase;
+  final UpdateAccount updateAccountUseCase;
+  final DeleteAccount deleteAccountUseCase;
+
+  const AccountListPage({
+    Key? key,
+    required this.getAccountUseCase,
+    required this.createAccountUseCase,
+    required this.updateAccountUseCase,
+    required this.deleteAccountUseCase,
+  }) : super(key: key);
+
 
   @override
   State<AccountListPage> createState() => _AccountListPageState();
 }
 
 class _AccountListPageState extends State<AccountListPage> {
-  // === KHAI BÁO BIẾN GIỮ USECASE "BẨN" ===
-  late GetAccount _getAccountUseCase;
-  late CreateAccount _createAccountUseCase;
-  late UpdateAccount _updateAccountUseCase;
-  late DeleteAccount _deleteAccountUseCase;
+  // === XÓA HẾT KHAI BÁO USECASE "BẨN" ===
+  // late GetAccount _getAccountUseCase;
+  // ... (xóa 3 cái kia)
 
   // (State variables)
   List<Account> _allAccounts = [];
@@ -54,13 +61,10 @@ class _AccountListPageState extends State<AccountListPage> {
   void initState() {
     super.initState();
 
-    // === PHẦN CODE "BẨN" (KHỞI TẠO TẠI CHỖ) ===
-    final dataSource = AccountRemoteDatasourceIpml(); // (Mày tự sửa tên Ipml nếu cần)
-    final repository = AccountRepositoryImpl(remoteDataSource: dataSource);
-    _getAccountUseCase = GetAccount(repository);
-    _createAccountUseCase = CreateAccount(repository);
-    _updateAccountUseCase = UpdateAccount(repository);
-    _deleteAccountUseCase = DeleteAccount(repository);
+    // === XÓA HẾT CODE "BẨN" TRONG INITSTATE ===
+    // (Không cần gán widget.usecase vào _usecase nữa)
+    // (Không cần tự tạo dataSource, repository...)
+    // ==========================================
 
     _loadAccounts(); // Tải data
   }
@@ -72,11 +76,12 @@ class _AccountListPageState extends State<AccountListPage> {
     super.dispose();
   }
 
-  // (Hàm tải data - ĐÃ FIX LỖI TỰ HỦY)
+  // (Hàm tải data - ĐÃ SỬA: DÙNG 'widget.getAccountUseCase')
   Future<void> _loadAccounts() async {
     setState(() { _isLoading = true; _error = null; });
     try {
-      final dynamic rawAccounts = await _getAccountUseCase.call();
+      // === SỬA: DÙNG USECASE TỪ WIDGET (SẠCH) ===
+      final dynamic rawAccounts = await widget.getAccountUseCase.call();
 
       final List<Account> accounts = (rawAccounts as List).map((doc) {
         if (doc is QueryDocumentSnapshot) {
@@ -85,10 +90,10 @@ class _AccountListPageState extends State<AccountListPage> {
         if (doc is Account) {
           return doc;
         }
-        throw Exception('Kiểu dữ liệu trả về từ UseCase không xác định');
+        throw Exception('The return data type from UseCase is undefined');
       }).toList();
 
-      // === LỌC ADMIN (FIX LỖI TỰ HỦY) ===
+      // Lọc Admin
       final String? currentAdminId = fb_auth.FirebaseAuth.instance.currentUser?.uid;
       if (currentAdminId != null) {
         accounts.removeWhere((account) => account.id == currentAdminId);
@@ -122,11 +127,13 @@ class _AccountListPageState extends State<AccountListPage> {
     });
   }
 
-  // (Hàm xóa - Giữ nguyên)
+  // (Hàm xóa - ĐÃ SỬA: DÙNG 'widget.deleteAccountUseCase')
   Future<void> _delete(String id) async {
     final confirmed = await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        title: Text("Confirm"),
+        content: Text("Are you sure?"),
         actions: [
           TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
           TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
@@ -135,20 +142,26 @@ class _AccountListPageState extends State<AccountListPage> {
     );
     if (confirmed == true) {
       try {
-        await _deleteAccountUseCase.call(id);
+        // === SỬA: DÙNG USECASE TỪ WIDGET (SẠCH) ===
+        await widget.deleteAccountUseCase.call(id);
         await _loadAccounts();
       } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi khi xóa: $e')));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error when deleting: $e')));
       }
     }
   }
 
-  // (Hàm mở Form Edit - Giữ nguyên)
+  // (Hàm mở Form Edit - ĐÃ SỬA: TRUYỀN USECASE "SẠCH" ĐI)
   Future<void> _openEditForm(Account? account) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => AccountFormPage(account: account),
+        builder: (_) => AccountFormPage(
+          account: account,
+          // === SỬA: TRUYỀN USECASE "SẠCH" CHO FORM ===
+          createAccountUseCase: widget.createAccountUseCase,
+          updateAccountUseCase: widget.updateAccountUseCase,
+        ),
       ),
     );
     if (result == true) _loadAccounts();
@@ -184,8 +197,8 @@ class _AccountListPageState extends State<AccountListPage> {
         backgroundColor: Colors.white,
         title: Text(
           'HLD',
-          style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
-            fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.w800,
             color: Colors.green,
             fontSize: 30,
           ),

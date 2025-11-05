@@ -1,8 +1,9 @@
 // file: lib/feature/Account/presentation/pages/profile_edit_page.dart
-// BẢN "BẨN HẾT CỠ" - LƯU ẢNH BASE64 VÀO FIRESTORE
+// BẢN "SẠCH" 100% - NHẬN USECASE TỪ CONSTRUCTOR
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:provider/provider.dart';
@@ -10,24 +11,21 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import 'dart:convert'; // <-- BẮT BUỘC CÓ ĐỂ ENCODE/DECODE
-import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 
-// (Vứt hết import Storage đi)
-
-// === IMPORT TẦNG DATA "BẨN" ===
+// === XÓA IMPORT "BẨN" ===
 import 'package:hld_project/feature/Account/domain/entities/account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/update_account.dart';
-import 'package:hld_project/feature/Account/data/datasource/account_remote_datasource.dart';
-import 'package:hld_project/feature/Account/data/repositories/account_repository_impl.dart';
-import 'package:hld_project/feature/auth/presentation/providers/auth_provider.dart';
-
 
 class ProfileEditPage extends StatefulWidget {
   final Map<String, dynamic> initialData;
 
+  // === THÊM DÒNG NÀY (ĐỂ NHẬN USECASE "SẠCH") ===
+  final UpdateAccount updateAccountUseCase;
+
   const ProfileEditPage({
     Key? key,
     required this.initialData,
+    required this.updateAccountUseCase, // <-- THÊM REQUIRED
   }) : super(key: key);
 
   @override
@@ -46,7 +44,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   String? _selectedRole;
   Uint8List? _newAvatarBytes; // Dùng Bytes
   bool _isSaving = false;
-  late UpdateAccount _updateUseCase;
+  // late UpdateAccount _updateUseCase; // <-- XÓA BIẾN "BẨN"
   late Account _originalAccount;
 
   @override
@@ -70,12 +68,11 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       updateAt: DateTime.parse(data['updateAt'] as String),
     );
 
-    // 2. TẠO USECASE "BẨN"
-    final dataSource = AccountRemoteDatasourceIpml(); // (Mày tự sửa tên Ipml nếu cần)
-    final repository = AccountRepositoryImpl(remoteDataSource: dataSource);
-    _updateUseCase = UpdateAccount(repository);
+    // 2. === XÓA HẾT CODE TẠO USECASE "BẨN" ===
+    // (Xóa dataSource = ..., repository = ..., _updateUseCase = ...)
+    // =======================================
 
-    // 3. KHỞI TẠO CONTROLLER
+    // 3. KHỞI TẠO CONTROLLER (GIỮ NGUYÊN)
     _nameController = TextEditingController(text: _originalAccount.name);
     _phoneController = TextEditingController(text: _originalAccount.phone);
     _dobController = TextEditingController(text: _originalAccount.dob);
@@ -107,12 +104,12 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     // ... (code y cũ)
   }
 
-  // === HÀM LƯU PROFILE (ĐÃ SỬA: LƯU BASE64 VÀO FIRESTORE) ===
+  // === HÀM LƯU PROFILE (SỬA: DÙNG USECASE "SẠCH") ===
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedGender == null || _selectedRole == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn Giới tính và Vai trò.')),
+        const SnackBar(content: Text('Please select Gender and Role.')),
       );
       return;
     }
@@ -125,18 +122,12 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
       // === BƯỚC 1: CHUYỂN ẢNH THÀNH TEXT (BASE64) ===
       if (_newAvatarBytes != null) {
-        print("Đang encode ảnh sang Base64...");
-        // 1. Chuyển đống bytes thành 1 String Base64
+        // (Code encode Base64 y như cũ)
         String base64Image = base64Encode(_newAvatarBytes!);
-        // 2. Thêm tiền tố (để app biết đây là data Base64)
         newAvatarData = 'data:image/jpeg;base64,$base64Image';
-
-        // (Kiểm tra kích thước - NẾU TO QUÁ 1MB SẼ CRASH)
         if (newAvatarData.length > 1000000) {
-          // Firestore có giới hạn 1MB cho 1 document
-          throw Exception('Ảnh quá lớn (trên 1MB), Firestore không cho lưu.');
+          throw Exception('The image is too large (over 1MB), Firestore does not allow saving it.');
         }
-        print("Encode ảnh thành công.");
       }
       // ===========================================
 
@@ -156,22 +147,25 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         avatarUrl: newAvatarData, // <-- DÙNG DATA MỚI
       );
 
-      // === BƯỚC 3: LƯU VÀO FIRESTORE ===
-      await _updateUseCase.call(updatedAccount);
+      // === BƯỚC 3: LƯU VÀO FIRESTORE (DÙNG USECASE "SẠCH") ===
+      await widget.updateAccountUseCase.call(updatedAccount);
 
-      // ... (Bỏ qua logic AuthProvider) ...
+      // (Bỏ qua logic AuthProvider)
 
       // === BƯỚC 4: BÁO THÀNH CÔNG VÀ POP(TRUE) ===
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cập nhật thông tin thành công!')),
+          const SnackBar(
+              content: Text('Information updated successfully!'),
+              backgroundColor: Colors.green,
+          ),
         );
         context.pop(true); // <-- TRẢ VỀ TRUE ĐỂ BÁO HIỆU REFRESH
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khi cập nhật: $e')),
+          SnackBar(content: Text('Error when updating: $e')),
         );
       }
     } finally {
@@ -181,17 +175,38 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
   @override
   Widget build(BuildContext context) {
+    // === TOÀN BỘ CODE UI GIỮ NGUYÊN ===
+    // (Nó dùng _newAvatarBytes để hiển thị MemoryImage,
+    // nên UI không cần sửa)
+
+    // (Logic decode ảnh cũ)
+    ImageProvider? currentAvatarImage;
+    if (_originalAccount.avatarUrl.startsWith('data:image')) {
+      try {
+        currentAvatarImage = MemoryImage(base64Decode(_originalAccount.avatarUrl.split(',')[1]));
+      } catch (e) { currentAvatarImage = null; }
+    } else if (_originalAccount.avatarUrl.startsWith('http')) {
+      currentAvatarImage = NetworkImage(_originalAccount.avatarUrl);
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Iconsax.arrow_left, color: Colors.black),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Chỉnh Sửa thông tin', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
-        centerTitle: true,
-      ),
+          backgroundColor: Colors.white,
+          title: Text(
+            'HLD',
+            style: GoogleFonts.montserrat(
+              fontWeight: FontWeight.w800,
+              color: Colors.green,
+              fontSize: 30,
+            ),
+          ),
+          centerTitle: true,
+        ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Form(
@@ -207,10 +222,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                     backgroundColor: Colors.grey.shade200,
                     backgroundImage: _newAvatarBytes != null
                         ? MemoryImage(_newAvatarBytes!)
-                        : (_originalAccount.avatarUrl.isNotEmpty
-                        ? NetworkImage(_originalAccount.avatarUrl)
-                        : null) as ImageProvider?,
-                    child: (_newAvatarBytes == null && _originalAccount.avatarUrl.isEmpty)
+                        : currentAvatarImage,
+                    child: (_newAvatarBytes == null && currentAvatarImage == null)
                         ? const Icon(Iconsax.user, size: 60, color: Colors.grey)
                         : null,
                   ),
@@ -220,7 +233,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
               GestureDetector(
                 onTap: _pickImage,
                 child: const Text(
-                  'Chọn ảnh',
+                  'Change avatar',
                   style: TextStyle(
                     color: Color(0xFF388E3C),
                     fontWeight: FontWeight.bold,
@@ -229,30 +242,34 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                 ),
               ),
               const SizedBox(height: 32),
-
-              // (Các TextFormField giữ nguyên)
-              _buildTextField(
-                controller: _nameController, label: 'Tên', hintText: 'Nhập họ và tên',
-                validator: (value) => value!.isEmpty ? 'Tên không được để trống' : null,
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: _phoneController, label: 'Số điện thoại', hintText: 'Nhập số điện thoại',
-                keyboardType: TextInputType.phone,
-                validator: (value) => value!.isEmpty ? 'Số điện thoại không được để trống' : null,
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: _addressController, label: 'Địa chỉ', hintText: 'Nhập địa chỉ',
-                validator: (value) => value!.isEmpty ? 'Địa chỉ không được để trống' : null,
-              ),
-              const SizedBox(height: 24),
-              _buildRadioButtons(context, 'Giới tính', ['Nam', 'Nữ']),
-              const SizedBox(height: 24),
-              _buildRadioButtons(context, 'Vai trò', ['Khách hàng', 'Quản lý', 'Nhân viên', 'Admin'], isRole: true),
-              const SizedBox(height: 24),
-              _buildDatePickerField(
-                context: context, controller: _dobController, label: 'Ngày sinh', hintText: 'Chọn ngày sinh',
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start, // <-- THÊM VÀO ĐÂY
+                children: [
+                  _buildTextField(
+                    controller: _nameController, label: 'Name', hintText: 'Enter name',
+                    validator: (value) => value!.isEmpty ? 'Name cannot be empty' : null,
+                  ),
+                  const SizedBox(height: 24),
+                  _buildTextField(
+                    controller: _phoneController, label: 'Phone', hintText: 'Enter phone',
+                    keyboardType: TextInputType.phone,
+                    validator: (value) => value!.isEmpty ? 'Phone number cannot be left blank' : null,
+                  ),
+                  const SizedBox(height: 24),
+                  _buildTextField(
+                    controller: _addressController, label: 'Address', hintText: 'Enter address',
+                    validator: (value) => value!.isEmpty ? 'Address cannot be empty' : null,
+                  ),
+                  const SizedBox(height: 24),
+                  _buildRadioButtons(context, 'Gender', ['Male', 'Female']),
+                  const SizedBox(height: 24),
+                  // Nhớ sửa lỗi chính tả "Mangament" -> "Management" nhé
+                  _buildRadioButtons(context, 'Role', ['Customer', 'Management', 'Staff', 'Admin'], isRole: true),
+                  const SizedBox(height: 24),
+                  _buildDatePickerField(
+                    context: context, controller: _dobController, label: 'Birthday', hintText: 'Select birth date',
+                  ),
+                ], // <-- KẾT THÚC CHILDREN CỦA COLUMN MỚI
               ),
               const SizedBox(height: 48),
 
@@ -271,7 +288,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                   ),
                   child: _isSaving
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Cập nhật', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      : const Text('EDIT', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -325,54 +342,40 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             filled: true,
             fillColor: Colors.white,
           ),
-          validator: (value) => value!.isEmpty ? 'Ngày sinh không được để trống' : null,
+          validator: (value) => value!.isEmpty ? 'Date of birth cannot be left blank' : null,
         ),
       ],
     );
   }
 
-  // === HÀM SỬA: RADIO BUTTONS (DÙNG ROW CĂN CHỈNH) ===
   Widget _buildRadioButtons(BuildContext context, String label, List<String> options, {bool isRole = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label
         Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12), // Tăng khoảng cách chút cho đẹp
-
-        // Group các nút Radio
-        Row(
-          // Dùng MainAxisAlignment.start để các nút căn sát lề trái
-          mainAxisAlignment: MainAxisAlignment.start,
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 16.0,
           children: options.map((value) {
             final currentValue = isRole ? _selectedRole : _selectedGender;
-
-            // Dùng Flexible/SizedBox để kiểm soát kích thước nếu cần, nhưng
-            // ở đây ta chỉ cần Row để căn chỉnh
-            return Padding(
-              padding: const EdgeInsets.only(right: 16.0), // Khoảng cách giữa các lựa chọn
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Nút Radio (Padding mặc định của nó hơi lớn)
-                  Radio<String>(
-                    value: value,
-                    groupValue: currentValue,
-                    activeColor: const Color(0xFF388E3C), // Màu xanh lá chủ đạo
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        if (isRole) {
-                          _selectedRole = newValue;
-                        } else {
-                          _selectedGender = newValue;
-                        }
-                      });
-                    },
-                  ),
-                  // Text (đặt ngay cạnh Radio)
-                  Text(value, style: const TextStyle(fontSize: 15)),
-                ],
-              ),
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Radio<String>(
+                  value: value,
+                  groupValue: currentValue,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      if (isRole) {
+                        _selectedRole = newValue;
+                      } else {
+                        _selectedGender = newValue;
+                      }
+                    });
+                  },
+                ),
+                Text(value),
+              ],
             );
           }).toList(),
         ),

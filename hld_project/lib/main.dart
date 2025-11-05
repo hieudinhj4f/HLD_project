@@ -4,6 +4,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'core/config/firebase_env.dart';
 import 'core/routing/app_router.dart';
+import 'feature/Account/data/datasource/account_remote_datasource.dart';
+import 'feature/Account/data/repositories/account_repository_impl.dart';
+import 'feature/Account/domain/account_repository/account_repository.dart';
+import 'feature/Account/domain/usecases/create_account.dart';
+import 'feature/Account/domain/usecases/delete_account.dart';
+import 'feature/Account/domain/usecases/get_account.dart';
+import 'feature/Account/domain/usecases/update_account.dart';
+import 'feature/Account/presentation/provider/account_provider.dart';
 import 'feature/Pharmacy/domain/usecase/get_global_dashboard_stats.dart';
 import 'feature/auth/presentation/providers/auth_provider.dart';
 
@@ -77,12 +85,14 @@ Future<void> main() async {
   final ProductRemoteDataSource productDataSource = ProductRemoteDataSourceImpl();
   final DoctorRemoteDatasource doctorDataSource = DoctorRemoteDataSourceImpl();
   final ChatRemoteDataSource chatDataSource = ChatRemoteDataSourceImpl();
+  final AccountRemoteDatasource accountDataSource = AccountRemoteDatasourceIpml();
 
   // === REPOSITORIES ===
   final pharmacyRepo = PharmacyRepositoryImpl(pharmacyDataSource);
   final productRepo = ProductRepositoryImpl(productDataSource);
   final doctorRepo = DoctorRepositoryImpl(doctorDataSource);
   final chatRepo = ChatRepositoryImpl(chatDataSource);
+  final accountRepo = AccountRepositoryImpl(remoteDataSource: accountDataSource);
 
   // === USECASES ===
   // Pharmacy
@@ -110,6 +120,11 @@ Future<void> main() async {
   // Chat (User)
   final getDoctors = GetDoctors(chatRepo);
 
+  // Account
+  final getAccountUseCase = GetAccount(accountRepo);
+  final createAccountUseCase = CreateAccount(accountRepo);
+  final updateAccountUseCase = UpdateAccount(accountRepo);
+  final deleteAccountUseCase = DeleteAccount(accountRepo);
   // === AUTH ===
   final authProvider = AuthProvider();
 
@@ -141,7 +156,11 @@ Future<void> main() async {
     updateDoctor: updateDoctor,
     deleteDoctor: deleteDoctor,
     // Chat
-
+    // Account
+    getAccountUseCase: getAccountUseCase,
+    createAccountUseCase: createAccountUseCase,
+    updateAccountUseCase: updateAccountUseCase,
+    deleteAccountUseCase: deleteAccountUseCase,
   );
 
   runApp(
@@ -151,6 +170,43 @@ Future<void> main() async {
         ChangeNotifierProxyProvider<AuthProvider, DashboardProvider>(
           create: (_) => dashboardProvider,
           update: (_, auth, previous) => previous!..updateAuth(auth),
+        ),
+        Provider<AccountRemoteDatasource>(
+          // (Mày tự sửa tên Ipml nếu cần)
+          create: (_) => AccountRemoteDatasourceIpml(),
+        ),
+        Provider<AccountRepository>(
+          create: (context) => AccountRepositoryImpl(
+            remoteDataSource: context.read<AccountRemoteDatasource>(),
+          ),
+        ),
+        // --- Tầng Domain (UseCases) ---
+        Provider<GetAccount>(
+          create: (context) => GetAccount(
+            context.read<AccountRepository>(),
+          ),
+        ),
+        Provider<CreateAccount>(
+          create: (context) => CreateAccount(
+            context.read<AccountRepository>(),
+          ),
+        ),
+        Provider<UpdateAccount>(
+          create: (context) => UpdateAccount(
+            context.read<AccountRepository>(),
+          ),
+        ),
+        Provider<DeleteAccount>(
+          create: (context) => DeleteAccount(
+            context.read<AccountRepository>(),
+          ),
+        ),
+        // --- Tầng Presentation (Cái AccountProvider của mày) ---
+        ChangeNotifierProvider<AccountProvider>(
+          create: (context) => AccountProvider(
+            getAccount: context.read<GetAccount>(),
+            deleteAccountUseCase: context.read<DeleteAccount>(),
+          )..fetchAccounts(), // Tự động gọi fetchAccounts khi app chạy
         ),
       ],
       child: MyApp(appRouter: appRouter),
