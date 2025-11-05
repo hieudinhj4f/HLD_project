@@ -127,11 +127,9 @@ class _AccountListPageState extends State<AccountListPage> {
     final confirmed = await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: const Text('Bạn có chắc chắn muốn xóa tài khoản này không?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Hủy')),
-          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Xóa', style: TextStyle(color: Colors.red))),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
         ],
       ),
     );
@@ -206,7 +204,7 @@ class _AccountListPageState extends State<AccountListPage> {
               controller: _searchController,
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm người dùng (tên, email)...',
+                hintText: 'Search for user ...',
                 prefixIcon: const Icon(Iconsax.search_normal),
                 filled: true,
                 fillColor: Colors.grey.shade100,
@@ -220,7 +218,7 @@ class _AccountListPageState extends State<AccountListPage> {
 
             // Tiêu đề
             const Text(
-              'Danh sách người dùng',
+              'User List',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -247,10 +245,10 @@ class _AccountListPageState extends State<AccountListPage> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_error != null) {
-      return Center(child: Text('Lỗi: $_error. Vui lòng thử lại.'));
+      return Center(child: Text('Error: $_error. Please try again.'));
     }
     if (_filteredAccounts.isEmpty) {
-      return const Center(child: Text('Không tìm thấy người dùng nào.'));
+      return const Center(child: Text('No user found.'));
     }
 
     // Dùng ListView
@@ -322,7 +320,7 @@ class _AccountListPageState extends State<AccountListPage> {
                         minimumSize: const Size(80, 35),
                         padding: EdgeInsets.zero,
                       ),
-                      child: const Text('Chỉnh sửa', style: TextStyle(fontSize: 14)),
+                      child: const Text('Edit', style: TextStyle(fontSize: 14)),
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton(
@@ -333,7 +331,7 @@ class _AccountListPageState extends State<AccountListPage> {
                         minimumSize: const Size(80, 35),
                         padding: EdgeInsets.zero,
                       ),
-                      child: const Text('Mở', style: TextStyle(fontSize: 14)),
+                      child: const Text('Open', style: TextStyle(fontSize: 14)),
                     ),
                   ],
                 ),

@@ -1,4 +1,3 @@
-// file: lib/presentation/providers/account_provider.dart
 import 'package:flutter/material.dart';
 import 'package:hld_project/feature/Account/domain/usecases/get_account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/delete_account.dart';
@@ -22,7 +21,7 @@ class AccountProvider with ChangeNotifier {
   String _errorMessage = '';
   String get errorMessage => _errorMessage;
 
-  // Hàm load data
+  // Hàm load data (Giữ nguyên)
   Future<void> fetchAccounts() async {
     _isLoading = true;
     _errorMessage = '';
@@ -37,18 +36,31 @@ class AccountProvider with ChangeNotifier {
     notifyListeners();
   }
 
+
+  // === SỬA HÀM NÀY ===
   Future<void> deleteAccount(String accountId) async {
+    // 1. Báo là đang loading (giống fetchAccounts)
+    _isLoading = true;
     _errorMessage = '';
+    notifyListeners();
+
     try {
-      // 1. Gọi UseCase
+      // 2. Gọi UseCase (Xóa trên server)
       await deleteAccountUseCase.call(accountId);
 
-      // 2. Tải lại danh sách
-      await fetchAccounts();
+      // 3. (THAY ĐỔI LỚN)
+      // Nếu xóa thành công, xóa nó ra khỏi list local
+      // Thay vì gọi lại fetchAccounts()
+      _accounts.removeWhere((account) => account.id == accountId);
 
     } catch (e) {
       _errorMessage = e.toString();
-      notifyListeners();
     }
+
+    // 4. Báo là xong, UI sẽ tự cập nhật list mới (hoặc báo lỗi)
+    _isLoading = false;
+    notifyListeners();
   }
+// === HẾT SỬA ===
+
 }

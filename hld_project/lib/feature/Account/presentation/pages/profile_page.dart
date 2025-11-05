@@ -24,7 +24,6 @@ import 'changePassword.dart';
 import 'profile_edit_page.dart'; // Import trang Edit
 import 'package:google_fonts/google_fonts.dart';
 
-
 // === 1. ĐỔI THÀNH STATEFULWIDGET ===
 class ProfilePage extends StatefulWidget {
   // NHẬN ACCOUNT TÙY CHỌN (NẾU ADMIN GỌI "OPEN")
