@@ -25,20 +25,20 @@ class DoctorCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Hình ảnh
+            // 1. Image
             SizedBox(
               width: 110,
               child: Image.network(
                 doctor.imageUrl,
                 fit: BoxFit.cover,
-                // Ảnh dự phòng khi load lỗi
+                // Fallback image on load error
                 errorBuilder: (context, error, stackTrace) => Container(
                   color: Colors.grey[200],
                   child: const Center(
                     child: Icon(Iconsax.user, color: Colors.grey, size: 50),
                   ),
                 ),
-                // Ảnh khi đang tải
+                // Image while loading
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Container(
@@ -49,7 +49,7 @@ class DoctorCard extends StatelessWidget {
               ),
             ),
 
-            // 2. Thông tin
+            // 2. Information
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
@@ -77,7 +77,7 @@ class DoctorCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
-                    // Hàng 1: Đánh giá & Kinh nghiệm
+                    // Row 1: Rating & Experience
                     Row(
                       children: [
                         _InfoChip(
@@ -88,22 +88,22 @@ class DoctorCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         _InfoChip(
                           icon: Iconsax.briefcase,
-                          text: '${doctor.experienceYears} năm KN',
+                          text: '${doctor.experienceYears} Yrs Exp', // <-- Translated
                           color: Colors.blue,
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    // Hàng 2: Chỉ số
+                    // Row 2: Stats
                     _InfoChip(
                       icon: Iconsax.activity,
-                      text: '${doctor.totalExaminations} lượt khám',
+                      text: '${doctor.totalExaminations} consultations', // <-- Translated
                       color: Colors.grey[600]!,
                     ),
 
-                    const Spacer(), // Đẩy 2 nút xuống dưới
+                    const Spacer(), // Push buttons to the bottom
 
-                    // 3. Nút bấm
+                    // 3. Buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -133,7 +133,7 @@ class DoctorCard extends StatelessWidget {
   }
 }
 
-// Widget con cho các chip thông tin (Đánh giá, Kinh nghiệm)
+// Child widget for info chips (Rating, Experience)
 class _InfoChip extends StatelessWidget {
   final IconData icon;
   final String text;
@@ -164,7 +164,7 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
-// Widget con cho nút Edit/Delete (Giống hệt PharmacyCard)
+// Child widget for Edit/Delete buttons (Identical to PharmacyCard)
 class _ActionButton extends StatelessWidget {
   final String text;
   final Color color;

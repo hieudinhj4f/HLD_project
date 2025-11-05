@@ -117,7 +117,14 @@ class PharmacyRemoteDataSourceImpl implements PharmacyRemoteDataSource {
   @override
   Future<List<String>> getAllPharmacyIds() async {
     final snapshot = await _firestore.collection('pharmacy').get();
-    return snapshot.docs.map((doc) => doc.id).toList();
+
+    // CHUYỂN snapshot → List<String>
+    final List<String> ids = snapshot.docs.map((doc) => doc.id).toList();
+
+    // IN RA DANH SÁCH ID → PHẢI LÀ [pham_001, pham_002, ...]
+    print("PHARMACY IDS: $ids");
+
+    return ids;
   }
 
   @override

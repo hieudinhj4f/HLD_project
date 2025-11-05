@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:hld_project/feature/Pharmacy/domain/usecase/get_total_products.dart';
 import 'package:provider/provider.dart';
 import 'core/config/firebase_env.dart';
 import 'core/routing/app_router.dart';
@@ -20,7 +21,6 @@ import 'feature/Pharmacy/presentation/providers/dashboard_provider.dart';
 
 // Pharmacy (Đã có)
 import 'feature/Pharmacy/domain/usecase/get_pharmacy_by_id.dart';
-import 'feature/Pharmacy/domain/usecase/get_dashboard_stats.dart';
 import 'feature/Pharmacy/domain/usecase/get_vendor_activity.dart';
 import 'feature/Pharmacy/domain/usecase/getAllPharmacy.dart';
 import 'feature/Pharmacy/domain/usecase/createPharmacy.dart';
@@ -96,7 +96,6 @@ Future<void> main() async {
 
   // === USECASES ===
   // Pharmacy
-  final getDashboardStats = GetDashboardStats(pharmacyRepo);
   final getGlobalDashboardStats = GetGlobalDashboardStats(pharmacyRepo);
   final getVendorActivity = GetVendorActivity(pharmacyRepo);
   final getPharmacyById = GetPharmacyById(pharmacyRepo);
@@ -110,6 +109,7 @@ Future<void> main() async {
   final createProduct = CreateProduct(productRepo);
   final updateProduct = UpdateProduct(productRepo);
   final deleteProduct = DeleteProduct(productRepo);
+  final getAllProductUsecase = GetTotalProductsUseCase(pharmacyRepo);
 
   // Doctor (Admin)
   final getAllDoctors = GetAllDoctor(doctorRepo);
@@ -131,10 +131,11 @@ Future<void> main() async {
   // === DASHBOARD PROVIDER ===
   final dashboardProvider = DashboardProvider(
     authProvider: null,
-    getDashboardStats: getDashboardStats,
+    getDashboardStats: getGlobalDashboardStats,
     getVendorActivity: getVendorActivity,
     getPharmacyInfo: getPharmacyById,
     getAllPharmacies: getAllPharmacies,
+    getTotalProducts: getAllProductUsecase,
   );
 
   // === APP ROUTER ===

@@ -111,6 +111,14 @@ class _ProductListPageState extends State<ProductListPage> {
     }
 
     Future<void> _openForm([Product? product]) async {
+        // LỖI LOGIC: ProductFormPage cần 'pharmacyId'
+        // Bạn cần lấy pharmacyId của nhà thuốc hiện tại (từ Provider hoặc nơi khác)
+        // và truyền nó vào đây.
+        // Ví dụ: final currentPharmacyId = context.read<PharmacyProvider>().currentId;
+
+        // GIẢ SỬ BẠN CHƯA CÓ, TÔI SẼ ĐỂ TRỐNG ĐỂ BẠN TỰ THÊM
+        // const String currentPharmacyId = "YOUR_PHARMACY_ID_HERE";
+
         final result = await Navigator.push(
             context,
             MaterialPageRoute(
@@ -118,6 +126,7 @@ class _ProductListPageState extends State<ProductListPage> {
                     product: product,
                     createUseCase: widget.createProduct,
                     updateUseCase: widget.updateProduct,
+                    // pharmacyId: currentPharmacyId, // <-- BẠN SẼ CẦN THÊM DÒNG NÀY
                 ),
             ),
         );
@@ -238,25 +247,28 @@ class _ProductListPageState extends State<ProductListPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Offers & Promotions
-                        Container(
-                            height: 150,
-                            decoration: BoxDecoration(
-                                color: Colors.green.shade100,
-                                borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Center(
-                                child: Text(
-                                    'Offers & Promotions',
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1E88E5),
-                                    ),
-                                ),
-                            ),
-                        ),
-                        const SizedBox(height: 24),
+                        // === PHẦN ĐÃ XÓA ===
+                        // // Offers & Promotions
+                        // Container(
+                        //     height: 150,
+                        //     decoration: BoxDecoration(
+                        //         color: Colors.green.shade100,
+                        //         borderRadius: BorderRadius.circular(12),
+                        //     ),
+                        //     child: const Center(
+                        //         child: Text(
+                        //             'Offers & Promotions',
+                        //             style: TextStyle(
+                        //                 fontSize: 20,
+                        //                 fontWeight: FontWeight.bold,
+                        //                 color: Color(0xFF1E88E5),
+                        //             ),
+                        //         ),
+                        //     ),
+                        // ),
+                        // const SizedBox(height: 24),
+                        // === KẾT THÚC PHẦN XÓA ===
+
 
                         // Featured Products Title
                         const Text(

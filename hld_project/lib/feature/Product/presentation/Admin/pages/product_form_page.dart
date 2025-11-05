@@ -35,6 +35,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
   // === FIX: Add missing controllers ===
   late TextEditingController _descriptionController;
   late TextEditingController _categoriesController;
+  late TextEditingController _pharmacyController;
   // (categoryId would be better, but using categories (String) based on your code)
 
   // State variable for loading
@@ -54,7 +55,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
     _imageUrlController = TextEditingController(text: isEditing ? product!.imageUrl : '');
     _descriptionController = TextEditingController(text: isEditing ? product!.description : '');
     _categoriesController = TextEditingController(text: isEditing ? product!.categories : '');
-
+    _pharmacyController = TextEditingController(text: isEditing ? product?.pharmacyId : '');
     // The 2 Timestamp variables you declared don't need to be state variables,
     // because their values are set on SAVE, not entered by the user.
     // We will handle them in the _saveForm() function.
@@ -70,6 +71,10 @@ class _ProductFormPageState extends State<ProductFormPage> {
     _imageUrlController.dispose();
     _descriptionController.dispose();
     _categoriesController.dispose();
+    // _categoriesController.dispose(); // <-- LỖI GÕ MÁY: BỊ LẶP
+    _pharmacyController.dispose(); // <-- ĐÃ SỬA
+
+
     super.dispose();
   }
 
@@ -95,6 +100,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
         categories: _categoriesController.text,
         createdAt: widget.product?.createdAt ?? now,
         updateAt: now,
+        pharmacyId: _pharmacyController.text.trim(),
       );
 
       // 4.5. Call UseCase
@@ -205,6 +211,18 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 decoration: const InputDecoration(labelText: 'Description', alignLabelWithHint: true),
                 maxLines: 3, // Allow multiple lines
               ),
+
+              // === PHẦN BẠN YÊU CẦU BỔ SUNG ===
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _pharmacyController,
+                decoration: const InputDecoration(labelText: 'Pharmacy ID (Cẩn thận!)'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Pharmacy ID là bắt buộc.';
+                  return null;
+                },
+              ),
+              // ================================
             ],
           ),
         ),

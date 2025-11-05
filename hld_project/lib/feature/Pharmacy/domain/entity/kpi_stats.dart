@@ -1,3 +1,4 @@
+// lib/feature/Pharmacy/domain/entity/kpi_stats.dart
 class KpiStats {
   final int totalProducts;
   final int itemsSold;
@@ -14,5 +15,30 @@ class KpiStats {
     this.totalRevenue = 0.0,
     this.totalRevenuePercent = 0.0,
   });
-  factory KpiStats.zero() =>  KpiStats();
+
+  factory KpiStats.zero() => KpiStats();
+
+  /// Tạo bản sao với các giá trị mới
+  KpiStats copyWith({
+    int? totalProducts,
+    int? itemsSold,
+    double? todayRevenue,
+    double? todayRevenuePercent,
+    double? totalRevenue,
+    double? totalRevenuePercent,
+  }) {
+    return KpiStats(
+      totalProducts: totalProducts ?? this.totalProducts,
+      itemsSold: itemsSold ?? this.itemsSold,
+      todayRevenue: todayRevenue ?? this.todayRevenue,
+      todayRevenuePercent: todayRevenuePercent ?? this.todayRevenuePercent,
+      totalRevenue: totalRevenue ?? this.totalRevenue,
+      totalRevenuePercent: totalRevenuePercent ?? this.totalRevenuePercent,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'KpiStats(totalProducts: $totalProducts, itemsSold: $itemsSold, todayRevenue: $todayRevenue)';
+  }
 }

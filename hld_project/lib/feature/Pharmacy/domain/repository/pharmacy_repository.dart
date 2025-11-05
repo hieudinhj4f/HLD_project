@@ -18,4 +18,9 @@ abstract class PharmacyRepository {
   // === GLOBAL (CHO ADMIN) ===
   Future<List<String>> getAllPharmacyIds(); // THÊM
   Future<KpiStats> getKpiStatsForPharmacy(String pharmacyId);
+  Future<void> purchaseProduct({
+    required String productId,
+    required int quantity,
+  });
+  Future<int> getTotalProducts(String pharmacyId);
 }

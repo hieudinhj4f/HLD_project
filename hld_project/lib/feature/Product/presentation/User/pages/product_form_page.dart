@@ -28,6 +28,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
   late TextEditingController _priceController;
   late TextEditingController _quantityController;
   late TextEditingController _imageUrlController;
+  late TextEditingController _pharmacyController;
   bool _isSaving = false;
 
   @override
@@ -42,6 +43,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
     _priceController = TextEditingController(text: isEditing ? product?.price.toString() : '');
     _quantityController = TextEditingController(text: isEditing ? product?.quantity.toString() : '');
     _imageUrlController = TextEditingController(text: isEditing ? product?.imageUrl : '');
+    _pharmacyController = TextEditingController(text: isEditing ? product?.pharmacyId : '');
   }
 
   @override
@@ -52,6 +54,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
     _priceController.dispose();
     _quantityController.dispose();
     _imageUrlController.dispose();
+    _pharmacyController.dispose();
+
     super.dispose();
   }
 
@@ -72,6 +76,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
         quantity: int.parse(_quantityController.text),
         createdAt: widget.product?.createdAt ?? now,
         updateAt: now,
+        pharmacyId: _pharmacyController.text.trim(),
       );
 
       if (widget.product == null) {
