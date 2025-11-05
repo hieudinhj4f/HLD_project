@@ -42,7 +42,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   late TextEditingController _addressController;
   String? _selectedGender;
   String? _selectedRole;
-  Uint8List? _newAvatarBytes; // Dùng Bytes
+  Uint8List? _newAvatarBytes; // Use Bytes
   bool _isSaving = false;
   // late UpdateAccount _updateUseCase; // <-- XÓA BIẾN "BẨN"
   late Account _originalAccount;
@@ -51,7 +51,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   void initState() {
     super.initState();
 
-    // 1. LẤY MAP VÀ CHUYỂN THÀNH ACCOUNT ENTITY (AN TOÀN)
+    // 1. GET MAP AND CONVERT TO ACCOUNT ENTITY (SAFELY)
     final Map<String, dynamic> data = widget.initialData;
     _originalAccount = Account(
       id: data['id'] as String,
@@ -63,7 +63,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       age: data['age'] ?? '',
       address: data['address'] ?? '',
       role: data['role'] ?? 'user',
-      avatarUrl: data['avatarUrl'] ?? '', // Thêm avatar
+      avatarUrl: data['avatarUrl'] ?? '', // Add avatar
       createAt: DateTime.parse(data['createAt'] as String),
       updateAt: DateTime.parse(data['updateAt'] as String),
     );
@@ -87,7 +87,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     super.dispose();
   }
 
-  // === HÀM CHỌN ẢNH (ĐỌC BYTES - Giữ nguyên) ===
+  // === PICK IMAGE FUNCTION (READ BYTES - Unchanged) ===
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
@@ -99,9 +99,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     }
   }
 
-  // Chọn ngày sinh (giữ nguyên)
+  // Select date of birth (unchanged)
   Future<void> _selectDate(BuildContext context) async {
-    // ... (code y cũ)
+    // ... (same old code)
   }
 
   // === HÀM LƯU PROFILE (SỬA: DÙNG USECASE "SẠCH") ===
@@ -118,9 +118,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
     try {
       final now = DateTime.now();
-      String newAvatarData = _originalAccount.avatarUrl; // Lấy URL/Data cũ
+      String newAvatarData = _originalAccount.avatarUrl; // Get old URL/Data
 
-      // === BƯỚC 1: CHUYỂN ẢNH THÀNH TEXT (BASE64) ===
+      // === STEP 1: CONVERT IMAGE TO TEXT (BASE64) ===
       if (_newAvatarBytes != null) {
         // (Code encode Base64 y như cũ)
         String base64Image = base64Encode(_newAvatarBytes!);
@@ -131,7 +131,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       }
       // ===========================================
 
-      // === BƯỚC 2: TẠO OBJECT VỚI DATA MỚI ===
+      // === STEP 2: CREATE OBJECT WITH NEW DATA ===
       final updatedAccount = Account(
         id: _originalAccount.id,
         email: _originalAccount.email,
@@ -144,7 +144,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         address: _addressController.text,
         role: _selectedRole!,
         updateAt: now,
-        avatarUrl: newAvatarData, // <-- DÙNG DATA MỚI
+        avatarUrl: newAvatarData, // <-- USE NEW DATA
       );
 
       // === BƯỚC 3: LƯU VÀO FIRESTORE (DÙNG USECASE "SẠCH") ===
@@ -152,7 +152,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
       // (Bỏ qua logic AuthProvider)
 
-      // === BƯỚC 4: BÁO THÀNH CÔNG VÀ POP(TRUE) ===
+      // === STEP 4: REPORT SUCCESS AND POP(TRUE) ===
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -160,7 +160,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
               backgroundColor: Colors.green,
           ),
         );
-        context.pop(true); // <-- TRẢ VỀ TRUE ĐỂ BÁO HIỆU REFRESH
+        context.pop(true); // <-- RETURN TRUE TO SIGNAL REFRESH
       }
     } catch (e) {
       if (mounted) {
@@ -273,7 +273,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
               ),
               const SizedBox(height: 48),
 
-              // Nút EDIT (Giữ nguyên)
+              // EDIT Button (Unchanged)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -298,7 +298,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     );
   }
 
-  // (Các Widget phụ trợ _buildTextField, _buildDatePickerField, _buildRadioButtons giữ nguyên)
+  // (Helper Widgets _buildTextField, _buildDatePickerField, _buildRadioButtons unchanged)
   Widget _buildTextField({
     required TextEditingController controller, required String label, required String hintText,
     TextInputType keyboardType = TextInputType.text, String? Function(String?)? validator,

@@ -83,13 +83,13 @@ class _ProductFormPageState extends State<ProductFormPage> {
       if (mounted) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Lưu thành công!')),
+          const SnackBar(content: Text('Saved successfully!')), // <-- Đã dịch
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(content: Text('Error: $e')), // <-- Đã dịch
         );
       }
     } finally {
@@ -103,7 +103,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'),
+        title: Text(isEditing ? 'Edit Product' : 'Add New Product'), // <-- Đã dịch
         actions: [
           IconButton(
             icon: _isSaving
@@ -125,44 +125,44 @@ class _ProductFormPageState extends State<ProductFormPage> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Tên sản phẩm'),
-                validator: (value) => value?.isEmpty ?? true ? 'Tên sản phẩm bắt buộc' : null,
+                decoration: const InputDecoration(labelText: 'Product Name'), // <-- Đã dịch
+                validator: (value) => value?.isEmpty ?? true ? 'Product name is required' : null, // <-- Đã dịch
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Mô tả'),
+                decoration: const InputDecoration(labelText: 'Description'), // <-- Đã dịch
                 maxLines: 3,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _categoriesController,
-                decoration: const InputDecoration(labelText: 'Danh mục'),
+                decoration: const InputDecoration(labelText: 'Categories'), // <-- Đã dịch
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _priceController,
-                decoration: const InputDecoration(labelText: 'Giá'),
+                decoration: const InputDecoration(labelText: 'Price'), // <-- Đã dịch
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || double.tryParse(value) == null) return 'Giá không hợp lệ';
+                  if (value == null || double.tryParse(value) == null) return 'Invalid price'; // <-- Đã dịch
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _quantityController,
-                decoration: const InputDecoration(labelText: 'Số lượng'),
+                decoration: const InputDecoration(labelText: 'Quantity'), // <-- Đã dịch
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || int.tryParse(value) == null) return 'Số lượng không hợp lệ';
+                  if (value == null || int.tryParse(value) == null) return 'Invalid quantity'; // <-- Đã dịch
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _imageUrlController,
-                decoration: const InputDecoration(labelText: 'URL hình ảnh'),
+                decoration: const InputDecoration(labelText: 'Image URL'), // <-- Đã dịch
               ),
             ],
           ),

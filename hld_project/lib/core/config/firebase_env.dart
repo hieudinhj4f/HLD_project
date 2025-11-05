@@ -1,5 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
+//Định nghĩa Env cho Firebase
 class FirebaseEnv {
   static String get apiKey => dotenv.env['FIREBASE_API_KEY'] ?? '';
   static String get appId => dotenv.env['FIREBASE_APP_ID'] ?? '';

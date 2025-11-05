@@ -1,12 +1,12 @@
-// [CẦN IMPORT CÁI NÀY NẾU CHƯA CÓ]
+// [NEEDS THIS IMPORT IF NOT ALREADY PRESENT]
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
-// import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // Mày đã có
+// import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // You already have this
 
-// === HÀM HIỆN DIALOG ĐỔI MẬT KHẨU (BẢN TÚT LẠI UI) ===
+// === FUNCTION TO SHOW CHANGE PASSWORD DIALOG (REFINED UI VERSION) ===
 void showChangePasswordDialog(BuildContext context) {
-  // Mấy cái này phải ở ngoài để giữ state
+  // These must be outside to maintain state
   final _formKey = GlobalKey<FormState>();
   final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
@@ -16,14 +16,14 @@ void showChangePasswordDialog(BuildContext context) {
 
   showDialog(
     context: context,
-    barrierDismissible: !_isLoading, // Không cho tắt khi đang loading
+    barrierDismissible: !_isLoading, // Don't allow dismissal while loading
     builder: (ctx) {
-      // Dùng StatefulBuilder để dialog tự cập nhật state của nó
+      // Use StatefulBuilder so the dialog can update its own state
       return StatefulBuilder(
         builder: (dialogContext, setDialogState) {
 
-          // [GỌN HƠN] Tách logic 'onPressed' ra một hàm riêng
-          // Nó vẫn nằm trong scope của 'builder' nên truy cập được setDialogState
+          // [CLEANER] Separate 'onPressed' logic into its own function
+          // It's still within the 'builder' scope so it can access setDialogState
           Future<void> _submitChangePassword() async {
             setDialogState(() { _dialogError = null; });
             if (!_formKey.currentState!.validate()) {
@@ -53,11 +53,11 @@ void showChangePasswordDialog(BuildContext context) {
               await user.reauthenticateWithCredential(credential);
               await user.updatePassword(newPassword);
 
-              // Xong thì tắt loading VÀ đóng dialog
+              // Done, so turn off loading AND close the dialog
               setDialogState(() { _isLoading = false; });
               Navigator.of(ctx).pop();
 
-              // Báo thành công ở màn hình chính
+              // Show success on the main screen
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Password changed successfully!'),
@@ -84,9 +84,9 @@ void showChangePasswordDialog(BuildContext context) {
             }
           }
 
-          // === PHẦN UI ĐÃ TÚT LẠI ===
+          // === REFINED UI PART ===
           return AlertDialog(
-            // [UI ĐẸP HƠN]
+            // [NICER UI]
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             icon: Icon(Iconsax.lock_1, color: Colors.blue.shade700, size: 44),
@@ -99,7 +99,7 @@ void showChangePasswordDialog(BuildContext context) {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // [UI ĐẸP HƠN] - Hiện lỗi tập trung ở trên
+                    // [NICER UI] - Show centralized error above
                     if (_dialogError != null) ...[
                       Text(
                         _dialogError!,
@@ -108,7 +108,7 @@ void showChangePasswordDialog(BuildContext context) {
                       ),
                       const SizedBox(height: 12),
                     ],
-                    // [UI ĐẸP HƠN] - Dùng TextFormField với OutlineBorder
+                    // [NICER UI] - Use TextFormField with OutlineBorder
                     TextFormField(
                       controller: _oldPasswordController,
                       obscureText: true,
@@ -141,11 +141,11 @@ void showChangePasswordDialog(BuildContext context) {
                       },
                     ),
                     const SizedBox(height: 30),
-                    // Dùng Row bọc 2 nút và MainAxisAlignment.spaceBetween để đẩy ra 2 bên
+                    // Use Row to wrap 2 buttons and MainAxisAlignment.spaceBetween to push them apart
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // NÚT HỦY (Dùng Expanded để nó chiếm 50% không gian)
+                        // CANCEL BUTTON (Use Expanded so it takes up 50% of space)
                         Expanded(
                           child: OutlinedButton(
                             onPressed: _isLoading ? null : () => Navigator.of(ctx).pop(),
@@ -176,14 +176,23 @@ void showChangePasswordDialog(BuildContext context) {
                                     )
                                   : const Text('Confirm'),
                             ),
+                            onPressed: _isLoading ? null : _submitChangePassword,
+                            child: _isLoading
+                                ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                                : const Text('Confirm'),
                           ),
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
             ),
-            // XÓA HẾT MẤY CÁI ACTION NÀY ĐI
+            // REMOVE ALL OF THESE ACTIONS
             // actionsAlignment: MainAxisAlignment.center,
             // actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
             // actions: [],
@@ -194,8 +203,8 @@ void showChangePasswordDialog(BuildContext context) {
   );
 }
 
-// [UI ĐẸP HƠN] - Tách hàm build InputDecoration ra cho gọn
-// Mày phải đặt hàm này BÊN NGOÀI hàm _showChangePasswordDialog
+// [NICER UI] - Extract the build InputDecoration function to keep it clean
+// You must place this function OUTSIDE the showChangePasswordDialog function
 InputDecoration _buildInputDecoration(String label) {
   return InputDecoration(
     labelText: label,

@@ -20,7 +20,7 @@ class InvoicePage extends StatelessWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Hóa đơn'),
+        title: const Text('Invoice'), // <-- Đã dịch
         backgroundColor: Colors.green,
       ),
       body: Padding(
@@ -28,10 +28,13 @@ class InvoicePage extends StatelessWidget {
         child: Column(
           children: [
             const Icon(Icons.check_circle, color: Colors.green, size: 64),
-            const Text('Thanh toán thành công', style: TextStyle(fontSize: 24)),
+            const Text(
+              'Payment Successful', // <-- Đã dịch
+              style: TextStyle(fontSize: 24),
+            ),
             const SizedBox(height: 8),
-            Text('Mã hóa đơn: $orderNumber'),
-            Text('31/10/2025, 17:50PM'),
+            Text('Invoice Code: $orderNumber'), // <-- Đã dịch
+            Text('31/10/2025, 17:50PM'), // (Giữ nguyên ngày giờ ví dụ)
             const SizedBox(height: 24),
             Row(
               children: [
@@ -53,11 +56,14 @@ class InvoicePage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            Text('Tổng cộng: ${totalAmount.toStringAsFixed(0)}đ', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(
+              'Total: ${totalAmount.toStringAsFixed(0)}đ', // <-- Đã dịch
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
             const Spacer(),
             ElevatedButton(
               onPressed: () => context.go('/'),
-              child: const Text('Về trang chủ'),
+              child: const Text('Back to Home'), // <-- Đã dịch
             ),
           ],
         ),

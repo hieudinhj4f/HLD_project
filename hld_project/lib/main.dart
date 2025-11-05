@@ -97,19 +97,19 @@ Future<void> main() async {
   // === USECASES ===
   // Pharmacy
   final getDashboardStats = GetDashboardStats(pharmacyRepo);
-  final getGlobalDashboardStats = GetGlobalDashboardStats(pharmacyRepo); // THÊM
+  final getGlobalDashboardStats = GetGlobalDashboardStats(pharmacyRepo);
   final getVendorActivity = GetVendorActivity(pharmacyRepo);
   final getPharmacyById = GetPharmacyById(pharmacyRepo);
-  final getAllPharmacies = GetAllPharmacy(pharmacyRepo); // ĐÃ SỬA
-  final createPharmacy = CreatePharmacy(pharmacyRepo);     // ĐÃ SỬA
-  final updatePharmacy = UpdatePharmacy(pharmacyRepo);     // ĐÃ SỬA
-  final deletePharmacy = DeletePharmacy(pharmacyRepo);     // ĐÃ SỬA
+  final getAllPharmacies = GetAllPharmacy(pharmacyRepo);
+  final createPharmacy = CreatePharmacy(pharmacyRepo);
+  final updatePharmacy = UpdatePharmacy(pharmacyRepo);
+  final deletePharmacy = DeletePharmacy(pharmacyRepo);
 
   // Product
-  final getAllProduct = GetAllProduct(productRepo);        // ĐÃ SỬA
-  final createProduct = CreateProduct(productRepo);        // ĐÃ SỬA
-  final updateProduct = UpdateProduct(productRepo);        // ĐÃ SỬA
-  final deleteProduct = DeleteProduct(productRepo);        // ĐÃ SỬA
+  final getAllProduct = GetAllProduct(productRepo);
+  final createProduct = CreateProduct(productRepo);
+  final updateProduct = UpdateProduct(productRepo);
+  final deleteProduct = DeleteProduct(productRepo);
 
   // Doctor (Admin)
   final getAllDoctors = GetAllDoctor(doctorRepo);

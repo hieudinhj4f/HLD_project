@@ -45,11 +45,11 @@ class ProductCard extends StatelessWidget {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      '${product.quantity} viên',
+                      '${product.quantity} units', // <-- Đã dịch
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                     Text(
-                      '${product.price.toInt()}đ / Viên',
+                      '${product.price.toInt()}đ / Unit', // <-- Đã dịch
                       style: const TextStyle(color: Colors.green),
                     ),
                   ],

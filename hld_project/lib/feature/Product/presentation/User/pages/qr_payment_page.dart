@@ -20,8 +20,8 @@ class QRPaymentPage extends StatelessWidget {
         backgroundColor: Colors.white,
         title: Text(
           'HLD',
-          style: GoogleFonts.montserrat( // <-- Đổi thành GoogleFonts.tên_font
-            fontWeight: FontWeight.w800, // Đây là độ dày Black (siêu dày)
+          style: GoogleFonts.montserrat( // <-- Change to GoogleFonts.font_name
+            fontWeight: FontWeight.w800, // This is the Black weight (super bold)
             color: Colors.green,
             fontSize: 30,
           ),
@@ -33,16 +33,22 @@ class QRPaymentPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Thông tin đơn hàng', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text(
+              'Order Information', // <-- Đã dịch
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    Text('Mã đơn hàng: $orderNumber'),
+                    Text('Order Code: $orderNumber'), // <-- Đã dịch
                     const SizedBox(height: 8),
-                    Text('Số tiền: ${totalAmount.toStringAsFixed(0)}đ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      'Amount: ${totalAmount.toStringAsFixed(0)}đ', // <-- Đã dịch
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ],
                 ),
               ),
@@ -64,7 +70,7 @@ class QRPaymentPage extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   context.go(
-                    '/user/cart/invoice', // ĐÚNG SUB-ROUTE
+                    '/user/cart/invoice', // CORRECT SUB-ROUTE
                     extra: {
                       'totalAmount': totalAmount,
                       'orderNumber': orderNumber,
@@ -76,7 +82,7 @@ class QRPaymentPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 ),
                 child: const Text(
-                  'Xem hóa đơn',
+                  'View Invoice', // <-- Đã dịch
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),

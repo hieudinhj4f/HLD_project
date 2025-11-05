@@ -109,9 +109,7 @@ class AppRouter {
   final UpdateDoctor updateDoctor;
   final DeleteDoctor deleteDoctor;
 
-  // Chat (User)
-  // final GetDoctors getDoctors; // (main.dart của bạn chưa tạo cái này)
-  // Account
+ 
   final GetAccount getAccountUseCase;
   final CreateAccount createAccountUseCase;
   final UpdateAccount updateAccountUseCase;
@@ -147,36 +145,19 @@ class AppRouter {
     required this.deleteAccountUseCase,
   });
 
-  // (Các tabs _adminTabs và _userTabs giữ nguyên)
   static const List<BottomNavItem> _adminTabs = [
     BottomNavItem(path: '/admin/home', label: 'Home', icon: Icons.home),
-    BottomNavItem(
-      path: '/admin/product',
-      label: 'Product',
-      icon: Icons.shopping_cart,
-    ),
-    BottomNavItem(
-      path: '/admin/Pharmacy',
-      label: 'Pharmacy',
-      icon: Icons.local_pharmacy,
-    ),
-    BottomNavItem(
-      path: '/admin/doctors',
-      label: 'Doctors',
-      icon: Icons.person_2,
-    ),
+    BottomNavItem(path: '/admin/product', label: 'Product', icon: Icons.shopping_cart,),
+    BottomNavItem(path: '/admin/Pharmacy', label: 'Pharmacy', icon: Icons.local_pharmacy,),
+    BottomNavItem(path: '/admin/doctors', label: 'Doctors', icon: Icons.person_2,),
     BottomNavItem(path: '/admin/account', label: 'Account', icon: Icons.person),
-    BottomNavItem(
-      path: '/admin/setting',
-      label: 'Setting',
-      icon: Icons.settings,
-    ),
+    BottomNavItem(path: '/admin/setting',label: 'Setting', icon: Icons.settings ),
   ];
   static const List<BottomNavItem> _userTabs = [
-    BottomNavItem(path: '/user/product', label: 'Product', icon: Icons.home),
+    BottomNavItem(path: '/user/product', label: 'Home', icon: Icons.home),
     BottomNavItem(path: '/user/cart', label: 'Cart', icon: Icons.shopping_cart),
     BottomNavItem(path: '/user/chat', label: 'Chat', icon: Icons.message),
-    BottomNavItem(path: '/user/account', label: 'Account', icon: Icons.person),
+    BottomNavItem(path: '/user/account', label: 'Profile', icon: Icons.person),
   ];
 
   late final GoRouter router = GoRouter(
@@ -184,7 +165,6 @@ class AppRouter {
     debugLogDiagnostics: true,
     refreshListenable: authProvider,
 
-    // (Hàm redirect của bạn giữ nguyên)
     redirect: (context, state) {
       final bool isLoggedIn = authProvider.isLoggedIn;
       final bool isAdmin = authProvider.isAdmin;
@@ -194,8 +174,6 @@ class AppRouter {
           location == AppRoutes.login ||
           location == AppRoutes.signup ||
           location == AppRoutes.home;
-              location == AppRoutes.signup ||
-              location == AppRoutes.home;
 
       final bool isGoingToAdmin = location.startsWith('/admin');
       final bool isGoingToUser =

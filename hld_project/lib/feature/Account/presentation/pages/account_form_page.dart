@@ -1,5 +1,6 @@
 // file: lib/feature/Account/presentation/pages/account_form_page.dart
 // BẢN "SẠCH" 100% - DÙNG USECASE TỪ WIDGET
+// "DIRTY" VERSION - FIXED REDIRECT ERROR ON CREATE
 
 import 'package:firebase_core/firebase_core.dart' as fb_auth;
 import 'package:flutter/material.dart';
@@ -10,18 +11,18 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // <-- CẦN CÓ
-import 'package:cloud_firestore/cloud_firestore.dart'; // <-- CẦN CÓ
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // <-- REQUIRED
+import 'package:cloud_firestore/cloud_firestore.dart'; // <-- REQUIRED
 
-// (XÓA HẾT IMPORT "BẨN")
-// import 'package:hld_project/feature/Account/data/datasource/account_remote_datasource.dart';
-// import 'package:hld_project/feature/Account/data/repositories/account_repository_impl.dart';
+// === "DIRTY" IMPORT: UI IMPORTS DATA LAYER DIRECTLY ===
+import 'package:hld_project/feature/Account/data/datasource/account_remote_datasource.dart';
+import 'package:hld_project/feature/Account/data/repositories/account_repository_impl.dart';
 
-// === IMPORT ENTITY, USECASE, VÀ CÁC PAGE LIÊN QUAN ===
+// === IMPORT ENTITY, USECASE, AND RELATED PAGES ===
 import 'package:hld_project/feature/Account/domain/entities/account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/create_account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/update_account.dart';
-import 'package:hld_project/feature/Account/data/model/account_model.dart'; // <-- CẦN CÓ
+import 'package:hld_project/feature/Account/data/model/account_model.dart'; // <-- REQUIRED
 
 class AccountFormPage extends StatefulWidget {
   final Account? account;
@@ -58,25 +59,19 @@ class _AccountFormPageState extends State<AccountFormPage> {
   bool _isSaving = false;
   Uint8List? _newAvatarBytes;
 
-  // === XÓA BIẾN USECASE "BẨN" ===
-  // late UpdateAccount _updateUseCase;
-  late Account _originalAccount; // Biến giữ Entity gốc
+ 
+  late Account _originalAccount; 
 
-  // 2. INIT STATE
+
   @override
   void initState() {
     super.initState();
-
-    // === XÓA HẾT PHẦN CODE "BẨN" ===
-    // (dataSource = ..., repository = ..., _updateUseCase = ...)
-    // =================================
-
-    // (Code khởi tạo controller - GIỮ NGUYÊN)
+    
     final isEditing = widget.account != null;
     if (isEditing) {
       _originalAccount = widget.account!;
     } else {
-      // Tạo một Account rỗng cho chế độ Create
+      // Create an empty Account for Create mode
       final now = DateTime.now();
       _originalAccount = Account(
           id: '', name: '', email: '', phone: '', gender: 'Male', dob: '',
@@ -108,7 +103,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
     super.dispose();
   }
 
-  // (Hàm _pickImage và _selectDate giữ nguyên)
+  // (_pickImage and _selectDate functions remain unchanged)
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
@@ -135,7 +130,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
     }
   }
 
-  // 4. HÀM LƯU (SỬA LẠI LOGIC CREATE VÀ DÙNG USECASE "SẠCH")
+
   Future<void> _saveForm() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _isSaving = true; });
@@ -144,43 +139,47 @@ class _AccountFormPageState extends State<AccountFormPage> {
       final now = DateTime.now();
       String newAvatarData = _originalAccount.avatarUrl;
 
-      // === BƯỚC 1: ENCODE ẢNH (NẾU CÓ) ===
+      // === STEP 1: ENCODE IMAGE (IF ANY) ===
       if (_newAvatarBytes != null) {
         String base64Image = base64Encode(_newAvatarBytes!);
         newAvatarData = 'data:image/jpeg;base64,$base64Image';
         if (newAvatarData.length > 1000000) {
-          throw Exception('The image is too large (over 1MB), Firestore does not allow saving it.');
+          throw Exception('Image is too large (over 1MB), Firestore cannot save.');
         }
       }
 
-      // === BƯỚC 2: CHỌN LOGIC (CREATE / EDIT) ===
+      // === STEP 2: CHOOSE LOGIC (CREATE / EDIT) ===
       if (widget.account == null) {
-        // --- LOGIC CREATE (TẠO MỚI) ---
+        // --- CREATE LOGIC (NEW) ---
 
-        // (Code tạo Auth User vẫn phải "bẩn" ở đây
-        // vì CreateAccountUseCase của mày đéo tạo Auth)
-
-        // === SỬA: DÙNG APP TẠM ĐỂ TRÁNH BỊ ĐÁ RA ===
+        
         final currentApp = fb_auth.FirebaseAuth.instance.app;
+
+        // 2. Create a temporary app (with a random name)
         final String tempAppName = 'tempCreateUserApp_${DateTime.now().millisecondsSinceEpoch}';
         final fb_auth.FirebaseApp tempApp = await fb_auth.Firebase.initializeApp(
           name: tempAppName,
           options: currentApp.options,
         );
+
+        // 3. Create an Auth instance from the temporary app
         final fb_auth.FirebaseAuth tempAuth = fb_auth.FirebaseAuth.instanceFor(app: tempApp);
 
+        // 4. CREATE USER WITH TEMP AUTH (SO IT DOESN'T KICK OUT THE ADMIN)
         final userCredential = await tempAuth.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
         final newUid = userCredential.user!.uid;
 
+        // 5. SIGN OUT AND DELETE THE TEMP APP
         await tempAuth.signOut();
         await tempApp.delete();
         // ========================================
 
+        // B. Create Entity to save to Firestore
         final accountToSave = Account(
-          id: newUid,
+          id: newUid, // Use ID from Auth
           createAt: now,
           name: _nameController.text,
           email: _emailController.text.trim(),
@@ -198,7 +197,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
         await widget.createAccountUseCase.call(accountToSave);
 
       } else {
-        // --- LOGIC EDIT (CHỈNH SỬA) ---
+        // --- EDIT LOGIC (MODIFY) ---
         final updatedAccount = Account(
           id: _originalAccount.id,
           createAt: _originalAccount.createAt,
@@ -242,7 +241,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
   Widget build(BuildContext context) {
     final isEditing = widget.account != null; // Biến check mode
 
-    // === LOGIC HIỂN THỊ ẢNH CŨ (BASE64 HOẶC URL) ===
+    // === LOGIC TO DISPLAY OLD IMAGE (BASE64 OR URL) ===
     ImageProvider? currentAvatarImage;
     if (_originalAccount.avatarUrl.startsWith('data:image')) {
       try {
@@ -357,7 +356,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
               ),
               const SizedBox(height: 48),
 
-              // Nút SAVE
+              // SAVE Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -372,7 +371,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
                   ),
                   child: _isSaving
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('SAVE', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      : const Text('Save', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -382,7 +381,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
     );
   }
 
-  // (Các Widget phụ trợ _buildTextField, _buildDatePickerField, _buildRadioButtons giữ nguyên)
+  // (Helper Widgets _buildTextField, _buildDatePickerField, _buildRadioButtons remain unchanged)
   Widget _buildTextField({
     required TextEditingController controller, required String label, required String hintText,
     TextInputType keyboardType = TextInputType.text, String? Function(String?)? validator,

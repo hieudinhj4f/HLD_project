@@ -5,7 +5,7 @@ import '../../../domain/entity/product/product.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
-  final VoidCallback onDetailsPressed; // Callback khi nhấn nút xem chi tiết
+  final VoidCallback onDetailsPressed; // Callback when the details button is pressed
   final VoidCallback onDeletePressed;
   const ProductCard({
     Key? key,
@@ -28,7 +28,7 @@ class ProductCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Hình ảnh sản phẩm
+            // Product image
             Container(
               width: 80,
               height: 80,
@@ -52,7 +52,7 @@ class ProductCard extends StatelessWidget {
             ),
             const SizedBox(width: 16.0),
 
-            // Thông tin sản phẩm
+            // Product information
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,12 +69,12 @@ class ProductCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4.0),
                   Text(
-                    // Có thể thêm thuộc tính packInfo vào Product model nếu muốn hiển thị
-                    // Hoặc lấy từ description và xử lý
-                    '${product.quantity} viên x ${product.price ~/ product.quantity}đ/ viên', // Giả sử price là tổng giá, quantity là tổng số viên
-                    // Hoặc đơn giản hơn: '10 vỉ x 10 viên' như trong hình
-                    // Nếu muốn hiển thị như hình, bạn có thể thêm một thuộc tính 'packInfo' vào Product model
-                    // Ví dụ: '10 vỉ x 10 viên'
+                    // Can add a packInfo attribute to the Product model if desired
+                    // Or get from description and process it
+                    '${product.quantity} units x ${product.price ~/ product.quantity}đ/ unit', // Assuming price is total price, quantity is total units
+                    // Or simpler: '10 blisters x 10 tablets' as in the image
+                    // If you want to display it like the image, you can add a 'packInfo' attribute to the Product model
+                    // Example: '10 blisters x 10 tablets'
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[700],
@@ -84,13 +84,13 @@ class ProductCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4.0),
                   Text(
-                    '${_formatPrice(product.price)}đ/ viên', // Giả sử price là giá 1 viên
-                    // Nếu price là tổng giá 1 pack, bạn sẽ cần tính toán lại
-                    // Hoặc thêm thuộc tính unitPrice vào Product model
+                    '${_formatPrice(product.price)}đ/ unit', // Assuming price is the price per unit
+                    // If price is the total price for 1 pack, you will need to recalculate
+                    // Or add a unitPrice attribute to the Product model
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey, // Màu xám như hình
+                      color: Colors.grey, // Gray color like in the image
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -99,12 +99,12 @@ class ProductCard extends StatelessWidget {
               ),
             ),
 
-            // Nút "Open" / "Xem chi tiết"
-            Column( // Thay đổi từ Align thành Column để chứa nhiều nút
+            // "Open" / "View details" button
+            Column( // Changed from Align to Column to hold multiple buttons
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // 1. Nút "Open" / "Xem chi tiết"
+                // 1. "Open" / "View details" button
                 ElevatedButton(
                   onPressed: onDetailsPressed,
                   style: ElevatedButton.styleFrom(
@@ -113,18 +113,18 @@ class ProductCard extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     elevation: 0,
-                    minimumSize: const Size(80, 35), // Đặt kích thước tối thiểu
+                    minimumSize: const Size(80, 35), // Set minimum size
                   ),
                   child: const Text('Open', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                 ),
 
                 const SizedBox(height: 8),
 
-                // 2. Nút XÓA
+                // 2. DELETE Button
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: onDeletePressed, // <--- SỬ DỤNG CALLBACK XÓA
-                  visualDensity: VisualDensity.compact, // Giảm kích thước vùng chạm
+                  onPressed: onDeletePressed, // <--- USE DELETE CALLBACK
+                  visualDensity: VisualDensity.compact, // Reduce the tap target size
                 ),
               ],
             ),
@@ -134,10 +134,10 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  // Hàm định dạng giá tiền (ví dụ: thêm dấu phẩy)
+  // Price formatting function (e.g., add commas)
   String _formatPrice(double price) {
-    // Có thể sử dụng intl package để định dạng tiền tệ chuyên nghiệp hơn
-    // Ở đây chỉ là ví dụ đơn giản
-    return price.toStringAsFixed(0); // Không hiển thị số lẻ
+    // Can use the intl package for more professional currency formatting
+    // This is just a simple example
+    return price.toStringAsFixed(0); // Do not display decimal places
   }
 }

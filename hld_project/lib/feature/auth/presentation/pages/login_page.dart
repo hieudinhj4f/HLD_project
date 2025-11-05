@@ -11,7 +11,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // --- TỪ FILE LOGIC CỦA BẠN ---
+  // --- FROM YOUR LOGIC FILE ---
   final emailCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   String? error;
@@ -35,11 +35,11 @@ class _LoginPageState extends State<LoginPage> {
         email: emailCtrl.text.trim(),
         password: passCtrl.text,
       );
-      // GoRouter sẽ tự động điều hướng nếu bạn set up
-      // authStateChanges() listener.
+      // GoRouter will automatically navigate if you set up
+      // the authStateChanges() listener.
     } on FirebaseAuthException catch (e) {
       if (mounted) {
-        setState(() => error = _mapFirebaseError(e.code)); // Cải thiện thông báo lỗi
+        setState(() => error = _mapFirebaseError(e.code)); // Improved error message
       }
     } catch (e) {
       if (mounted) {
@@ -52,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // (Tùy chọn) Hàm này giúp hiển thị lỗi thân thiện hơn
+  // (Optional) This function helps display friendlier errors
   String _mapFirebaseError(String code) {
     switch (code) {
       case 'user-not-found':
@@ -68,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // --- TỪ FILE UI CỦA TÔI ---
+  // --- FROM MY UI FILE ---
   static const Color primaryColor = Color(0xFF2DCC70);
   static const Color lightGreenColor = Color(0xFFE0F7E9);
   static const Color scaffoldBgColor = Color(0xFFF7F7F7);
@@ -76,25 +76,25 @@ class _LoginPageState extends State<LoginPage> {
   static const Color subtleTextColor = Color(0xFF757575);
 
   // -----------------------------------------------------------------
-  // --- THÊM MỚI: LOGIC GỬI EMAIL RESET MẬT KHẨU ---
+  // --- NEW ADDITION: LOGIC TO SEND PASSWORD RESET EMAIL ---
   // -----------------------------------------------------------------
   Future<void> _sendResetEmail(String email) async {
-    // Tạm thời vô hiệu hoá nút login để tránh user bấm lung tung
+    // Temporarily disable the login button to avoid user misclicks
     setState(() => _isLoading = true);
 
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
       if (!mounted) return;
-      // Thông báo thành công
+      // Success notification
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Đã gửi link reset. Vui lòng kiểm tra email!"),
+          content: Text("Reset link sent. Please check your email!"),
           backgroundColor: Colors.green,
         ),
       );
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-      // Thông báo lỗi
+      // Error notification
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(_mapFirebaseError(e.code)),
@@ -105,24 +105,24 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Đã xảy ra lỗi. Vui lòng thử lại."),
+          content: Text("An error occurred. Please try again."),
           backgroundColor: Colors.red,
         ),
       );
     } finally {
-      // Mở lại nút login
+      // Re-enable the login button
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
   }
 
-  // --- THÊM MỚI: HIỂN THỊ DIALOG ĐỂ NHẬP EMAIL ---
+  // --- NEW ADDITION: SHOW DIALOG TO ENTER EMAIL ---
   void _showForgotPasswordDialog() {
-    // Controller này chỉ dùng cho cái dialog thôi
+    // This controller is only for the dialog
     final emailResetCtrl = TextEditingController();
 
-    // Nếu user đã nhập email ở form login thì mình lấy luôn cho tiện
+    // If the user already entered an email in the login form, use it
     if (emailCtrl.text.isNotEmpty) {
       emailResetCtrl.text = emailCtrl.text.trim();
     }
@@ -130,40 +130,40 @@ class _LoginPageState extends State<LoginPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Quên Mật Khẩu"),
+        title: const Text("Forgot Password"),
         content: TextField(
           controller: emailResetCtrl,
           decoration: const InputDecoration(
             labelText: "Email",
-            hintText: "Nhập email của bạn...",
+            hintText: "Enter your email...",
           ),
           keyboardType: TextInputType.emailAddress,
           autofocus: true,
         ),
         actions: [
-          // Nút Huỷ
+          // Cancel Button
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("Huỷ"),
+            child: const Text("Cancel"),
           ),
-          // Nút Gửi
+          // Send Button
           ElevatedButton(
             onPressed: () {
               final email = emailResetCtrl.text.trim();
               if (email.isNotEmpty) {
-                Navigator.pop(ctx); // Đóng dialog
-                _sendResetEmail(email); // Gọi hàm gửi link
+                Navigator.pop(ctx); // Close dialog
+                _sendResetEmail(email); // Call the send link function
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-            child: const Text("Gửi link", style: TextStyle(color: Colors.white)),
+            child: const Text("Send Link", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
   }
   // -----------------------------------------------------------------
-  // --- KẾT THÚC PHẦN THÊM MỚI ---
+  // --- END OF NEW ADDITIONS ---
   // -----------------------------------------------------------------
 
 
@@ -174,7 +174,7 @@ class _LoginPageState extends State<LoginPage> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Sóng lượn
+          // 1. Wave
           Positioned(
             bottom: 0,
             left: 0,
@@ -188,7 +188,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          // 2. Form đăng nhập
+          // 2. Login Form
           SafeArea(
             child: SingleChildScrollView(
               child: Padding(
@@ -224,20 +224,20 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 48.0),
 
-                    // --- TÍCH HỢP LOGIC ---
-                    // Trường E-mail
+                    // --- LOGIC INTEGRATION ---
+                    // E-mail Field
                     _buildTextField("E-mail", false, emailCtrl),
                     const SizedBox(height: 20.0),
 
-                    // Trường Password
+                    // Password Field
                     _buildTextField("Password", true, passCtrl),
                     const SizedBox(height: 12.0),
 
-                    // Link Quên mật khẩu
-                    _buildForgotPassword(), // <-- CHỖ NÀY SẼ GỌI HÀM MỚI
+                    // Forgot Password Link
+                    _buildForgotPassword(), // <-- THIS WILL CALL THE NEW FUNCTION
                     const SizedBox(height: 24.0),
 
-                    // --- TÍCH HỢP LOGIC: HIỂN THỊ LỖI ---
+                    // --- LOGIC INTEGRATION: SHOW ERROR ---
                     if (error != null)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 16.0),
@@ -248,12 +248,12 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
 
-                    // --- TÍCH HỢP LOGIC: NÚT SIGN IN & LOADING ---
+                    // --- LOGIC INTEGRATION: SIGN IN BUTTON & LOADING ---
                     _buildSignInButton(),
 
                     const SizedBox(height: 16.0),
 
-                    // --- TÍCH HỢP LOGIC: NÚT ĐĂNG KÝ ---
+                    // --- LOGIC INTEGRATION: SIGN UP BUTTON ---
                     _buildSignUpButton(context),
                   ],
                 ),
@@ -265,13 +265,13 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // --- CẬP NHẬT HELPER WIDGETS ---
+  // --- UPDATED HELPER WIDGETS ---
 
   Widget _buildTextField(String label, bool isPassword, TextEditingController controller) {
     return TextField(
-      controller: controller, // <-- GẮN CONTROLLER
+      controller: controller, // <-- ATTACH CONTROLLER
       obscureText: isPassword,
-      enabled: !_isLoading, // <-- VÔ HIỆU HOÁ KHI LOADING
+      enabled: !_isLoading, // <-- DISABLE WHEN LOADING
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: subtleTextColor),
@@ -285,7 +285,7 @@ class _LoginPageState extends State<LoginPage> {
           borderRadius: BorderRadius.circular(12.0),
           borderSide: const BorderSide(color: primaryColor, width: 2.0),
         ),
-        disabledBorder: OutlineInputBorder( // <-- Thêm style khi bị vô hiệu hoá
+        disabledBorder: OutlineInputBorder( // <-- Add style for disabled state
           borderRadius: BorderRadius.circular(12.0),
           borderSide: BorderSide(color: Colors.grey.shade300, width: 1.0),
         ),
@@ -297,10 +297,10 @@ class _LoginPageState extends State<LoginPage> {
     return Container(
       alignment: Alignment.centerRight,
       child: TextButton(
-        // <-- SỬA Ở ĐÂY: Gọi hàm _showForgotPasswordDialog
+        // <-- MODIFIED HERE: Call _showForgotPasswordDialog
         onPressed: _isLoading ? null : _showForgotPasswordDialog,
         child: const Text(
-          "Quên mật khẩu ?",
+          "Forgot password?",
           style: TextStyle(
             color: subtleTextColor,
             fontSize: 14,
@@ -316,7 +316,7 @@ class _LoginPageState extends State<LoginPage> {
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        // <-- VÔ HIỆU HOÁ KHI LOADING VÀ GẮN HÀM _login
+        // <-- DISABLE WHEN LOADING AND ATTACH _login FUNCTION
         onPressed: _isLoading ? null : _login,
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
@@ -326,7 +326,7 @@ class _LoginPageState extends State<LoginPage> {
           elevation: 4.0,
           shadowColor: primaryColor.withOpacity(0.5),
         ),
-        // <-- HIỂN THỊ VÒNG XOAY KHI LOADING
+        // <-- SHOW SPINNER WHEN LOADING
         child: _isLoading
             ? const SizedBox(
           width: 24,
@@ -337,7 +337,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         )
             : const Text(
-          "Đăng nhập",
+          "Sign In",
           style: TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -348,17 +348,17 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Thêm nút này để khớp với logic của bạn (context.go(AppRoutes.signup))
+  // Add this button to match your logic (context.go(AppRoutes.signup))
   Widget _buildSignUpButton(BuildContext context) {
     return TextButton(
       onPressed: _isLoading ? null : () => context.push(AppRoutes.signup),
       child: const Text.rich(
         TextSpan(
-          text: "Chưa có tài khoản? ",
+          text: "Don't have an account? ",
           style: TextStyle(color: subtleTextColor, fontSize: 14),
           children: [
             TextSpan(
-              text: "Đăng ký",
+              text: "Sign Up",
               style: TextStyle(
                 color: primaryColor,
                 fontWeight: FontWeight.bold,
@@ -371,7 +371,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-// Class CustomClipper để vẽ sóng lượn (giữ nguyên)
+// CustomClipper class to draw the wave (unchanged)
 class WaveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {

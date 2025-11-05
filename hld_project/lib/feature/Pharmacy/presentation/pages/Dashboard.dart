@@ -80,26 +80,26 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       childAspectRatio: 1.25,
                       children: [
                         _KpiCard(
-                          title: 'Tổng Sản Phẩm',
+                          title: 'Total Products',
                           value: isLoading ? '...' : stats.totalProducts.toString(),
                           backgroundColor: isLoading ? adminCardBackground : adminPrimaryGreen,
                           textColor: isLoading ? Colors.black : Colors.white,
                         ),
                         _KpiCard(
-                          title: 'Đã Bán',
+                          title: 'Items Sold',
                           value: isLoading ? '...' : stats.itemsSold.toString(),
                           backgroundColor: adminCardBackground,
                           textColor: Colors.black,
                         ),
                         _KpiCard(
-                          title: 'Doanh Thu Hôm Nay',
+                          title: 'Today\'s Revenue',
                           value: isLoading ? '...' : formatRevenue(stats.todayRevenue),
                           backgroundColor: adminCardBackground,
                           textColor: Colors.black,
                           changeIndicator: _ChangeChip(value: isLoading ? 0 : stats.todayRevenuePercent),
                         ),
                         _KpiCard(
-                          title: 'Tổng Doanh Thu',
+                          title: 'Total Revenue',
                           value: isLoading ? '...' : formatRevenue(stats.totalRevenue),
                           backgroundColor: adminCardBackground,
                           textColor: Colors.black,
@@ -113,7 +113,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Hoạt Động Nhà Cung Cấp', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        Text('Vendor Activity', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), // <-- Đã dịch
                         _WeekDropdown(),
                       ],
                     ),
@@ -173,7 +173,7 @@ class _PharmacySelector extends StatelessWidget {
           children: [
             SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
             SizedBox(width: 16),
-            Text("Đang tải danh sách nhà thuốc...", style: TextStyle(color: Colors.grey)),
+            Text("Loading pharmacy list...", style: TextStyle(color: Colors.grey)), // <-- Đã dịch
           ],
         ),
       );
@@ -192,7 +192,7 @@ class _PharmacySelector extends StatelessWidget {
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange),
             SizedBox(width: 16),
-            Text("Chưa có nhà thuốc nào được gán.", style: TextStyle(color: Colors.grey)),
+            Text("No pharmacies assigned yet.", style: TextStyle(color: Colors.grey)),
           ],
         ),
       );
@@ -210,7 +210,7 @@ class _PharmacySelector extends StatelessWidget {
         child: DropdownButton<String>(
           isExpanded: true,
           value: selectedId,
-          hint: const Text("Chọn nhà thuốc", style: TextStyle(color: Colors.grey)),
+          hint: const Text("Select a pharmacy", style: TextStyle(color: Colors.grey)),
           icon: const Icon(Icons.keyboard_arrow_down, color: adminPrimaryGreen),
           items: allPharmacies.map((pharmacy) {
             return DropdownMenuItem<String>(
@@ -325,7 +325,7 @@ class _WeekDropdown extends StatelessWidget {
         border: Border.all(color: Colors.grey[300]!),
       ),
       child: const Row(children: [
-        Text('Tuần này', style: TextStyle(color: Colors.grey)),
+        Text('This Week', style: TextStyle(color: Colors.grey)), // <-- Đã dịch
         SizedBox(width: 8),
         Icon(Icons.keyboard_arrow_down, color: Colors.grey, size: 20),
       ]),
@@ -349,13 +349,13 @@ class _VendorChart extends StatelessWidget {
         titlesData: FlTitlesData(
           show: true,
           rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles:false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               getTitlesWidget: (value, meta) {
                 const style = TextStyle(color: Colors.grey, fontSize: 14);
-                const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+                const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']; // <-- Đã dịch
                 return SideTitleWidget(meta: meta, child: Text(days[value.toInt()], style: style));
               },
               reservedSize: 38,
@@ -435,17 +435,17 @@ class _PharmacyInfoCard extends StatelessWidget {
                     : Text(pharmacy!.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Row(children: [
-                  const Text('Trạng thái:', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                  const Text('Status:', style: TextStyle(color: Colors.grey, fontSize: 14)), // <-- Đã dịch
                   const SizedBox(width: 8),
                   isLoading ? _shimmer(100, 20) : _stateChip(pharmacy!.state),
                 ]),
                 const SizedBox(height: 4),
                 Row(children: [
-                  const Text('Nhân viên:', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                  const Text('Staff:', style: TextStyle(color: Colors.grey, fontSize: 14)), // <-- Đã dịch
                   const SizedBox(width: 8),
                   isLoading
                       ? _shimmer(50, 16)
-                      : Text('${pharmacy!.staffCount} người', style: const TextStyle(fontWeight: FontWeight.w500)),
+                      : Text('${pharmacy!.staffCount} people', style: const TextStyle(fontWeight: FontWeight.w500)), // <-- Đã dịch
                 ]),
               ],
             ),

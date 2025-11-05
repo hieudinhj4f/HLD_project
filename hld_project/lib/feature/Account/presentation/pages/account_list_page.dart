@@ -49,7 +49,6 @@ class _AccountListPageState extends State<AccountListPage> {
   // late GetAccount _getAccountUseCase;
   // ... (xóa 3 cái kia)
 
-  // (State variables)
   List<Account> _allAccounts = [];
   List<Account> _filteredAccounts = [];
   bool _isLoading = false;
@@ -66,7 +65,7 @@ class _AccountListPageState extends State<AccountListPage> {
     // (Không cần tự tạo dataSource, repository...)
     // ==========================================
 
-    _loadAccounts(); // Tải data
+    _loadAccounts();
   }
 
   @override
@@ -297,7 +296,7 @@ class _AccountListPageState extends State<AccountListPage> {
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: Colors.grey.shade200,
-                  backgroundImage: avatarImage, // <-- DÙNG BIẾN MỚI
+                  backgroundImage: avatarImage,
                   child: (avatarImage == null)
                       ? const Icon(Iconsax.user, color: Colors.grey)
                       : null,
