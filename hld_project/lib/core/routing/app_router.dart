@@ -86,17 +86,11 @@ import 'app_routers.dart';
 
 class AppRouter {
   final AuthProvider authProvider;
-
-  // === 4. LƯU TRỮ CÁC USECASE ===
-  // (Lấy từ constructor, được truyền từ main.dart)
-
   // Pharmacy
   final GetAllPharmacy getAllPharmacy;
   final CreatePharmacy createPharmacy;
   final UpdatePharmacy updatePharmacy;
   final DeletePharmacy deletePharmacy;
-
-  // (Bạn cũng cần thêm các Usecase khác mà main.dart tạo)
   // Product
   final GetAllProduct getAllProduct;
   final CreateProduct createProduct;
@@ -108,14 +102,12 @@ class AppRouter {
   final CreateDoctor createDoctor;
   final UpdateDoctor updateDoctor;
   final DeleteDoctor deleteDoctor;
-
- 
+  // Account
   final GetAccount getAccountUseCase;
   final CreateAccount createAccountUseCase;
   final UpdateAccount updateAccountUseCase;
   final DeleteAccount deleteAccountUseCase;
 
-  // === 5. CẬP NHẬT CONSTRUCTOR ===
   AppRouter({
     required this.authProvider,
 
@@ -131,7 +123,7 @@ class AppRouter {
     required this.updateProduct,
     required this.deleteProduct,
 
-    // Doctor (Giả sử bạn sẽ thêm vào main.dart)
+    // Doctor
     required this.getAllDoctors,
     required this.createDoctor,
     required this.updateDoctor,
@@ -189,18 +181,15 @@ class AppRouter {
     },
 
     routes: [
-      // (Các route auth giữ nguyên)
       GoRoute(path: AppRoutes.login,  builder: (context, state) => const LoginPage()),
       GoRoute(path: AppRoutes.splash,  builder: (context, state) => const SplashScreen()),
       GoRoute(path: AppRoutes.signup, builder: (context, state) => const SignupPage()),
 
-      // --- ADMIN SHELL (ĐÃ SỬA) ---
       // ADMIN SHELL
       ShellRoute(
         builder: (context, state, child) =>
             AppShell(tabs: _adminTabs, child: child),
         routes: [
-          // app_router.dart
           GoRoute(
             path: '/admin/home',
             builder: (context, state) => const AdminHomePage(),
@@ -278,7 +267,6 @@ class AppRouter {
           )
         ],
       ),
-
       // USER SHELL
       ShellRoute(
         builder: (context, state, child) =>

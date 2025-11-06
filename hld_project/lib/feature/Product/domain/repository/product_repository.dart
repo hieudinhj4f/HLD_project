@@ -11,4 +11,6 @@ abstract class ProductRepository{
 
   Future<Product?> getProductById(String id);
 
+  Future<int?> getTotalSold(String pharmacyId);
+
 }

@@ -12,23 +12,23 @@ class GetGlobalDashboardStats {
     if (ids.isEmpty) return KpiStats.zero();
 
     int totalProducts = 0;
-    int itemsSold = 0;
+    int totalSold = 0;
     double todayRevenue = 0;
-    double totalRevenue = 0; // ← CỘNG TỪ TỪNG CHI NHÁNH
+    double totalRevenue = 0;
 
     for (final id in ids) {
       final stats = await repository.getKpiStatsForPharmacy(id);
       totalProducts += stats.totalProducts;
-      itemsSold += stats.itemsSold;
+      totalSold += stats.totalSold;
       todayRevenue += stats.todayRevenue;
-      totalRevenue += stats.totalRevenue; // ← CỘNG TỪNG CHI NHÁNH
+      totalRevenue += stats.totalRevenue;
     }
 
     return KpiStats(
       totalProducts: totalProducts,
-      itemsSold: itemsSold,
+      totalSold: totalSold,
       todayRevenue: todayRevenue,
-      totalRevenue: totalRevenue, // ← TỔNG CỦA TẤT CẢ CHI NHÁNH
+      totalRevenue: totalRevenue,
       todayRevenuePercent: 0.0,
       totalRevenuePercent: 0.0,
     );

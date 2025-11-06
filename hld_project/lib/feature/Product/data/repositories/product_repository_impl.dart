@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:hld_project/feature/Product/domain/entity/product/product.dart';
 import 'package:hld_project/feature/Product/domain/repository/product_repository.dart';
 
@@ -43,6 +45,11 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<List<Product>> getAllProducts() async {
     final models = await _remoteDataSource.getAll();
     return models.map((model) => model.toEntity()).toList();
+  }
+
+  @override
+  Future<int> getTotalSold(String pharmacyId) async {
+    return await _remoteDataSource.getTotalSold(pharmacyId)  ??0;
   }
 }
 

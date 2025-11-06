@@ -36,6 +36,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
   late TextEditingController _descriptionController;
   late TextEditingController _categoriesController;
   late TextEditingController _pharmacyController;
+  late TextEditingController _soldController;
   // (categoryId would be better, but using categories (String) based on your code)
 
   // State variable for loading
@@ -56,6 +57,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
     _descriptionController = TextEditingController(text: isEditing ? product!.description : '');
     _categoriesController = TextEditingController(text: isEditing ? product!.categories : '');
     _pharmacyController = TextEditingController(text: isEditing ? product?.pharmacyId : '');
+    _soldController = TextEditingController(text: product != null ? product.sold.toString() : '0'
+    );
     // The 2 Timestamp variables you declared don't need to be state variables,
     // because their values are set on SAVE, not entered by the user.
     // We will handle them in the _saveForm() function.
@@ -71,8 +74,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
     _imageUrlController.dispose();
     _descriptionController.dispose();
     _categoriesController.dispose();
-    // _categoriesController.dispose(); // <-- LỖI GÕ MÁY: BỊ LẶP
-    _pharmacyController.dispose(); // <-- ĐÃ SỬA
+    _pharmacyController.dispose();
+    _soldController.dispose();
+
 
 
     super.dispose();
@@ -95,11 +99,11 @@ class _ProductFormPageState extends State<ProductFormPage> {
         price: double.parse(_priceController.text),
         quantity: int.parse(_quantityController.text),
         imageUrl: _imageUrlController.text,
-        // === FIX: Get values from controllers instead of empty strings ===
         description: _descriptionController.text,
         categories: _categoriesController.text,
         createdAt: widget.product?.createdAt ?? now,
         updateAt: now,
+        sold: widget.product?.sold ?? 0,
         pharmacyId: _pharmacyController.text.trim(),
       );
 
@@ -222,7 +226,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   return null;
                 },
               ),
-              // ================================
             ],
           ),
         ),

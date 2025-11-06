@@ -8,7 +8,8 @@ class Product {
   final String imageUrl;
   final double price;
   final int quantity;
-  final String pharmacyId; // 🔹 thêm khóa ngoại
+  final String pharmacyId;
+  final int sold;
   final Timestamp createdAt;
   final Timestamp updateAt;
 
@@ -20,7 +21,8 @@ class Product {
     required this.imageUrl,
     required this.price,
     required this.quantity,
-    required this.pharmacyId, // 🔹 thêm vào constructor
+    required this.pharmacyId,
+    required this.sold,
     Timestamp? createdAt,
     Timestamp? updateAt,
   })  : createdAt = createdAt ?? Timestamp.now(),
@@ -36,7 +38,8 @@ class Product {
       'imageUrl': imageUrl,
       'price': price,
       'quantity': quantity,
-      'pharmacyId': pharmacyId, // ghi xuống Firestore
+      'pharmacyId': pharmacyId,
+      'sold': sold,
       'createdAt': createdAt,
       'updateAt': updateAt,
     };
@@ -51,7 +54,8 @@ class Product {
       imageUrl: map['imageUrl'] ?? '',
       price: (map['price'] ?? 0).toDouble(),
       quantity: (map['quantity'] ?? 0).toInt(),
-      pharmacyId: map['pharmacyId'] ?? '', // đọc lại từ Firestore
+      pharmacyId: map['pharmacyId'] ?? '',
+      sold: (map['sold'] ?? 0).toInt(),
       createdAt: map['createdAt'],
       updateAt: map['updateAt'],
     );

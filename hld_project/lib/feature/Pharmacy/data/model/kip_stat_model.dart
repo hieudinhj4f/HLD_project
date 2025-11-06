@@ -3,7 +3,7 @@ import 'package:hld_project/feature/Pharmacy/domain/entity/kpi_stats.dart';
 
 class KpiStatsModel extends KpiStats {
   KpiStatsModel({
-    required super.itemsSold,
+    required super.totalSold,
     required super.todayRevenue,
     required super.todayRevenuePercent,
     required super.totalRevenue,
@@ -16,7 +16,7 @@ class KpiStatsModel extends KpiStats {
 
     return KpiStatsModel(
       // BỎ totalProducts → KHÔNG LẤY TỪ stats/daily
-      itemsSold: (data['itemsSold'] as num?)?.toInt() ?? 0,
+      totalSold: (data['totalSold'] as num?)?.toInt() ?? 0,
       todayRevenue: (data['todayRevenue'] as num?)?.toDouble() ?? 0.0,
       todayRevenuePercent: (data['todayRevenuePercent'] as num?)?.toDouble() ?? 0.0,
       totalRevenue: (data['totalRevenue'] as num?)?.toDouble() ?? 0.0,
@@ -28,11 +28,22 @@ class KpiStatsModel extends KpiStats {
   KpiStats toEntity() {
     return KpiStats(
       totalProducts: totalProducts, // ← SẼ ĐƯỢC GHI ĐÈ BỞI GetTotalProductsUseCase
-      itemsSold: itemsSold,
+      totalSold: totalSold,
       todayRevenue: todayRevenue,
       todayRevenuePercent: todayRevenuePercent,
       totalRevenue: totalRevenue,
       totalRevenuePercent: totalRevenuePercent,
+    );
+  }
+
+  factory KpiStatsModel.zero() {
+    return KpiStatsModel(
+      totalProducts: 0,
+      totalSold: 0,
+      todayRevenue: 0.0,
+      todayRevenuePercent: 0.0,
+      totalRevenue: 0.0,
+      totalRevenuePercent: 0.0,
     );
   }
 }

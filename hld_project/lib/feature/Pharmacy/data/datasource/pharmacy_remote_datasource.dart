@@ -1,30 +1,28 @@
-import 'package:cloud_firestore/cloud_firestore.dart'; // <-- 1. THÊM IMPORT NÀY
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/data/firebase_remote_datasource.dart';
 import '../model/kip_stat_model.dart';
 import '../model/pharmacy_model.dart';
 
 abstract class PharmacyRemoteDataSource {
-  Future<List<PharmacyModel>> getAll();
-  Future<PharmacyModel?> getPharmacyById(String id);
+  Future<List<PharmacyModel>> getAll(); // Admin: lấy tất cả nhà thuốc
+  Future<PharmacyModel?> getPharmacyById(String id); // Theo ID cụ thể
+  Future<PharmacyModel?> getPharmacyByAuth(String pharmacyId); // Theo người đăng nhập
+
   Future<void> add(PharmacyModel pharmacy);
   Future<void> update(PharmacyModel pharmacy);
   Future<void> delete(String id);
 
-  // Dashboard
+  // Dashboard (cho 1 nhà thuốc)
   Future<KpiStatsModel> getDashboardStats(String pharmacyId);
-
   Future<List<double>> getVendorActivity(String pharmacyId);
 
-  // Global
+  // Global (cho Admin)
   Future<List<String>> getAllPharmacyIds();
   Future<KpiStatsModel> getKpiStatsForPharmacy(String pharmacyId);
 }
 
 class PharmacyRemoteDataSourceImpl implements PharmacyRemoteDataSource {
-  // Generic helper cho PharmacyModel
   final FirebaseRemoteDS<PharmacyModel> _remoteSource;
-
-  // Firestore instance cho custom queries
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   PharmacyRemoteDataSourceImpl()
@@ -37,12 +35,21 @@ class PharmacyRemoteDataSourceImpl implements PharmacyRemoteDataSource {
   // === CRUD PHARMACY ===
   @override
   Future<List<PharmacyModel>> getAll() async {
+    // Admin dùng: lấy tất cả nhà thuốc
     return await _remoteSource.getAll();
   }
 
   @override
   Future<PharmacyModel?> getPharmacyById(String id) async {
     return await _remoteSource.getById(id);
+  }
+
+  @override
+  Future<PharmacyModel?> getPharmacyByAuth(String pharmacyId) async {
+    // Chỉ lấy nhà thuốc hiện tại (ví dụ khi người bán login)
+    final doc = await _firestore.collection('pharmacy').doc(pharmacyId).get();
+    if (!doc.exists) return null;
+    return PharmacyModel.fromFirestore(doc);
   }
 
   @override
@@ -60,93 +67,92 @@ class PharmacyRemoteDataSourceImpl implements PharmacyRemoteDataSource {
     await _remoteSource.delete(id);
   }
 
+  // === DASHBOARD DATA ===
   @override
   Future<KpiStatsModel> getDashboardStats(String pharmacyId) async {
-    final doc = await _firestore
-        .collection('pharmacy')
-        .doc(pharmacyId)
-        .collection('stats')
-        .doc('daily')
-        .get();
+    try {
+      final doc = await _firestore
+          .collection('pharmacy')
+          .doc(pharmacyId)
+          .collection('stats')
+          .doc('daily')
+          .get();
 
-    if (!doc.exists) {
-      return  KpiStatsModel(
-        totalProducts: 0,
-        itemsSold: 0,
-        todayRevenue: 0.0,
-        todayRevenuePercent: 0.0,
-        totalRevenue: 0.0,
-        totalRevenuePercent: 0.0,
-      );
+      if (!doc.exists) {
+        return KpiStatsModel(
+          totalProducts: 0,
+          totalSold: 0,
+          todayRevenue: 0.0,
+          todayRevenuePercent: 0.0,
+          totalRevenue: 0.0,
+          totalRevenuePercent: 0.0,
+        );
+      }
+
+      return KpiStatsModel.fromFirestore(doc);
+    } catch (e) {
+      print("🔥 Error in getDashboardStats($pharmacyId): $e");
+      return KpiStatsModel.zero();
     }
-
-    return KpiStatsModel.fromFirestore(doc);
   }
 
   @override
   Future<List<double>> getVendorActivity(String pharmacyId) async {
-    final doc = await _firestore
-        .collection('pharmacy')
-        .doc(pharmacyId)
-        .collection('stats')
-        .doc('activity_week')
-        .get();
+    try {
+      final doc = await _firestore
+          .collection('pharmacy')
+          .doc(pharmacyId)
+          .collection('stats')
+          .doc('activity_week')
+          .get();
 
-    if (!doc.exists || !doc.data()!.containsKey('last7days')) {
+      if (!doc.exists || !doc.data()!.containsKey('last7days')) {
+        return List.filled(7, 0.0);
+      }
+
+      final data = doc.data()!;
+      final rawList = data['last7days'] as List<dynamic>? ?? [];
+      final result = List<double>.filled(7, 0.0);
+
+      for (int i = 0; i < rawList.length && i < 7; i++) {
+        final value = rawList[i];
+        if (value is num) result[i] = value.toDouble();
+      }
+
+      return result;
+    } catch (e) {
+      print("🔥 Error in getVendorActivity($pharmacyId): $e");
       return List.filled(7, 0.0);
     }
-
-    final data = doc.data()!;
-    final rawList = data['last7days'] as List<dynamic>? ?? [];
-
-    // Tạo mảng 7 phần tử, mặc định 0.0
-    final result = List<double>.filled(7, 0.0);
-
-    // Gán dữ liệu thật (tối đa 7 phần tử)
-    for (int i = 0; i < rawList.length && i < 7; i++) {
-      final value = rawList[i];
-      if (value is num) {
-        result[i] = value.toDouble();
-      }
-    }
-
-    return result;
   }
 
-  // === GLOBAL STATS (CHO ADMIN) ===
+  // === GLOBAL ADMIN DASHBOARD ===
   @override
   Future<List<String>> getAllPharmacyIds() async {
     final snapshot = await _firestore.collection('pharmacy').get();
-
-    // CHUYỂN snapshot → List<String>
-    final List<String> ids = snapshot.docs.map((doc) => doc.id).toList();
-
-    // IN RA DANH SÁCH ID → PHẢI LÀ [pham_001, pham_002, ...]
-    print("PHARMACY IDS: $ids");
-
+    final ids = snapshot.docs.map((doc) => doc.id).toList();
+    print("✅ PHARMACY IDS: $ids");
     return ids;
   }
 
   @override
   Future<KpiStatsModel> getKpiStatsForPharmacy(String pharmacyId) async {
-    final doc = await _firestore
-        .collection('pharmacy')
-        .doc(pharmacyId)
-        .collection('stats')
-        .doc('daily')
-        .get();
+    try {
+      final doc = await _firestore
+          .collection('pharmacy')
+          .doc(pharmacyId)
+          .collection('stats')
+          .doc('daily')
+          .get();
 
-    if (!doc.exists) {
-      return KpiStatsModel(
-        totalProducts: 0,
-        itemsSold: 0,
-        todayRevenue: 0.0,
-        todayRevenuePercent: 0.0,
-        totalRevenue: 0.0,
-        totalRevenuePercent: 0.0,
-      );
+      if (!doc.exists) {
+        return KpiStatsModel.zero();
+      }
+
+      return KpiStatsModel.fromFirestore(doc);
+    } catch (e) {
+      print("🔥 Error in getKpiStatsForPharmacy($pharmacyId): $e");
+      return KpiStatsModel.zero();
     }
-
-    return KpiStatsModel.fromFirestore(doc);
   }
 }

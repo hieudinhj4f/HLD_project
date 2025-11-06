@@ -1,8 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
+
 import '../../../../core/data/firebase_remote_datasource.dart';
 import '../model/product_model.dart';
 
 abstract class ProductRemoteDataSource {
   Future<List<ProductModel>> getAll();
+  Future<int?> getTotalSold(String pharmacyID);
   Future<ProductModel?> getProduct(String id);
   Future<void> add(ProductModel product);
   Future<void> update(ProductModel product);
@@ -45,5 +49,24 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   @override
   Future<void> delete(String id) async {
     await _remoteSource.delete(id);
+  }
+
+  @override
+  Future<int> getTotalSold(String pharmacyId) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('product')
+          .where('pharmacyId', isEqualTo: pharmacyId)
+          .get();
+
+      int totalSold = 0;
+      for (final doc in snapshot.docs) {
+        totalSold += (doc['sold'] ?? 0) as int;
+      }
+      return totalSold;
+    } catch (e) {
+      debugPrint('Error in getTotalSold: $e');
+      return 0;
+    }
   }
 }

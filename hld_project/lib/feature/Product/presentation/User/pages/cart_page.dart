@@ -90,6 +90,7 @@ class _CartPageState extends State<CartPage> {
         if (productSnap.exists) {
           batch.update(productRef, {
             'quantity': FieldValue.increment(-qtyBought),
+            'sold': FieldValue.increment(qtyBought),
           });
         }
         // If it doesn't exist -> SKIP, NO ERROR

@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hld_project/feature/Pharmacy/domain/usecase/get_total_products.dart';
+import 'package:hld_project/feature/Product/domain/usecase/get_total_sold.dart';
 import 'package:provider/provider.dart';
 import 'core/config/firebase_env.dart';
 import 'core/routing/app_router.dart';
@@ -110,6 +111,7 @@ Future<void> main() async {
   final updateProduct = UpdateProduct(productRepo);
   final deleteProduct = DeleteProduct(productRepo);
   final getAllProductUsecase = GetTotalProductsUseCase(pharmacyRepo);
+  final GetTotalSold = getTotalSold(productRepo);
 
   // Doctor (Admin)
   final getAllDoctors = GetAllDoctor(doctorRepo);
@@ -136,6 +138,7 @@ Future<void> main() async {
     getPharmacyInfo: getPharmacyById,
     getAllPharmacies: getAllPharmacies,
     getTotalProducts: getAllProductUsecase,
+    getTotalSold: GetTotalSold,
   );
 
   // === APP ROUTER ===

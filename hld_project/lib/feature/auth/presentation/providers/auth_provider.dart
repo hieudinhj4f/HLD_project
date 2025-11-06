@@ -13,8 +13,9 @@ class AuthProvider with ChangeNotifier {
   AuthProvider() {
     FirebaseAuth.instance.authStateChanges().listen(_onAuthStateChanged);
   }
-
+  //Quản lý trạng thái đăng nhập
   Future<void> _onAuthStateChanged(User? firebaseUser) async {
+    //Trạng thái đăng xuất
     if (firebaseUser == null) {
       if (_user != null) {
         _user = null;
@@ -22,7 +23,6 @@ class AuthProvider with ChangeNotifier {
       }
       return;
     }
-
     try {
       final doc = await FirebaseFirestore.instance
           .collection('users')
@@ -52,6 +52,7 @@ class AuthProvider with ChangeNotifier {
 
     notifyListeners();
   }
+  //Đăng xuất
   Future<void> signOut() async {
     try {
       await FirebaseAuth.instance.signOut();
@@ -60,6 +61,7 @@ class AuthProvider with ChangeNotifier {
       rethrow;
     }
   }
+  //Đăng nhập
   Future<void> signInWithEmail(String email, String password) async {
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(

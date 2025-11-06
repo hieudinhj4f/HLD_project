@@ -87,7 +87,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         ),
                         _KpiCard(
                           title: 'Items Sold',
-                          value: isLoading ? '...' : stats.itemsSold.toString(),
+                          value: isLoading ? '...' : stats.totalSold.toString(),
                           backgroundColor: adminCardBackground,
                           textColor: Colors.black,
                         ),

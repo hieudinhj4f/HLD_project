@@ -1,7 +1,7 @@
 // lib/feature/Pharmacy/domain/entity/kpi_stats.dart
 class KpiStats {
   final int totalProducts;
-  final int itemsSold;
+  final int totalSold;
   final double todayRevenue;
   final double todayRevenuePercent;
   final double totalRevenue;
@@ -9,7 +9,7 @@ class KpiStats {
 
   KpiStats({
     this.totalProducts = 0,
-    this.itemsSold = 0,
+    this.totalSold = 0,
     this.todayRevenue = 0.0,
     this.todayRevenuePercent = 0.0,
     this.totalRevenue = 0.0,
@@ -21,7 +21,7 @@ class KpiStats {
   /// Tạo bản sao với các giá trị mới
   KpiStats copyWith({
     int? totalProducts,
-    int? itemsSold,
+    int? totalSold,
     double? todayRevenue,
     double? todayRevenuePercent,
     double? totalRevenue,
@@ -29,7 +29,7 @@ class KpiStats {
   }) {
     return KpiStats(
       totalProducts: totalProducts ?? this.totalProducts,
-      itemsSold: itemsSold ?? this.itemsSold,
+      totalSold: totalSold ?? this.totalSold,
       todayRevenue: todayRevenue ?? this.todayRevenue,
       todayRevenuePercent: todayRevenuePercent ?? this.todayRevenuePercent,
       totalRevenue: totalRevenue ?? this.totalRevenue,
@@ -39,6 +39,6 @@ class KpiStats {
 
   @override
   String toString() {
-    return 'KpiStats(totalProducts: $totalProducts, itemsSold: $itemsSold, todayRevenue: $todayRevenue)';
+    return 'KpiStats(totalProducts: $totalProducts, itemsSold: $totalSold, todayRevenue: $todayRevenue)';
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entity/product/product.dart';
 
@@ -10,7 +12,8 @@ class ProductModel extends Product {
     required super.imageUrl,
     required super.price,
     required super.quantity,
-    required super.pharmacyId, // ✅ Thêm vào constructor
+    required super.pharmacyId,
+    required super.sold,
     required super.createdAt,
     required super.updateAt,
   });
@@ -25,7 +28,8 @@ class ProductModel extends Product {
       imageUrl: data['imageUrl'] ?? '',
       price: (data['price'] as num?)?.toDouble() ?? 0.0,
       quantity: data['quantity'] ?? 0,
-      pharmacyId: data['pharmacyId'] ?? '', // ✅
+      pharmacyId: data['pharmacyId'] ?? '',
+      sold: data['sold'] ?? 0,// ✅
       createdAt: data['createdAt'] as Timestamp? ?? Timestamp.now(),
       updateAt: data['updateAt'] as Timestamp? ?? Timestamp.now(),
     );
@@ -40,7 +44,8 @@ class ProductModel extends Product {
       imageUrl: product.imageUrl,
       price: product.price,
       quantity: product.quantity,
-      pharmacyId: product.pharmacyId, // ✅
+      pharmacyId: product.pharmacyId,
+      sold: product.sold,
       createdAt: product.createdAt,
       updateAt: product.updateAt,
     );
@@ -54,7 +59,8 @@ class ProductModel extends Product {
       'imageUrl': imageUrl,
       'price': price,
       'quantity': quantity,
-      'pharmacyId': pharmacyId, // ✅
+      'pharmacyId': pharmacyId,
+      'sold': sold,
       'createdAt': createdAt,
       'updateAt': updateAt,
     };
@@ -72,6 +78,7 @@ class ProductModel extends Product {
       price: price,
       quantity: quantity,
       pharmacyId: pharmacyId,
+      sold: sold,
       createdAt: createdAt,
       updateAt: updateAt,
     );

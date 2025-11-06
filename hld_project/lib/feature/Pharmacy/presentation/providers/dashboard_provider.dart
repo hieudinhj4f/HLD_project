@@ -2,24 +2,27 @@
 import 'package:flutter/material.dart';
 import 'package:hld_project/feature/Pharmacy/domain/usecase/getAllPharmacy.dart';
 import 'package:hld_project/feature/Pharmacy/domain/usecase/get_global_dashboard_stats.dart';
+import 'package:hld_project/feature/Product/domain/usecase/get_total_sold.dart';
 import 'package:hld_project/feature/auth/presentation/providers/auth_provider.dart';
 import 'package:hld_project/feature/Pharmacy/domain/entity/pharmacy.dart';
 import 'package:hld_project/feature/Pharmacy/domain/entity/kpi_stats.dart';
-
 import 'package:hld_project/feature/Pharmacy/domain/usecase/get_vendor_activity.dart';
 import 'package:hld_project/feature/Pharmacy/domain/usecase/get_pharmacy_by_id.dart';
+import 'package:hld_project/feature/Product/domain/usecase/get_total_sold.dart';
 
-
-import '../../domain/usecase/get_total_products.dart';
+import '../../domain/usecase/get_total_products.dart'; // ĐÃ SỬA
 
 class DashboardProvider with ChangeNotifier {
   // === DI: Usecase & AuthProvider ===
+
+
   final AuthProvider? _authProvider;
   final GetGlobalDashboardStats _getDashboardStats;
   final GetVendorActivity _getVendorActivity;
   final GetPharmacyById _getPharmacyInfo;
   final GetAllPharmacy _getAllPharmacies;
   final GetTotalProductsUseCase _getTotalProducts;
+  final getTotalSold _getTotalSold;
 
   DashboardProvider({
     required AuthProvider? authProvider,
@@ -28,19 +31,21 @@ class DashboardProvider with ChangeNotifier {
     required GetPharmacyById getPharmacyInfo,
     required GetAllPharmacy getAllPharmacies,
     required GetTotalProductsUseCase getTotalProducts,
+    required getTotalSold getTotalSold,
   })  : _authProvider = authProvider,
         _getDashboardStats = getDashboardStats,
         _getVendorActivity = getVendorActivity,
         _getPharmacyInfo = getPharmacyInfo,
         _getAllPharmacies = getAllPharmacies,
-        _getTotalProducts = getTotalProducts; // ← ĐÃ SỬA
-
+        _getTotalProducts = getTotalProducts,
+        _getTotalSold = getTotalSold;
   // === State ===
   bool _isLoading = false;
   String? _error;
   KpiStats _stats = KpiStats.zero();
   List<double> _chartData = List.filled(7, 0.0);
   Pharmacy? _pharmacy;
+  int _totalSold = 0;
 
   // Dropdown
   bool _isListLoading = false;
@@ -57,6 +62,7 @@ class DashboardProvider with ChangeNotifier {
   bool get isListLoading => _isListLoading;
   List<Pharmacy> get allAdminPharmacies => _allAdminPharmacies;
   String? get selectedPharmacyId => _selectedPharmacyId;
+  int get totalSold => _totalSold; // THÊM GETTER
 
   // === INITIAL LOAD ===
   Future<void> fetchInitialData() async {
@@ -119,17 +125,20 @@ class DashboardProvider with ChangeNotifier {
         _getDashboardStats(),
         _getVendorActivity(_selectedPharmacyId!),
         _getPharmacyInfo(_selectedPharmacyId!),
-        _getTotalProducts(_selectedPharmacyId!), // ← ĐÃ THÊM
+        _getTotalProducts(_selectedPharmacyId!),
+        _getTotalSold(_selectedPharmacyId!), // THÊM: TỔNG SOLD
       ], eagerError: true);
 
       final baseStats = results[0] as KpiStats;
       final chartData = results[1] as List<double>;
       final pharmacy = results[2] as Pharmacy?;
       final totalProducts = results[3] as int;
+      final totalSold = results[4] as int; // LẤY TỔNG SOLD
 
-      _stats = baseStats.copyWith(totalProducts: totalProducts); // ← GÁN TỔNG TỒN KHO
+      _stats = baseStats.copyWith(totalProducts: totalProducts);
       _chartData = List<double>.from(chartData);
       _pharmacy = pharmacy;
+      _totalSold = totalSold; // GÁN VÀO STATE
       _error = null;
     } catch (e) {
       _error = "Lỗi tải dữ liệu: $e";
@@ -145,6 +154,7 @@ class DashboardProvider with ChangeNotifier {
     _stats = KpiStats.zero();
     _chartData = List.filled(7, 0.0);
     _pharmacy = null;
+    _totalSold = 0; // RESET SOLD
     _error = null;
     _isLoading = false;
     _isListLoading = false;

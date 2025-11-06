@@ -77,16 +77,17 @@ class _ProductListPageState extends State<ProductListPage> {
           .get();
 
       if (snapshot.exists) {
-        debugPrint('FIRESTORE CONNECTION SUCCESSFUL'); // <-- Đã dịch
+        debugPrint('FIRESTORE CONNECTION SUCCESSFUL');
       } else {
         debugPrint(
-          'FIRESTORE CONNECTION SUCCESSFUL, but "products" document does not exist.', // <-- Đã dịch
+          'FIRESTORE CONNECTION SUCCESSFUL, but "products" document does not exist.', 
         );
       }
     } on FirebaseException catch (e) {
-      debugPrint('FIRESTORE ERROR: ${e.code}'); // <-- Đã dịch
+      debugPrint('FIRESTORE ERROR: ${e.code}');
     } catch (e) {
-      debugPrint('OTHER ERROR: $e'); // <-- Đã dịch
+      debugPrint('OTHER ERROR: $e');
+
     }
   }
 
