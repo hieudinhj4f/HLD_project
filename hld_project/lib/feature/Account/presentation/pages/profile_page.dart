@@ -1,6 +1,3 @@
-// file: lib/feature/Account/presentation/pages/profile_page.dart
-// BẢN "HOÀN CHỈNH" - ĐÃ SỬA SPACING, DIALOG, VÀ CÁC NÚT
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter/material.dart';
