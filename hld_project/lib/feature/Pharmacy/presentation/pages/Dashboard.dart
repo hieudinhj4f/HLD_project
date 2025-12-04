@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hld_project/feature/Pharmacy/presentation/providers/dashboard_provider.dart';
 import 'package:hld_project/feature/Pharmacy/domain/entity/pharmacy.dart';
-import 'package:hld_project/feature/Pharmacy/domain/entity/kpi_stats.dart';
 
 // ==================== MÀU SẮC ====================
 const Color adminPrimaryGreen = Color(0xFF90D2B0);
@@ -87,7 +86,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         ),
                         _KpiCard(
                           title: 'Items Sold',
-                          value: isLoading ? '...' : stats.totalSold.toString(),
+                          value: isLoading ? '...' : provider.totalSold.toString(),
                           backgroundColor: adminCardBackground,
                           textColor: Colors.black,
                         ),

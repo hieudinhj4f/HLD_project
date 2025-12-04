@@ -14,7 +14,6 @@ abstract class ProductRemoteDataSource {
 }
 
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
-  // FirebaseRemoteDS là lớp generic giúp tương tác với Firestore
   final FirebaseRemoteDS<ProductModel> _remoteSource;
 
   ProductRemoteDataSourceImpl()

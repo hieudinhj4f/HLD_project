@@ -6,11 +6,9 @@ class Pharmacy {
   final String? imageUrl;
   final String? address;
   final String? phone;
-  final String state; // Current Working, Pending, Inactive
+  final String state;
   final int staffCount;
-
-  // === CHỈ BỔ SUNG NHỮNG TRƯỜNG CẦN THIẾT NHẤT ===
-  final String ownerId;     // UID chủ sở hữu
+  final String ownerId;
   final DateTime createdAt;
   final bool isActive;
 
@@ -27,7 +25,6 @@ class Pharmacy {
     this.isActive = true,
   });
 
-  // === COPY WITH (Tiện cho update) ===
   Pharmacy copyWith({
     String? id,
     String? name,

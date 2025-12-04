@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 
 // === 2. IMPORT CỦA CÁC GÓI BÊN THỨ BA (3RD PARTY PACKAGES) ===
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hld_project/feature/Account/domain/usecases/create_account.dart';
 import 'package:hld_project/feature/Account/domain/usecases/delete_account.dart';
@@ -21,7 +20,6 @@ import 'package:hld_project/feature/auth/presentation/pages/signup_page.dart';
 import 'package:hld_project/feature/chat/domain/entities/doctor.dart';
 
 // Chat & Doctor
-import 'package:hld_project/feature/chat/domain/repositories/doctor_repository.dart';
 import 'package:hld_project/feature/chat/domain/usecases/create_doctor.dart';
 import 'package:hld_project/feature/chat/domain/usecases/delete_doctor.dart';
 import 'package:hld_project/feature/chat/domain/usecases/update_doctor.dart';
@@ -31,11 +29,9 @@ import 'package:hld_project/feature/chat/presentation/pages/chat_home_page.dart'
 import 'package:hld_project/feature/Pharmacy/presentation/pages/Dashboard.dart';
 
 // Home
-import 'package:hld_project/feature/Home/presentation/pages/home_page.dart';
 import 'package:hld_project/feature/Home/presentation/pages/splash_screen.dart';
 
 // Pharmacy
-import 'package:hld_project/feature/Pharmacy/domain/repository/pharmacy_repository.dart';
 import 'package:hld_project/feature/Pharmacy/domain/usecase/createPharmacy.dart';
 import 'package:hld_project/feature/Pharmacy/domain/usecase/deletePharmacy.dart';
 import 'package:hld_project/feature/Pharmacy/domain/usecase/getAllPharmacy.dart';
@@ -61,9 +57,14 @@ import 'package:hld_project/feature/chat/presentation/pages/doctor_detail_page.d
 import 'package:hld_project/feature/chat/presentation/pages/doctor_list_page.dart';
 import 'package:provider/provider.dart';
 
+// Order
+import 'package:hld_project/feature/Order/domain/usecases/get_all_orders.dart';
+import 'package:hld_project/feature/Order/domain/usecases/update_order_status.dart';
+import 'package:hld_project/feature/Order/domain/usecases/delete_order.dart';
+import 'package:hld_project/feature/Order/presentation/Admin/pages/order_list_page.dart';
+
 // === 4. IMPORT TƯƠNG ĐỐI (RELATIVE IMPORTS - TỪ CHÍNH MODULE HIỆN TẠI) ===
 
-import '../../feature/Account/domain/entities/account.dart';
 import '../../feature/Account/presentation/pages/profile_edit_page.dart';
 import '../../feature/Configuration/presentation/configuration_page.dart';
 import '../../feature/Pharmacy/data/datasource/pharmacy_remote_datasource.dart';
@@ -76,6 +77,8 @@ import '../../feature/chat/data/repositories/chat_repository_impl.dart';
 import '../../feature/chat/data/repositories/doctor_repository_impl.dart';
 import '../../feature/chat/domain/usecases/get_all_doctor.dart';
 import '../../feature/chat/domain/usecases/get_doctors.dart';
+import '../../feature/Order/data/datasource/order_remote_datasource.dart';
+import '../../feature/Order/data/repository/order_repository_impl.dart';
 
 // Navbar
 import '../navbar/domain/entity/bottom_nav_item.dart';
@@ -107,6 +110,10 @@ class AppRouter {
   final CreateAccount createAccountUseCase;
   final UpdateAccount updateAccountUseCase;
   final DeleteAccount deleteAccountUseCase;
+  // Order
+  final GetAllOrders getAllOrders;
+  final UpdateOrderStatus updateOrderStatus;
+  final DeleteOrder deleteOrder;
 
   AppRouter({
     required this.authProvider,
@@ -135,12 +142,17 @@ class AppRouter {
     required this.createAccountUseCase,
     required this.updateAccountUseCase,
     required this.deleteAccountUseCase,
+    // Order
+    required this.getAllOrders,
+    required this.updateOrderStatus,
+    required this.deleteOrder,
   });
 
   static const List<BottomNavItem> _adminTabs = [
     BottomNavItem(path: '/admin/home', label: 'Home', icon: Icons.home),
     BottomNavItem(path: '/admin/product', label: 'Product', icon: Icons.shopping_cart,),
     BottomNavItem(path: '/admin/Pharmacy', label: 'Pharmacy', icon: Icons.local_pharmacy,),
+    BottomNavItem(path: '/admin/orders', label: 'Orders', icon: Icons.receipt_long,),
     BottomNavItem(path: '/admin/doctors', label: 'Doctors', icon: Icons.person_2,),
     BottomNavItem(path: '/admin/account', label: 'Account', icon: Icons.person),
     BottomNavItem(path: '/admin/setting',label: 'Setting', icon: Icons.settings ),
@@ -251,6 +263,18 @@ class AppRouter {
           GoRoute(
             path: '/admin/setting',
             builder: (context, state) => const SettingsPage(),
+          ),
+          GoRoute(
+            path: '/admin/orders',
+            builder: (context, state) {
+              final remote = OrderRemoteDataSourceImpl();
+              final repo = OrderRepositoryImpl(remote);
+              return OrderListPage(
+                getAllOrders: GetAllOrders(repo),
+                updateOrderStatus: UpdateOrderStatus(repo),
+                deleteOrder: DeleteOrder(repo),
+              );
+            },
           ),
           GoRoute(
               path: '/admin/doctors',

@@ -1,23 +1,20 @@
 // presentation/providers/dashboard_provider.dart
 import 'package:flutter/material.dart';
 import 'package:hld_project/feature/Pharmacy/domain/usecase/getAllPharmacy.dart';
-import 'package:hld_project/feature/Pharmacy/domain/usecase/get_global_dashboard_stats.dart';
-import 'package:hld_project/feature/Product/domain/usecase/get_total_sold.dart';
+import 'package:hld_project/feature/Pharmacy/domain/usecase/get_dashboard_stats.dart';
 import 'package:hld_project/feature/auth/presentation/providers/auth_provider.dart';
 import 'package:hld_project/feature/Pharmacy/domain/entity/pharmacy.dart';
 import 'package:hld_project/feature/Pharmacy/domain/entity/kpi_stats.dart';
 import 'package:hld_project/feature/Pharmacy/domain/usecase/get_vendor_activity.dart';
 import 'package:hld_project/feature/Pharmacy/domain/usecase/get_pharmacy_by_id.dart';
 import 'package:hld_project/feature/Product/domain/usecase/get_total_sold.dart';
-
-import '../../domain/usecase/get_total_products.dart'; // ĐÃ SỬA
+import '../../domain/usecase/get_total_products.dart';
 
 class DashboardProvider with ChangeNotifier {
   // === DI: Usecase & AuthProvider ===
 
 
-  final AuthProvider? _authProvider;
-  final GetGlobalDashboardStats _getDashboardStats;
+  final GetDashboardStats _getDashboardStats;
   final GetVendorActivity _getVendorActivity;
   final GetPharmacyById _getPharmacyInfo;
   final GetAllPharmacy _getAllPharmacies;
@@ -25,15 +22,13 @@ class DashboardProvider with ChangeNotifier {
   final getTotalSold _getTotalSold;
 
   DashboardProvider({
-    required AuthProvider? authProvider,
-    required GetGlobalDashboardStats getDashboardStats,
+    required GetDashboardStats getDashboardStats,
     required GetVendorActivity getVendorActivity,
     required GetPharmacyById getPharmacyInfo,
     required GetAllPharmacy getAllPharmacies,
     required GetTotalProductsUseCase getTotalProducts,
     required getTotalSold getTotalSold,
-  })  : _authProvider = authProvider,
-        _getDashboardStats = getDashboardStats,
+  })  : _getDashboardStats = getDashboardStats,
         _getVendorActivity = getVendorActivity,
         _getPharmacyInfo = getPharmacyInfo,
         _getAllPharmacies = getAllPharmacies,
@@ -122,23 +117,27 @@ class DashboardProvider with ChangeNotifier {
 
     try {
       final results = await Future.wait([
-        _getDashboardStats(),
+        _getDashboardStats(_selectedPharmacyId!),
         _getVendorActivity(_selectedPharmacyId!),
         _getPharmacyInfo(_selectedPharmacyId!),
         _getTotalProducts(_selectedPharmacyId!),
-        _getTotalSold(_selectedPharmacyId!), // THÊM: TỔNG SOLD
+        _getTotalSold(_selectedPharmacyId!),
       ], eagerError: true);
 
       final baseStats = results[0] as KpiStats;
       final chartData = results[1] as List<double>;
       final pharmacy = results[2] as Pharmacy?;
       final totalProducts = results[3] as int;
-      final totalSold = results[4] as int; // LẤY TỔNG SOLD
+      final totalSold = results[4] as int;
 
-      _stats = baseStats.copyWith(totalProducts: totalProducts);
+      // Update stats with correct values
+      _stats = baseStats.copyWith(
+        totalProducts: totalProducts,
+        totalSold: totalSold,
+      );
       _chartData = List<double>.from(chartData);
       _pharmacy = pharmacy;
-      _totalSold = totalSold; // GÁN VÀO STATE
+      _totalSold = totalSold;
       _error = null;
     } catch (e) {
       _error = "Lỗi tải dữ liệu: $e";
@@ -165,6 +164,7 @@ class DashboardProvider with ChangeNotifier {
 
   // === UPDATE AUTH (khi login/logout) ===
   void updateAuth(AuthProvider? auth) {
+    // Reset dashboard when user logs out
     if (auth == null) {
       reset();
     }

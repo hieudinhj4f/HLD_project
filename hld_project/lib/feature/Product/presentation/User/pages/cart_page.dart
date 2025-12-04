@@ -3,6 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../auth/presentation/providers/auth_provider.dart';
+import 'package:hld_project/feature/Order/domain/entity/order.dart' as order_entity;
+import 'package:hld_project/feature/Order/domain/usecases/create_order.dart';
+import 'package:hld_project/feature/Order/data/repository/order_repository_impl.dart';
+import 'package:hld_project/feature/Order/data/datasource/order_remote_datasource.dart';
+import 'package:hld_project/feature/Pharmacy/data/repository/pharmacy_repository_impl.dart';
+import 'package:hld_project/feature/Pharmacy/data/datasource/pharmacy_remote_datasource.dart';
+import 'package:hld_project/feature/Pharmacy/domain/usecase/update_order_revenue.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({Key? key}) : super(key: key);
@@ -98,6 +105,71 @@ class _CartPageState extends State<CartPage> {
     }
 
     await batch.commit();
+  }
+
+  // Update revenue AFTER all processes are complete
+  // This groups cart items by pharmacy and updates revenue for each pharmacy
+  Future<void> _updateRevenueFromCartItems(List<Map<String, dynamic>> cartItemsData) async {
+    if (cartItemsData.isEmpty) return;
+
+    // Group cart items by pharmacyId
+    final Map<String, List<Map<String, dynamic>>> pharmacyGroups = {};
+
+    for (var itemData in cartItemsData) {
+      final productId = itemData['productId'] as String?;
+      final quantity = (itemData['quantity'] as num?)?.toInt() ?? 1;
+      final price = (itemData['price'] as num?)?.toDouble() ?? 0.0;
+
+      if (productId != null && quantity > 0) {
+        // Get pharmacyId from product
+        final productDoc = await FirebaseFirestore.instance
+            .collection('product')
+            .doc(productId)
+            .get();
+
+        if (productDoc.exists) {
+          final productData = productDoc.data();
+          final pharmacyId = productData?['pharmacyId'] as String?;
+
+          if (pharmacyId != null && pharmacyId.isNotEmpty) {
+            if (!pharmacyGroups.containsKey(pharmacyId)) {
+              pharmacyGroups[pharmacyId] = [];
+            }
+
+            pharmacyGroups[pharmacyId]!.add({
+              'quantity': quantity,
+              'price': price,
+              'subtotal': price * quantity,
+            });
+          }
+        }
+      }
+    }
+
+    // Update revenue for each pharmacy
+    final pharmacyRepo = PharmacyRepositoryImpl(PharmacyRemoteDataSourceImpl());
+    final updateRevenueUseCase = UpdateOrderRevenue(pharmacyRepo);
+
+    for (var entry in pharmacyGroups.entries) {
+      final pharmacyId = entry.key;
+      final items = entry.value;
+
+      // Calculate total revenue for this pharmacy
+      double pharmacyTotal = 0.0;
+      int pharmacyItemsSold = 0;
+
+      for (var item in items) {
+        pharmacyTotal += item['subtotal'] as double;
+        pharmacyItemsSold += item['quantity'] as int;
+      }
+
+      // Update revenue AFTER all processes are done
+      await updateRevenueUseCase.call(
+        pharmacyId: pharmacyId,
+        totalAmount: pharmacyTotal,
+        itemsSold: pharmacyItemsSold,
+      );
+    }
   }
 
   @override
@@ -353,13 +425,51 @@ class _CartPageState extends State<CartPage> {
                             onPressed: _total > 0
                                 ? () async {
                               try {
-                                // 1. DEDUCT STOCK
+                                // STEP 1: Save cart items data BEFORE clearing
+                                final cartSnapshot = await FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(userId)
+                                    .collection('cart')
+                                    .get();
+                                
+                                final cartItemsData = cartSnapshot.docs
+                                    .map((doc) => doc.data())
+                                    .toList();
+
+                                // STEP 2: DEDUCT STOCK
                                 await _deductStock(userId);
 
-                                // 2. CLEAR CART
+                                // STEP 3: CREATE ORDER
+                                final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                                final userName = authProvider.user?.name ?? 'User';
+                                
+                                final orderRepo = OrderRepositoryImpl(OrderRemoteDataSourceImpl());
+                                final createOrderUseCase = CreateOrder(orderRepo);
+                                
+                                // Generate temporary ID (will be replaced by Firestore)
+                                final tempId = DateTime.now().millisecondsSinceEpoch.toString();
+                                final order = order_entity.Order(
+                                  id: tempId,
+                                  orderNumber: _orderNumber,
+                                  totalAmount: _total,
+                                  senderName: userName,
+                                  receiverName: userName, // Can be updated later if needed
+                                  status: 'pending',
+                                  createdAt: DateTime.now(),
+                                  userId: userId,
+                                );
+                                
+                                await createOrderUseCase.call(order);
+
+                                // STEP 4: CLEAR CART
                                 await _clearCart(userId);
 
-                                // 3. GO TO PAYMENT
+                                // STEP 5: UPDATE REVENUE AFTER ALL PROCESSES ARE COMPLETE
+                                // This happens LAST, after order is created and cart is cleared
+                                // Use saved cart items data to update revenue
+                                await _updateRevenueFromCartItems(cartItemsData);
+
+                                // STEP 6: GO TO PAYMENT
                                 context.go(
                                   '/user/cart/qr-payment',
                                   extra: {
@@ -373,7 +483,7 @@ class _CartPageState extends State<CartPage> {
                                 ).showSnackBar(
                                   const SnackBar(
                                     content: Text(
-                                      'Checkout successful! Stock updated.',
+                                      'Checkout successful! Order created and revenue updated.',
                                     ),
                                     backgroundColor: Colors.green,
                                   ),

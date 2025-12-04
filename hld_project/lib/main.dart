@@ -14,7 +14,7 @@ import 'feature/Account/domain/usecases/delete_account.dart';
 import 'feature/Account/domain/usecases/get_account.dart';
 import 'feature/Account/domain/usecases/update_account.dart';
 import 'feature/Account/presentation/provider/account_provider.dart';
-import 'feature/Pharmacy/domain/usecase/get_global_dashboard_stats.dart';
+import 'feature/Pharmacy/domain/usecase/get_dashboard_stats.dart';
 import 'feature/auth/presentation/providers/auth_provider.dart';
 
 // --- 1. IMPORT CÁC FILE CẦN THIẾT ---
@@ -47,23 +47,14 @@ import 'feature/chat/data/repositories/doctor_repository_impl.dart';
 import 'feature/chat/data/datasources/doctor_remote_datasource.dart';
 
 // --- (THÊM MỚI) Chat (User) Imports ---
-import 'feature/chat/domain/usecases/get_doctors.dart';
-import 'feature/chat/data/repositories/chat_repository_impl.dart';
-import 'feature/chat/data/datasources/chat_remote_datasource.dart';
+// Note: Chat repository is created inline in app_router
 
-// main.dart
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:provider/provider.dart';
-import 'core/config/firebase_env.dart';
-import 'core/routing/app_router.dart';
-import 'feature/auth/presentation/providers/auth_provider.dart';
-
-// === CHAT (USER) ===
-import 'feature/chat/domain/usecases/get_doctors.dart';
-import 'feature/chat/data/repositories/chat_repository_impl.dart';
-import 'feature/chat/data/datasources/chat_remote_datasource.dart';
+// --- (THÊM MỚI) Order Imports ---
+import 'feature/Order/domain/usecases/get_all_orders.dart';
+import 'feature/Order/domain/usecases/update_order_status.dart';
+import 'feature/Order/domain/usecases/delete_order.dart';
+import 'feature/Order/data/repository/order_repository_impl.dart';
+import 'feature/Order/data/datasource/order_remote_datasource.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -85,19 +76,22 @@ Future<void> main() async {
   final PharmacyRemoteDataSource pharmacyDataSource = PharmacyRemoteDataSourceImpl();
   final ProductRemoteDataSource productDataSource = ProductRemoteDataSourceImpl();
   final DoctorRemoteDatasource doctorDataSource = DoctorRemoteDataSourceImpl();
-  final ChatRemoteDataSource chatDataSource = ChatRemoteDataSourceImpl();
+  // Note: ChatDataSource is created inline in app_router
   final AccountRemoteDatasource accountDataSource = AccountRemoteDatasourceIpml();
+  final OrderRemoteDataSource orderDataSource = OrderRemoteDataSourceImpl();
 
   // === REPOSITORIES ===
   final pharmacyRepo = PharmacyRepositoryImpl(pharmacyDataSource);
   final productRepo = ProductRepositoryImpl(productDataSource);
   final doctorRepo = DoctorRepositoryImpl(doctorDataSource);
-  final chatRepo = ChatRepositoryImpl(chatDataSource);
+  // Note: ChatRepository is created inline in app_router
   final accountRepo = AccountRepositoryImpl(remoteDataSource: accountDataSource);
+  final orderRepo = OrderRepositoryImpl(orderDataSource);
 
   // === USECASES ===
   // Pharmacy
-  final getGlobalDashboardStats = GetGlobalDashboardStats(pharmacyRepo);
+  final getDashboardStats = GetDashboardStats(pharmacyRepo);
+  // Note: GetGlobalDashboardStats kept for potential future use
   final getVendorActivity = GetVendorActivity(pharmacyRepo);
   final getPharmacyById = GetPharmacyById(pharmacyRepo);
   final getAllPharmacies = GetAllPharmacy(pharmacyRepo);
@@ -119,21 +113,22 @@ Future<void> main() async {
   final updateDoctor = UpdateDoctor(doctorRepo);
   final deleteDoctor = DeleteDoctor(doctorRepo);
 
-  // Chat (User)
-  final getDoctors = GetDoctors(chatRepo);
-
   // Account
   final getAccountUseCase = GetAccount(accountRepo);
   final createAccountUseCase = CreateAccount(accountRepo);
   final updateAccountUseCase = UpdateAccount(accountRepo);
   final deleteAccountUseCase = DeleteAccount(accountRepo);
+
+  // Order
+  final getAllOrders = GetAllOrders(orderRepo);
+  final updateOrderStatus = UpdateOrderStatus(orderRepo);
+  final deleteOrder = DeleteOrder(orderRepo);
   // === AUTH ===
   final authProvider = AuthProvider();
 
   // === DASHBOARD PROVIDER ===
   final dashboardProvider = DashboardProvider(
-    authProvider: null,
-    getDashboardStats: getGlobalDashboardStats,
+    getDashboardStats: getDashboardStats,
     getVendorActivity: getVendorActivity,
     getPharmacyInfo: getPharmacyById,
     getAllPharmacies: getAllPharmacies,
@@ -165,6 +160,10 @@ Future<void> main() async {
     createAccountUseCase: createAccountUseCase,
     updateAccountUseCase: updateAccountUseCase,
     deleteAccountUseCase: deleteAccountUseCase,
+    // Order
+    getAllOrders: getAllOrders,
+    updateOrderStatus: updateOrderStatus,
+    deleteOrder: deleteOrder,
   );
 
   runApp(

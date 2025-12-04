@@ -23,4 +23,11 @@ abstract class PharmacyRepository {
     required int quantity,
   });
   Future<int> getTotalProducts(String pharmacyId);
+  
+  // === UPDATE REVENUE FROM ORDER ===
+  Future<void> updateOrderRevenue({
+    required String pharmacyId,
+    required double totalAmount,
+    required int itemsSold,
+  });
 }

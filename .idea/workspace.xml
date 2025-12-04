@@ -5,16 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4b8c20d9-8865-46cd-b0a3-622fd6bf5144" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hld_project/lib/core/routing/app_router.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/core/routing/app_router.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hld_project/lib/feature/Pharmacy/data/repository/pharmacy_repository_impl.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/feature/Pharmacy/data/repository/pharmacy_repository_impl.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/pages/product_form_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/Admin/pages/product_form_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/pages/product_list_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/Admin/pages/product_list_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/widget/product_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/Admin/widget/product_card.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hld_project/linux/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/linux/flutter/generated_plugin_registrant.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hld_project/linux/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/linux/flutter/generated_plugins.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hld_project/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hld_project/windows/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/windows/flutter/generated_plugin_registrant.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hld_project/windows/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/windows/flutter/generated_plugins.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/lib/feature/Account/domain/entities/account.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/feature/Account/domain/entities/account.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/lib/feature/Pharmacy/domain/entity/pharmacy.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/feature/Pharmacy/domain/entity/pharmacy.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/lib/feature/Product/data/datasource/product_repository_datasource.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/feature/Product/data/datasource/product_repository_datasource.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/User/pages/cart_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/User/pages/cart_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld_project/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/hld_project/lib/main.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,33 +27,37 @@
   &quot;associatedIndex&quot;: 6
 }</component>
   <component name="ProjectId" id="3415476dsu8vTGzLF5wVicJ7bPR" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "com.google.services.firebase.aqiPopupShown": "true",
-    "last_opened_file_path": "D:/HLD_project",
-    "settings.editor.selected.configurable": "editor.preferences.fonts.default",
-    "show.migrate.to.gradle.popup": "false"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/HLD_project&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.fonts.default&quot;,
+    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\HLD_project\hld_project\lib\feature\Pharmacy\domain\usecase" />
       <recent name="D:\HLD_project\hld_project\lib\feature\Product\presentation\Admin" />
       <recent name="D:\HLD_project\hld_project\lib\feature\Product\data\datasource" />
       <recent name="D:\HLD_project\hld_project\lib\feature\Product\data\repositories" />
       <recent name="D:\HLD_project\hld_project\lib\feature\Product\presentation\widget" />
-      <recent name="D:\HLD_project\hld_project\lib\feature\Product\presentation\pages" />
     </key>
   </component>
   <component name="TaskManager">
@@ -130,11 +133,6 @@
           <url>file://$PROJECT_DIR$/hld_project/lib/feature/Pharmacy/domain/usecase/getAllPharmacy.dart</url>
           <line>9</line>
           <option name="timeStamp" value="8" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="Dart">
-          <url>file://$PROJECT_DIR$/hld_project/lib/feature/Product/presentation/Admin/widget/product_card.dart</url>
-          <line>2</line>
-          <option name="timeStamp" value="9" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

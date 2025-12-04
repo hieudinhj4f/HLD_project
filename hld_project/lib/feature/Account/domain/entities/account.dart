@@ -1,17 +1,15 @@
-// file: lib/feature/Account/domain/entities/account.dart
-
 class Account{
   final String id;
   final String name;
-  final String email; // Mày có 'email'
+  final String email;
   final String phone;
   final String gender;
-  final String dob; // Mày dùng 'dob' (String)
-  final String age; // Mày có 'age'
-  final String address; // Mày có 'address'
-  final String role; // Mày có 'role'
-  final DateTime createAt; // (tên field là createdAt)
-  final DateTime updateAt; // (tên field là updatedAt)
+  final String dob;
+  final String age;
+  final String address;
+  final String role;
+  final DateTime createAt;
+  final DateTime updateAt;
   final String avatarUrl;
 
   const Account({

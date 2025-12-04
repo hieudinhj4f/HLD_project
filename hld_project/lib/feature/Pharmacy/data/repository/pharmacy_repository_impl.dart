@@ -2,7 +2,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hld_project/feature/Pharmacy/data/datasource/pharmacy_remote_datasource.dart';
 import 'package:hld_project/feature/Pharmacy/data/model/pharmacy_model.dart';
-import 'package:hld_project/feature/Pharmacy/data/model/kip_stat_model.dart';
 import 'package:hld_project/feature/Pharmacy/domain/entity/pharmacy.dart';
 import 'package:hld_project/feature/Pharmacy/domain/entity/kpi_stats.dart';
 import 'package:hld_project/feature/Pharmacy/domain/repository/pharmacy_repository.dart';
@@ -161,5 +160,48 @@ class PharmacyRepositoryImpl implements PharmacyRepository {
     }
 
     return total;
+  }
+
+  // === UPDATE REVENUE FROM ORDER (CALLED AFTER ORDER IS COMPLETE) ===
+  @override
+  Future<void> updateOrderRevenue({
+    required String pharmacyId,
+    required double totalAmount,
+    required int itemsSold,
+  }) async {
+    final firestore = FirebaseFirestore.instance;
+    final statsRef = firestore
+        .collection('pharmacy')
+        .doc(pharmacyId)
+        .collection('stats')
+        .doc('daily');
+
+    // Use transaction to ensure atomicity
+    await firestore.runTransaction((transaction) async {
+      final statsSnapshot = await transaction.get(statsRef);
+      final statsData = statsSnapshot.exists ? statsSnapshot.data()! : {};
+
+      final currentItemsSold = (statsData['itemsSold'] as num?)?.toInt() ?? 0;
+      final currentTodayRevenue = (statsData['todayRevenue'] as num?)?.toDouble() ?? 0.0;
+      final currentTotalRevenue = (statsData['totalRevenue'] as num?)?.toDouble() ?? 0.0;
+
+      // Calculate new values
+      final newItemsSold = currentItemsSold + itemsSold;
+      final newTodayRevenue = currentTodayRevenue + totalAmount;
+      final newTotalRevenue = currentTotalRevenue + totalAmount;
+
+      // Update stats
+      transaction.set(
+        statsRef,
+        {
+          'itemsSold': newItemsSold,
+          'todayRevenue': newTodayRevenue,
+          'totalRevenue': newTotalRevenue,
+          'todayRevenuePercent': 0.0,
+          'totalRevenuePercent': 0.0,
+        },
+        SetOptions(merge: true),
+      );
+    });
   }
 }
