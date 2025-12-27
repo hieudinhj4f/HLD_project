@@ -9,6 +9,7 @@ class AuthProvider with ChangeNotifier {
   String? get userId => _user?.uid;
   bool get isLoggedIn => _user != null;
   bool get isAdmin => _user?.role == 'admin';
+  bool get isDoctor => _user?.role == 'doctor';
 
   AuthProvider() {
     FirebaseAuth.instance.authStateChanges().listen(_onAuthStateChanged);

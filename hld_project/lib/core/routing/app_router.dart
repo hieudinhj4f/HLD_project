@@ -63,6 +63,9 @@ import 'package:hld_project/feature/Order/domain/usecases/update_order_status.da
 import 'package:hld_project/feature/Order/domain/usecases/delete_order.dart';
 import 'package:hld_project/feature/Order/presentation/Admin/pages/order_list_page.dart';
 
+// Doctor Dashboard
+import 'package:hld_project/feature/chat/presentation/pages/doctor_dashboard_page.dart';
+
 // === 4. IMPORT TƯƠNG ĐỐI (RELATIVE IMPORTS - TỪ CHÍNH MODULE HIỆN TẠI) ===
 
 import '../../feature/Account/presentation/pages/profile_edit_page.dart';
@@ -125,7 +128,7 @@ class AppRouter {
     required this.deletePharmacy,
 
     // Product (Giả sử bạn sẽ thêm vào main.dart)
-    required this.getAllProduct,
+      required this.getAllProduct,
     required this.createProduct,
     required this.updateProduct,
     required this.deleteProduct,
@@ -164,6 +167,13 @@ class AppRouter {
     BottomNavItem(path: '/user/account', label: 'Profile', icon: Icons.person),
   ];
 
+  static const List<BottomNavItem> _doctorTabs = [
+    BottomNavItem(path: '/doctor/chat', label: 'Chat', icon: Icons.chat_bubble),
+    BottomNavItem(path: '/doctor/schedule', label: 'Schedule', icon: Icons.calendar_today),
+    BottomNavItem(path: '/doctor/patients', label: 'Patients', icon: Icons.people),
+    BottomNavItem(path: '/doctor/profile', label: 'Profile', icon: Icons.person),
+  ];
+
   late final GoRouter router = GoRouter(
     initialLocation: AppRoutes.login,
     debugLogDiagnostics: true,
@@ -172,6 +182,7 @@ class AppRouter {
     redirect: (context, state) {
       final bool isLoggedIn = authProvider.isLoggedIn;
       final bool isAdmin = authProvider.isAdmin;
+      final bool isDoctor = authProvider.isDoctor;
       final location = state.matchedLocation;
 
       final bool isAuthFlow =
@@ -182,12 +193,18 @@ class AppRouter {
       final bool isGoingToAdmin = location.startsWith('/admin');
       final bool isGoingToUser =
           location.startsWith('/user') || location == '/doctor-detail';
+      final bool isGoingToDoctor = location.startsWith('/doctor');
 
       if (!isLoggedIn && !isAuthFlow) return AppRoutes.login;
       if (isLoggedIn) {
-        if (isAuthFlow) return isAdmin ? '/admin/home' : '/user/product';
+        if (isAuthFlow) {
+          if (isAdmin) return '/admin/home';
+          if (isDoctor) return '/doctor/chat';
+          return '/user/product';
+        }
         if (isAdmin && !isGoingToAdmin) return '/admin/home';
-        if (!isAdmin && !isGoingToUser) return '/user/product';
+        if (isDoctor && !isGoingToDoctor) return '/doctor/chat';
+        if (!isAdmin && !isDoctor && !isGoingToUser) return '/user/product';
       }
       return null;
     },
@@ -367,6 +384,61 @@ class AppRouter {
                 },
               ),
             ],
+          ),
+        ],
+      ),
+
+      // DOCTOR SHELL
+      ShellRoute(
+        builder: (context, state, child) =>
+            AppShell(tabs: _doctorTabs, child: child),
+        routes: [
+          GoRoute(
+            path: '/doctor/chat',
+            builder: (context, state) {
+              final auth = context.read<AuthProvider>();
+              if (!auth.isLoggedIn || !auth.isDoctor) {
+                return const LoginPage();
+              }
+              return const DoctorDashboardPage();
+            },
+            redirect: (context, state) {
+              final auth = context.read<AuthProvider>();
+              if (!auth.isLoggedIn || !auth.isDoctor) {
+                return '/login';
+              }
+              return null;
+            },
+          ),
+          GoRoute(
+            path: '/doctor/schedule',
+            builder: (context, state) {
+              final auth = context.read<AuthProvider>();
+              if (!auth.isLoggedIn || !auth.isDoctor) {
+                return const LoginPage();
+              }
+              return const DoctorDashboardPage();
+            },
+          ),
+          GoRoute(
+            path: '/doctor/patients',
+            builder: (context, state) {
+              final auth = context.read<AuthProvider>();
+              if (!auth.isLoggedIn || !auth.isDoctor) {
+                return const LoginPage();
+              }
+              return const DoctorDashboardPage();
+            },
+          ),
+          GoRoute(
+            path: '/doctor/profile',
+            builder: (context, state) {
+              final auth = context.read<AuthProvider>();
+              if (!auth.isLoggedIn || !auth.isDoctor) {
+                return const LoginPage();
+              }
+              return const DoctorDashboardPage();
+            },
           ),
         ],
       ),

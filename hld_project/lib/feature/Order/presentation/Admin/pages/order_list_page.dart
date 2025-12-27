@@ -416,6 +416,22 @@ class _OrderListPageState extends State<OrderListPage> {
                       ),
                     ],
                   ),
+                  if (order.userId != null && order.userId!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.account_circle, size: 16, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            'User ID: ${order.userId}',
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Row(
                     children: [
